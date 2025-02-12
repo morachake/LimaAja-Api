@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
@@ -51,3 +51,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'address', 'city', 'country', 'created_at', 'updated_at')
         read_only_fields = ('id', 'email', 'role', 'created_at', 'updated_at')
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls,user):
+        token = super().get_token(user)
+        token['email'] = user.email
+        token['role'] = user.role
+        return token
+class TokenVerifySerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+class EmailVerificationSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+class UserDetailsSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = User
+        fields = ('id','email','full_name','role')
+        read_only_fields = fields
