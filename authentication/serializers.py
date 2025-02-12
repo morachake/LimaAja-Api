@@ -33,8 +33,16 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(max_length=128, write_only=True)
 
-class PasswordResetSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
