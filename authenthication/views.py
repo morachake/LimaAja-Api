@@ -62,4 +62,9 @@ class PasswordResetView(generics,GenericAPIview):
             return Response({"success": "Password reset link has been sent to your email"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error":" User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = (isAuthenticated)
 
+    def get_object(self):
+        return self.request.user
