@@ -40,4 +40,26 @@ class LoginView(generics.GenericAPIview):
             })
         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+class PasswordResetView(generics,GenericAPIview):
+    serializer_class = PasswordResetSerializer
+    permission_classes = (AllowAny)
+
+    def post(self,request,*args,**kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validate_data['email']
+        try:
+            user = User.objects.get(email=email)
+                #generate token and send pass reset link
+                #send simple emisl for now
+            send_mail(
+                'Password reset',
+                'here is your passwort reset link : [link]',
+                'setting.DEFAULT_FROM_EMAIL',
+                [email],                    
+                fail_silently=False,
+            )
+            return Response({"success": "Password reset link has been sent to your email"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error":" User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
