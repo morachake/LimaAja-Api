@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'email', 'phone_number', 'password', 'password2', 'role', 
-                  'profile_picture', 'address', 'city', 'country')
+                  'profile_picture', 'address', 'city', 'country','certificates','payment_details','payment_methods','is_approved')
         extra_kwargs = {
             'full_name': {'required': True},
             'email': {'required': True},
@@ -48,8 +48,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'email', 'phone_number', 'role', 'profile_picture', 
-                  'address', 'city', 'country', 'created_at', 'updated_at')
-        read_only_fields = ('id', 'email', 'role', 'created_at', 'updated_at')
+                  'address', 'city', 'country', 'created_at', 'updated_at','certificates','payment_details','payment_methods','is_approved')
+        read_only_fields = ('id', 'email', 'role', 'created_at', 'updated_at','is_approved')
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -69,3 +69,9 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id','email','full_name','role')
         read_only_fields = fields
+class CooperativeApprovalSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    is_approved = serializers.BooleanField()
+
+class AdminLoginAsCooperativeSerializer(serializers.Serializer):
+    cooperative_id = serializers.IntegerField()
