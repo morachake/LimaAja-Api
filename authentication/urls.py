@@ -4,13 +4,13 @@ from .views import (
     RegisterView, LoginView, PasswordResetRequestView, PasswordResetConfirmView,
     ChangePasswordView, UserProfileView, DeleteAccountView, CustomTokenObtainPairView,
     LogoutView, TokenVerifyView, UserDetailsView, EmailVerificationView,
-    ResendEmailVerificationView
+    ResendEmailVerificationView, CooperativeApprovalView, AdminLoginAsCooperativeView
 )
 
 urlpatterns = [
     path('v1/', include([
         path('register/', RegisterView.as_view(), name='register'),
-        path('login/', CustomTokenObtainPairView.as_view(), name='login'),
+        path('login/', LoginView.as_view(), name='login'),
         path('logout/', LogoutView.as_view(), name='logout'),
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
         path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
@@ -22,6 +22,8 @@ urlpatterns = [
         path('delete-account/', DeleteAccountView.as_view(), name='delete-account'),
         path('verify-email/', EmailVerificationView.as_view(), name='verify-email'),
         path('resend-verification-email/', ResendEmailVerificationView.as_view(), name='resend-verification-email'),
+        path('cooperative-approval/', CooperativeApprovalView.as_view(), name='cooperative-approval'),
+        path('admin-login-as-cooperative/', AdminLoginAsCooperativeView.as_view(), name='admin-login-as-cooperative'),
     ])),
 ]
 
