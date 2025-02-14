@@ -1,7 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import get_user_model
@@ -13,12 +13,9 @@ from .serializers import (
     UserSerializer, LoginSerializer, PasswordResetRequestSerializer, 
     PasswordResetConfirmSerializer, ChangePasswordSerializer, UserProfileSerializer,
     CustomTokenObtainPairSerializer, TokenVerifySerializer, EmailVerificationSerializer,
-    UserDetailsSerializer,CooperativeApprovalSerializer,AdminLoginAsCooperativeSerializer
+    UserDetailsSerializer, CooperativeApprovalSerializer, AdminLoginAsCooperativeSerializer
 )
 
-from rest_framework.authtoken.models import Token
-
-from authentication import serializers
 User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
@@ -31,16 +28,16 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        if user.role == 'cooperative'
+        if user.role == 'cooperative':
             user.is_approved = False
             user.save()
-            #Notify adin of new cooperative
+            # Notify admin about new cooperative registration
             send_mail(
-                'A new cooperative regsitartion',
-                f " A new cooperative has benn regsiterd and need approval :{user.email}",
+                'New Cooperative Registration',
+                f'A new cooperative has registered and needs approval: {user.email}',
                 settings.DEFAULT_FROM_EMAIL,
-                [settings.ADMINEMAIL]
-                 fail_silently = False
+                [settings.ADMIN_EMAIL],
+                fail_silently=False,
             )
         else:
             user.is_approved = True
@@ -49,22 +46,20 @@ class RegisterView(generics.CreateAPIView):
         refresh = RefreshToken.for_user(user)
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "refresh": str(refresh)
-            "access": str(refresh.access_token)
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
         })
 
-class LoginView(generics.GenericAPIView):
+class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
-    def post(self,request,*args, **kwargs):
-        response = super().post(request,*args,**kwargs)
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
-            user =User.objects.get(email=request.data['email'])
-            if user.role == 'cooperative' and not 'user.is_approved':
-                return Response({"error":"Your cooperative is pending approval"}, status=status.HTTP_403_FORBIDENNED)
-        return Response
-        
-
+            user = User.objects.get(email=request.data['email'])
+            if user.role == 'cooperative' and not user.is_approved:
+                return Response({"error": "Your cooperative account is pending approval."}, status=status.HTTP_403_FORBIDDEN)
+        return response
 
 class PasswordResetRequestView(generics.GenericAPIView):
     serializer_class = PasswordResetRequestSerializer
@@ -222,38 +217,42 @@ class ResendEmailVerificationView(generics.GenericAPIView):
             return Response({"success": "Email verification link has been sent."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User with this email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class CooperativeApprovalView(generics.GenericAPIView):
     serializer_class = CooperativeApprovalSerializer
     permission_classes = [IsAdminUser]
 
-    def post(self,request):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_id = serializer.validated_data['user_id']
         is_approved = serializer.validated_data['is_approved']
 
-        try: 
-            user = User.objects.get(id=user_id,role='cooperative')
+        try:
+            user = User.objects.get(id=user_id, role='cooperative')
             user.is_approved = is_approved
             user.save()
-            return Response({"success": f"Cooperative approval status updated to {is_approved}"},status=status.HTTP_200_OK )
+            return Response({"success": f"Cooperative approval status updated to {is_approved}"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
-            return Response({"error":"Cooperative not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Cooperative not found"}, status=status.HTTP_404_NOT_FOUND)
+
 class AdminLoginAsCooperativeView(generics.GenericAPIView):
     serializer_class = AdminLoginAsCooperativeSerializer
     permission_classes = [IsAdminUser]
 
-    def post(self,request):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cooperative_id = serializer.validated_data['cooperative_id']
 
         try:
-            cooperative = User.objects.get(id=cooperative_id,role='cooperative')
+            cooperative = User.objects.get(id=cooperative_id, role='cooperative')
             refresh = RefreshToken.for_user(cooperative)
             return Response({
-                    "refresh": str(refresh),
-                    "access":str(refresh.access_token)
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
             })
         except User.DoesNotExist:
-            return Response({"error":"Cooperative not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Cooperative not found"}, status=status.HTTP_404_NOT_FOUND)
+

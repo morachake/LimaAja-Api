@@ -16,7 +16,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('role', 'admin')
-        extra_fields.setdefault('is_approved',True)
+        extra_fields.setdefault('is_approved', True)
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -27,9 +27,9 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = (
-        ('farmer', 'Farmer'),
-        ('admin', 'Admin')
-        ('cooperative':'Cooperative')
+        ('cooperative', 'Cooperative'),
+        ('buyer', 'Buyer'),
+        ('admin', 'Admin'),
     )
 
     full_name = models.CharField(max_length=255)
@@ -48,12 +48,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_deleted = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
 
-    #cooperatve specific fields
-    certificates = model.JSONField(blank=True, null=True)
+    # Cooperative specific fields
+    certificates = models.JSONField(blank=True, null=True)
     payment_details = models.JSONField(blank=True, null=True)
 
-    #Buyer specific
-    payment_methods = models.JSONField(blank=True,null=True)
+    # Buyer specific fields
+    payment_methods = models.JSONField(blank=True, null=True)
 
     objects = CustomUserManager()
 
@@ -65,5 +65,5 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def soft_delete(self):
         self.is_deleted = True
-        self.is_active = False
         self.save()
+
