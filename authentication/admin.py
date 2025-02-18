@@ -10,12 +10,12 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('email', 'password')}),
         ('Personal Info', {'fields': ('full_name', 'phone_number', 'profile_picture')}),
         ('Address', {'fields': ('address', 'city', 'country')}),
-        ('Permissions', {'fields': ('role', 'is_staff', 'is_active')}),
+        ('Permissions', {'fields': ('role', 'is_staff', 'is_active','is_verified')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'full_name', 'phone_number', 'password1', 'password2', 'role', 'is_staff', 'is_active')}
+            'fields': ('email', 'full_name', 'phone_number', 'password1', 'password2', 'role', 'is_staff', 'is_active','is_verified')}
         ),
     )
     search_fields = ('email', 'full_name', 'phone_number')
