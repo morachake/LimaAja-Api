@@ -3,176 +3,323 @@
 
 {% block title %}Dashboard - Lima Aja{% endblock %}
 
-
-
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  /* Custom styles for top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    gap: 1rem;
+  }
+
+  .search-container {
+    flex: 1;
+    max-width: 600px;
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    padding-right: 4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.875rem;
+  }
+
+  .search-shortcut {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .action-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--text-color);
+    position: relative;
+    cursor: pointer;
+  }
+
+  .action-icon:hover {
+    background-color: var(--hover-color);
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .user-profile:hover {
+    background-color: var(--hover-color);
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .user-info {
+      display: block;
+    }
+
+    .user-name {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .user-role {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+  }
+
+  /* Updated sidebar styles */
+  .cooperative-header {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .cooperative-header:hover {
+    background-color: var(--hover-color);
+  }
+
+  .cooperative-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+  }
+
+  .cooperative-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cooperative-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cooperative-type {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <img src="{% static 'images/logo.png' %}" alt="Lima Aja">
-                <span class="sidebar-logo-text">LIMA-AJA</span>
-            </div>
-            <button class="sidebar-toggle" id="sidebar-toggle">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+      <div class="cooperative-header">
+          <div class="cooperative-logo">
+              <img src="{% static 'images/logo.png' %}" alt="Lima Aja" width="24" height="24">
+          </div>
+          <div class="cooperative-info">
+              <div class="cooperative-name">{{ request.user.full_name }}</div>
+              <div class="cooperative-type">Cooperative</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+      </div>
+      
+      <div class="sidebar-content">
+          <ul class="sidebar-menu">
+              <li class="sidebar-menu-item">
+                  <a href="{% url 'cooperative_dashboard' %}" class="sidebar-menu-link">
+                      <div class="sidebar-menu-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                          </svg>
+                      </div>
+                      <span class="sidebar-menu-text">Home</span>
+                  </a>
+              </li>
+              <li class="sidebar-menu-item">
+                  <a href="{% url 'cooperative_dashboard' %}?view=products" class="sidebar-menu-link">
+                      <div class="sidebar-menu-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M3 2h18v8H3zM3 14h18v8H3z"></path>
+                          </svg>
+                      </div>
+                      <span class="sidebar-menu-text">Farm Products</span>
+                  </a>
+              </li>
+              <li class="sidebar-menu-item">
+                  <a href="{% url 'cooperative_dashboard' %}?view=orders" class="sidebar-menu-link">
+                      <div class="sidebar-menu-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="9" cy="21" r="1"></circle>
+                              <circle cx="20" cy="21" r="1"></circle>
+                              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                          </svg>
+                      </div>
+                      <span class="sidebar-menu-text">Orders</span>
+                  </a>
+              </li>
+              <li class="sidebar-menu-item">
+                  <a href="{% url 'cooperative_dashboard' %}?view=finance" class="sidebar-menu-link">
+                      <div class="sidebar-menu-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="12" y1="1" x2="12" y2="23"></line>
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                          </svg>
+                      </div>
+                      <span class="sidebar-menu-text">Finance</span>
+                  </a>
+              </li>
+          </ul>
+
+          <div class="sidebar-section">
+              <ul class="sidebar-menu">
+                  <li class="sidebar-menu-item">
+                      <a href="{% url 'cooperative_dashboard' %}?view=settings" class="sidebar-menu-link">
+                          <div class="sidebar-menu-icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <circle cx="12" cy="12" r="3"></circle>
+                                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                              </svg>
+                          </div>
+                          <span class="sidebar-menu-text">Settings</span>
+                      </a>
+                  </li>
+                  <li class="sidebar-menu-item">
+                      <a href="{% url 'cooperative_dashboard' %}?view=help" class="sidebar-menu-link">
+                          <div class="sidebar-menu-icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                              </svg>
+                          </div>
+                          <span class="sidebar-menu-text">Help Center</span>
+                      </a>
+                  </li>
+              </ul>
+          </div>
+      </div>
+  </aside>
+  
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search products, farmers, orders...">
+            <span class="search-shortcut">⌘K</span>
+        </div>
+
+        <div class="topbar-actions">
+            <div class="action-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 18l-6-6 6-6" />
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
-            </button>
-        </div>
-        
-        <div class="sidebar-content">
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Main</div>
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'cooperative_dashboard' %}" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="7" height="7"></rect>
-                                    <rect x="14" y="3" width="7" height="7"></rect>
-                                    <rect x="14" y="14" width="7" height="7"></rect>
-                                    <rect x="3" y="14" width="7" height="7"></rect>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Dashboard</span>
-                        </a>
-                    </li>
-                </ul>
+                <span class="notification-badge"></span>
             </div>
-            
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Management</div>
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'cooperative_dashboard' %}?view=farmers" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Farmers</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'cooperative_dashboard' %}?view=products" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Products</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'cooperative_dashboard' %}?view=orders" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="9" cy="21" r="1"></circle>
-                                    <circle cx="20" cy="21" r="1"></circle>
-                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Orders</span>
-                        </a>
-                    </li>
-                </ul>
+
+            <div class="action-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
             </div>
-            
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Account</div>
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'document_upload' %}" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Documents</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'cooperative_dashboard' %}?view=settings" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Settings</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="{% url 'cooperative_login' %}" class="sidebar-menu-link">
-                            <div class="sidebar-menu-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
-                            </div>
-                            <span class="sidebar-menu-text">Logout</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="sidebar-user-avatar">
+
+            <div class="user-profile">
+                <div class="user-avatar">
                     {{ request.user.full_name|slice:":1" }}
                 </div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">{{ request.user.full_name }}</div>
-                    <div class="sidebar-user-role">{{ request.user.role|title }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ request.user.full_name }}</div>
+                    <div class="user-role">Cooperative</div>
                 </div>
-            </div>
-        </div>
-    </aside>
-    
-    <!-- Overlay for mobile -->
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
-    
-    <!-- Main Content -->
-    <main class="main-content" id="main-content">
-        <header class="main-header">
-            <button class="mobile-menu-toggle" id="mobile-menu-toggle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
-            </button>
-            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
-            <div class="header-actions">
-                <!-- Add header actions here if needed -->
             </div>
-        </header>
-        
-        <div class="main-container">
-            {% block dashboard_content %}{% endblock %}
         </div>
-    </main>
+    </div>
+    
+    <div class="main-container">
+        {% block dashboard_content %}{% endblock %}
+    </div>
+</main>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/dashboard.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
 
