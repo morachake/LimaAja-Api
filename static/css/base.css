@@ -1,0 +1,93 @@
+:root {
+    --primary-color: #28a745;
+    --primary-dark: #218838;
+    --text-color: #333;
+    --text-secondary: #6b7280;
+    --border-color: #e2e8f0;
+    --background-color: #f8f9fa;
+    --white: #ffffff;
+    --error: #dc2626;
+    --success: #16a34a;
+    --info: #0369a1;
+    --warning: #d97706;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.5;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: var(--text-color);
+    text-decoration: none;
+  }
+  
+  .logo img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  /* Utility Classes */
+  .text-center {
+    text-align: center;
+  }
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+  .mt-4 {
+    margin-top: 1rem;
+  }
+  .mb-4 {
+    margin-bottom: 1rem;
+  }
+  .mb-6 {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Alert Styles */
+  .alert {
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+  
+  .alert-danger {
+    background-color: #fee2e2;
+    color: var(--error);
+  }
+  
+  .alert-success {
+    background-color: #dcfce7;
+    color: var(--success);
+  }
+  
+  .alert-info {
+    background-color: #e0f2fe;
+    color: var(--info);
+  }
+  
+  .alert-warning {
+    background-color: #fef3c7;
+    color: var(--warning);
+  }
+  
+  

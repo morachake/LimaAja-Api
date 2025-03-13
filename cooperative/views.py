@@ -100,36 +100,46 @@ class ProductDeleteView(generics.DestroyAPIView):
         return Product.objects.filter(cooperative=self.request.user)
 
 
-# New template-based views for cooperatives
+# Update the cooperative_login view to handle the new login form
 def cooperative_login(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
         password = request.POST.get('password')
-        user = authenticate(request, email=email, password=password)
         
-        if user is not None and user.role == 'cooperative':
-            login(request, user)
-            if not user.is_approved:
-                return redirect('document_upload')
-            return redirect('cooperative_dashboard')
-        else:
-            messages.error(request, 'Invalid email or password')
+        # Try to find a user with this phone number
+        try:
+            user = User.objects.get(phone_number=phone_number)
+            user = authenticate(request, email=user.email, password=password)
+            
+            if user is not None and user.role == 'cooperative':
+                login(request, user)
+                if not user.is_approved:
+                    return redirect('document_upload')
+                return redirect('cooperative_dashboard')
+            else:
+                messages.error(request, 'Invalid phone number or password')
+        except User.DoesNotExist:
+            messages.error(request, 'No account found with this phone number')
     
     return render(request, 'cooperative/login.html')
 
 def cooperative_register(request):
     if request.method == 'POST':
+        # Get form data
         full_name = request.POST.get('full_name')
         email = request.POST.get('email')
         phone_number = request.POST.get('phone_number')
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
+        team_emails = request.POST.get('team_emails', '')
         
+        # Validate passwords
         if password != password2:
             messages.error(request, 'Passwords do not match')
             return render(request, 'cooperative/register.html')
         
         try:
+            # Create user
             user = User.objects.create_user(
                 email=email,
                 full_name=full_name,
@@ -138,12 +148,45 @@ def cooperative_register(request):
                 role='cooperative',
                 is_approved=False
             )
+            
+            # Handle document uploads
+            certificates = []
+            for key in request.FILES:
+                if key.startswith('documents'):
+                    for file in request.FILES.getlist(key):
+                        file_path = os.path.join('certificates', email, file.name)
+                        
+                        # Create directory if it doesn't exist
+                        os.makedirs(os.path.join(settings.MEDIA_ROOT, 'certificates', email), exist_ok=True)
+                        
+                        # Save file
+                        with open(os.path.join(settings.MEDIA_ROOT, file_path), 'wb+') as destination:
+                            for chunk in file.chunks():
+                                destination.write(chunk)
+                        
+                        certificates.append({
+                            'name': file.name,
+                            'path': file_path,
+                            'uploaded_at': str(timezone.now())
+                        })
+            
+            # Update user certificates
+            if certificates:
+                user.certificates = certificates
+                user.save()
+            
+            # Process team invitations if provided
+            if team_emails:
+                team_emails = [email.strip() for email in team_emails.split('\n') if email.strip()]
+                # Here you would implement the logic to send invitations to team members
+            
             login(request, user)
             return redirect('document_upload')
         except Exception as e:
             messages.error(request, str(e))
     
     return render(request, 'cooperative/register.html')
+
 
 @login_required
 def document_upload(request):

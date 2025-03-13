@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Document Upload - Lima Aja{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-upload-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropzone {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+
+    .dropzone:hover {
+        border-color: var(--primary-color);
+    }
+
+    .file-list {
+        margin-top: 2rem;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-item .icon {
+        margin-right: 1rem;
+        color: var(--primary-color);
+    }
+
+    .file-info {
+        flex: 1;
+    }
+
+    .file-name {
+        font-weight: 500;
+    }
+
+    .file-size {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .remove-file {
+        color: #ef4444;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="document-upload-container">
+    <h2 class="text-center mb-4">Upload Your Documents</h2>
+    
+    <div class="alert alert-info">
+        <p>Please upload the following documents:</p>
+        <ul class="mt-2">
+            <li>Business registration certificate</li>
+            <li>Tax registration document</li>
+            <li>Bank account details</li>
+            <li>Proof of address</li>
+        </ul>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="documentUploadForm">
+        {% csrf_token %}
+        
+        <div class="dropzone" id="documentDropzone">
+            <img src="{% static 'images/upload-icon.png' %}" alt="Upload" width="48" height="48">
+            <p class="mt-4">Click to upload or drag and drop</p>
+            <p class="text-sm text-gray-500">SVG, PNG, JPG or PDF files</p>
+        </div>
+        
+        <input type="file" id="documentInput" name="documents[]" multiple style="display: none">
+        
+        <div class="file-list" id="uploadedFiles"></div>
+
+        <div class="form-group mt-4">
+            <label for="notes" class="form-label">Additional Notes</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3"
+                      placeholder="Any additional information about the uploaded documents"></textarea>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary" style="max-width: 200px;">Submit Documents</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dropzone = document.getElementById('documentDropzone');
+const fileInput = document.getElementById('documentInput');
+const uploadedFiles = document.getElementById('uploadedFiles');
+let files = new Set();
+
+dropzone.addEventListener('click', () => fileInput.click());
+
+dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--primary-color)';
+});
+
+dropzone.addEventListener('dragleave', () => {
+    dropzone.style.borderColor = 'var(--border-color)';
+});
+
+dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--border-color)';
+    handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+});
+
+function handleFiles(fileList) {
+    Array.from(fileList).forEach(file => {
+        if (!files.has(file)) {
+            files.add(file);
+            const fileItem = createFileItem(file);
+            uploadedFiles.appendChild(fileItem);
+        }
+    });
+}
+
+function createFileItem(file) {
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    
+    const size = (file.size / 1024 / 1024).toFixed(2);
+    
+    div.innerHTML = `
+        <div class="icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+        </div>
+        <div class="file-info">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${size} MB</div>
+        </div>
+        <div class="remove-file" onclick="removeFile(this, '${file.name}')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+    `;
+    
+    return div;
+}
+
+function removeFile(element, fileName) {
+    const fileItem = element.parentElement;
+    files.forEach(file => {
+        if (file.name === fileName) {
+            files.delete(file);
+        }
+    });
+    fileItem.remove();
+}
+
+document.getElementById('documentUploadForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    files.forEach(file => {
+        formData.append('documents[]', file);
+    });
+    formData.append('notes', document.getElementById('notes').value);
+    
+    // Submit the form
+    e.target.submit();
+});
+</script>
+{% endblock %}
+
