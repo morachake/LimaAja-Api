@@ -10,6 +10,8 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 import os
 from django.utils import timezone
+from django.http import JsonResponse
+from django.core.mail import send_mail
 
 User = get_user_model()
 
@@ -100,21 +102,29 @@ class ProductDeleteView(generics.DestroyAPIView):
         return Product.objects.filter(cooperative=self.request.user)
 
 
-# Update the cooperative_login view to handle the new login form
+def cooperative_index(request):
+    return render(request, 'cooperative/index.html')
+
+# login for coopreratives
 def cooperative_login(request):
     if request.method == 'POST':
         phone_number = request.POST.get('phone_number')
         password = request.POST.get('password')
         
-        # Try to find a user with this phone number
         try:
             user = User.objects.get(phone_number=phone_number)
             user = authenticate(request, email=user.email, password=password)
             
             if user is not None and user.role == 'cooperative':
                 login(request, user)
-                if not user.is_approved:
-                    return redirect('document_upload')
+                
+                # If user has not uploaded documents yet, redirect to verification
+                if not user.certificates:
+                    return redirect('cooperative_verification')
+                # If user is not approved, show message but still allow dashboard access
+                elif not user.is_approved:
+                    messages.info(request, 'Your account is pending approval.')
+              
                 return redirect('cooperative_dashboard')
             else:
                 messages.error(request, 'Invalid phone number or password')
@@ -131,7 +141,6 @@ def cooperative_register(request):
         phone_number = request.POST.get('phone_number')
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
-        team_emails = request.POST.get('team_emails', '')
         
         # Validate passwords
         if password != password2:
@@ -149,43 +158,92 @@ def cooperative_register(request):
                 is_approved=False
             )
             
-            # Handle document uploads
-            certificates = []
-            for key in request.FILES:
-                if key.startswith('documents'):
-                    for file in request.FILES.getlist(key):
-                        file_path = os.path.join('certificates', email, file.name)
-                        
-                        # Create directory if it doesn't exist
-                        os.makedirs(os.path.join(settings.MEDIA_ROOT, 'certificates', email), exist_ok=True)
-                        
-                        # Save file
-                        with open(os.path.join(settings.MEDIA_ROOT, file_path), 'wb+') as destination:
-                            for chunk in file.chunks():
-                                destination.write(chunk)
-                        
-                        certificates.append({
-                            'name': file.name,
-                            'path': file_path,
-                            'uploaded_at': str(timezone.now())
-                        })
-            
-            # Update user certificates
-            if certificates:
-                user.certificates = certificates
-                user.save()
-            
-            # Process team invitations if provided
-            if team_emails:
-                team_emails = [email.strip() for email in team_emails.split('\n') if email.strip()]
-                # Here you would implement the logic to send invitations to team members
-            
-            login(request, user)
-            return redirect('document_upload')
+            messages.success(request, 'Registration successful! Please log in to continue with verification.')
+            return redirect('cooperative_login')
         except Exception as e:
             messages.error(request, str(e))
     
     return render(request, 'cooperative/register.html')
+
+@login_required
+def cooperative_verification(request):
+    if request.user.role != 'cooperative':
+        messages.error(request, 'Only cooperatives can access this page')
+        return redirect('cooperative_login')
+    
+    if request.user.is_approved:
+        return redirect('cooperative_dashboard')
+    
+    if request.method == 'POST':
+        certificates = []
+        
+        for file_key in request.FILES:
+            if file_key.startswith('documents'):
+                for file in request.FILES.getlist(file_key):
+                    # Validate file type
+                    if not file.content_type in ['image/svg+xml', 'image/png', 'image/jpeg', 'image/gif']:
+                        return JsonResponse({
+                            'success': False,
+                            'message': f'Invalid file type for {file.name}. Only SVG, PNG, JPG or GIF files are allowed.'
+                        })
+                    
+                    # Validate file size (5MB limit)
+                    if file.size > 5 * 1024 * 1024:
+                        return JsonResponse({
+                            'success': False,
+                            'message': f'File {file.name} is too large. Maximum size is 5MB.'
+                        })
+                    
+                    file_path = os.path.join('certificates', request.user.email, file.name)
+                    
+                    # Create directory if it doesn't exist
+                    os.makedirs(os.path.join(settings.MEDIA_ROOT, 'certificates', request.user.email), exist_ok=True)
+                    
+                    # Save file
+                    with open(os.path.join(settings.MEDIA_ROOT, file_path), 'wb+') as destination:
+                        for chunk in file.chunks():
+                            destination.write(chunk)
+                    
+                    certificates.append({
+                        'name': file.name,
+                        'path': file_path,
+                        'uploaded_at': str(timezone.now())
+                    })
+        
+        # Update user certificates
+        if certificates:
+            if request.user.certificates:
+                existing_certs = request.user.certificates
+                if isinstance(existing_certs, list):
+                    existing_certs.extend(certificates)
+                    request.user.certificates = existing_certs
+                else:
+                    request.user.certificates = certificates
+            else:
+                request.user.certificates = certificates
+            
+            request.user.save()
+            
+            # Send notification to admin
+            send_mail(
+                'New Cooperative Documents Uploaded',
+                f'Cooperative {request.user.full_name} has uploaded verification documents.',
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.ADMIN_EMAIL],
+                fail_silently=True,
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Documents uploaded successfully. Your account is pending approval.'
+            })
+        
+        return JsonResponse({
+            'success': False,
+            'message': 'No documents were uploaded.'
+        })
+    
+    return render(request, 'cooperative/verification.html')
 
 
 @login_required
@@ -228,16 +286,51 @@ def document_upload(request):
     
     return render(request, 'cooperative/document_upload.html')
 
+
 @login_required
 def cooperative_dashboard(request):
-    if request.user.role != 'cooperative' or not request.user.is_approved:
+    if request.user.role != 'cooperative':
         messages.error(request, 'You do not have access to this page')
         return redirect('cooperative_login')
     
+    # Get the view parameter from the URL
+    view = request.GET.get('view', 'overview')
+    
+    # Handle form submissions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'update_profile':
+            # Update user profile
+            request.user.full_name = request.POST.get('full_name')
+            request.user.phone_number = request.POST.get('phone_number')
+            request.user.address = request.POST.get('address')
+            request.user.city = request.POST.get('city')
+            request.user.country = request.POST.get('country')
+            request.user.save()
+            messages.success(request, 'Profile updated successfully')
+            
+        elif action == 'change_password':
+            # Change password
+            current_password = request.POST.get('current_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            if not request.user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect')
+            elif new_password != confirm_password:
+                messages.error(request, 'New passwords do not match')
+            else:
+                request.user.set_password(new_password)
+                request.user.save()
+                messages.success(request, 'Password changed successfully')
+    
+    # Get data for the dashboard
     farmers = Farmer.objects.filter(cooperative=request.user)
     products = Product.objects.filter(cooperative=request.user)
     
     context = {
+        'view': view,
         'farmers': farmers,
         'products': products
     }

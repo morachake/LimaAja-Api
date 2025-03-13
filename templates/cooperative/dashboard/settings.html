@@ -1,0 +1,91 @@
+<div class="section-header">
+    <h2 class="section-title">Account Settings</h2>
+</div>
+
+<div class="settings-container">
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <h3>Profile Information</h3>
+            <p>Update your account's profile information</p>
+        </div>
+        <div class="settings-card-content">
+            <form method="post" action="{% url 'cooperative_dashboard' %}?view=settings">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_profile">
+                
+                <div class="form-group">
+                    <label for="full_name" class="form-label">Cooperative Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ request.user.full_name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ request.user.email }}" readonly>
+                    <div class="form-text">Email address cannot be changed</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone_number" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ request.user.phone_number }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea class="form-control" id="address" name="address" rows="3">{{ request.user.address }}</textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" value="{{ request.user.city }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="country" class="form-label">Country</label>
+                            <input type="text" class="form-control" id="country" name="country" value="{{ request.user.country }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <h3>Change Password</h3>
+            <p>Ensure your account is using a secure password</p>
+        </div>
+        <div class="settings-card-content">
+            <form method="post" action="{% url 'cooperative_dashboard' %}?view=settings">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="form-group">
+                    <label for="current_password" class="form-label">Current Password</label>
+                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new_password" class="form-label">New Password</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
