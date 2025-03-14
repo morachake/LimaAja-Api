@@ -1,9 +1,10 @@
 from django.urls import path, include
 from .views import (
     cooperative_index, cooperative_login, cooperative_register, cooperative_verification,
-    cooperative_dashboard, document_upload,
+    cooperative_dashboard, document_upload, dashboard_test,
     FarmerListView, FarmerDetailView, FarmerCreateView, FarmerUpdateView, FarmerDeleteView,
-    ProductListView, ProductDetailView, ProductCreateView, ProductUpdateView, ProductDeleteView
+    ProductListView, ProductDetailView, ProductCreateView, ProductUpdateView, ProductDeleteView,
+    add_produce
 )
 
 urlpatterns = [
@@ -14,6 +15,8 @@ urlpatterns = [
     path('verification/', cooperative_verification, name='cooperative_verification'),
     path('dashboard/', cooperative_dashboard, name='cooperative_dashboard'),
     path('document-upload/', document_upload, name='document_upload'),
+    path('dashboard-test/', dashboard_test, name='dashboard_test'),  # Added test route
+    path('add-produce/', add_produce, name='add_produce'),  # Add this line
     
     # API endpoints for cooperative data
     path('api/', include([

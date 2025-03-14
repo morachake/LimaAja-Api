@@ -337,3 +337,38 @@ def cooperative_dashboard(request):
     
     return render(request, 'cooperative/dashboard.html', context)
 
+@login_required
+def add_produce(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        price = request.POST.get('price')
+        quantity = request.POST.get('quantity')
+        farmer_id = request.POST.get('farmer')
+        
+        try:
+            farmer = Farmer.objects.get(id=farmer_id, cooperative=request.user)
+            
+            Product.objects.create(
+                cooperative=request.user,
+                farmer=farmer,
+                name=name,
+                description=description,
+                price=price,
+                quantity=quantity
+            )
+            
+            messages.success(request, 'Product added successfully')
+            return redirect('cooperative_dashboard')
+            
+        except Farmer.DoesNotExist:
+            messages.error(request, 'Invalid farmer selected')
+    
+    return redirect('cooperative_dashboard')
+
+def dashboard_test(request):
+    """
+    A test view to debug dashboard styling issues
+    """
+    return render(request, 'cooperative/dashboard_base_test.html')
+

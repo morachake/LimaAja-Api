@@ -1,115 +1,954 @@
+{% load static %}
+
+{% block dashboard_content %}
+<!-- Main content only - no sidebar or top bar needed -->
 <div class="section-header">
-    <h2 class="section-title">Products Management</h2>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Add Product
-    </button>
+  <h2 class="section-title">Farm Produce</h2>
+  <button onclick="openAddProduceModal()" class="btn btn-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Add New Produce
+  </button>
 </div>
 
-<div class="table-container mt-4">
-    <div class="table-content">
-        {% if products %}
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Farmer</th>
-                        <th>Description</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in products %}
-                    <tr>
-                        <td>{{ product.name }}</td>
-                        <td>{{ product.farmer.name }}</td>
-                        <td>{{ product.description|truncatechars:50 }}</td>
-                        <td>${{ product.price }}</td>
-                        <td>{{ product.quantity }}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-icon edit-product" data-id="{{ product.id }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </button>
-                                <button class="btn-icon delete-product" data-id="{{ product.id }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                    </svg>
-                </div>
-                <h3>No products added yet</h3>
-                <p>Start by adding your first product to the marketplace</p>
-                <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addProductModal">Add Product</button>
-            </div>
-        {% endif %}
-    </div>
+<!-- Filter Tabs -->
+<div class="filter-tabs">
+  <a href="?view=products&category=all" class="filter-tab {% if not request.GET.category or request.GET.category == 'all' %}active{% endif %}">
+      All Produce
+      <span class="badge badge-primary">{{ total_produce|default:"0" }}</span>
+  </a>
+  <a href="?view=products&category=vegetables" class="filter-tab {% if request.GET.category == 'vegetables' %}active{% endif %}">
+      Vegetables
+      <span class="badge">{{ vegetables_count|default:"0" }}</span>
+  </a>
+  <a href="?view=products&category=fruits" class="filter-tab {% if request.GET.category == 'fruits' %}active{% endif %}">
+      Fruits
+      <span class="badge">{{ fruits_count|default:"0" }}</span>
+  </a>
+  <a href="?view=products&category=nuts" class="filter-tab {% if request.GET.category == 'nuts' %}active{% endif %}">
+      Nuts
+      <span class="badge">{{ nuts_count|default:"0" }}</span>
+  </a>
+  <a href="?view=products&category=herbs" class="filter-tab {% if request.GET.category == 'herbs' %}active{% endif %}">
+      Herbs
+      <span class="badge">{{ herbs_count|default:"0" }}</span>
+  </a>
+  <a href="?view=products&category=grains" class="filter-tab {% if request.GET.category == 'grains' %}active{% endif %}">
+      Grains
+      <span class="badge">{{ grains_count|default:"0" }}</span>
+  </a>
+  
+  <!-- View Toggle -->
+  <div class="view-toggle">
+      <button class="view-toggle-button {% if view_mode == 'grid' %}active{% endif %}" onclick="setViewMode('grid')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+      </button>
+      <button class="view-toggle-button {% if view_mode == 'list' %}active{% endif %}" onclick="setViewMode('list')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+      </button>
+  </div>
 </div>
 
-<!-- Add Product Modal -->
-<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addProductForm" method="post" action="{% url 'product-create' %}">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label for="productName" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="productName" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="productDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="productDescription" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="productPrice" class="form-label">Price</label>
-                        <input type="number" step="0.01" class="form-control" id="productPrice" name="price" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="productQuantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="productQuantity" name="quantity" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="productFarmer" class="form-label">Farmer</label>
-                        <select class="form-select" id="productFarmer" name="farmer" required>
-                            <option value="">Select a farmer</option>
-                            {% for farmer in farmers %}
-                                <option value="{{ farmer.id }}">{{ farmer.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="addProductForm" class="btn btn-primary">Add Product</button>
-            </div>
-        </div>
-    </div>
+{% if produce_items %}
+  <!-- Produce Grid/List View -->
+  <div class="products-grid {% if view_mode == 'list' %}list-view{% endif %}">
+      {% for produce in produce_items %}
+      <div class="product-card">
+          <img src="{% if produce.produce_type.image %}{{ produce.produce_type.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" 
+               alt="{{ produce.produce_type.name }}" 
+               class="product-image">
+          <div class="product-content">
+              <h3 class="product-title">{{ produce.produce_type.name }}</h3>
+              <p class="product-price">RWF {{ produce.price|floatformat:2 }}</p>
+              <div class="product-meta">
+                  <span>{{ produce.quantity }} Tons</span>
+                  <span>Grade {{ produce.variant.grade }}</span>
+                  <span>{{ produce.province }}</span>
+              </div>
+              <div class="product-actions">
+                  <button onclick="openEditProduceModal({{ produce.id }}, '{{ produce.produce_type.name }}', '{{ produce.variant.grade }}', {{ produce.quantity }}, '{{ produce.province }}')" class="btn-action btn-edit">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                      Edit
+                  </button>
+                  <button onclick="confirmDeleteProduce({{ produce.id }}, '{{ produce.produce_type.name }}')" class="btn-action btn-delete">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                      Delete
+                  </button>
+              </div>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+{% else %}
+  <!-- Empty State -->
+  <div class="empty-state">
+      <div class="empty-state-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+      </div>
+      <h3>No produce found</h3>
+      <p>Get started by adding your first produce to the marketplace</p>
+      <button onclick="openAddProduceModal()" class="btn btn-primary mt-4">Add New Produce</button>
+  </div>
+{% endif %}
+
+<!-- Add Produce Modal -->
+<div id="addProduceModal" class="modal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h3>Add New Produce</h3>
+          <button onclick="closeAddProduceModal()" class="modal-close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+          </button>
+      </div>
+      
+      <form id="addProduceForm" method="post" action="{% url 'add_produce' %}">
+          {% csrf_token %}
+          
+          <div class="modal-body">
+              <!-- Produce Name -->
+              <div class="form-group">
+                  <label for="produce_type" class="form-label">What is the name of the Farm Produce?</label>
+                  <select name="produce_type" id="produce_type" class="form-control" required>
+                      <option value="">Select a produce</option>
+                      {% for type in produce_types %}
+                      <option value="{{ type.id }}">{{ type.name }}</option>
+                      {% endfor %}
+                      {% if not produce_types %}
+                      <option value="1">Aldrich Almond</option>
+                      <option value="2">Rice</option>
+                      <option value="3">Potatoes</option>
+                      <option value="4">Broccoli</option>
+                      <option value="5">Oranges</option>
+                      {% endif %}
+                  </select>
+              </div>
+
+              <!-- Variants -->
+              <div class="form-group">
+                  <label class="form-label">Choose Applicable Variants of Farm Produce</label>
+                  <div class="variant-buttons">
+                      {% for grade in "ABCDE" %}
+                      <button type="button" class="variant-button" data-grade="{{ grade }}">
+                          Grade {{ grade }}
+                          <input type="checkbox" name="variants[]" value="{{ grade }}" hidden>
+                      </button>
+                      {% endfor %}
+                  </div>
+              </div>
+
+              <!-- Quantity -->
+              <div class="form-group">
+                  <label for="quantity" class="form-label">Enter Quantity of Farm Produce</label>
+                  <div class="input-group">
+                      <input type="number" name="quantity" id="quantity" class="form-control" placeholder="0" required>
+                      <select name="unit" class="form-control" style="width: auto">
+                          <option value="tons">Tons</option>
+                      </select>
+                  </div>
+              </div>
+
+              <!-- Province -->
+              <div class="form-group">
+                  <label for="province" class="form-label">Choose Province of Farm Produce</label>
+                  <input type="text" name="province" id="province" class="form-control" placeholder="e.g. Kigali, Northern Province" required>
+              </div>
+          </div>
+
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="closeAddProduceModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+      </form>
+  </div>
 </div>
+
+<!-- Edit Produce Modal -->
+<div id="editProduceModal" class="modal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h3>Edit Produce</h3>
+          <button onclick="closeEditProduceModal()" class="modal-close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+          </button>
+      </div>
+      
+      <form id="editProduceForm" method="post" action="">
+          {% csrf_token %}
+          
+          <div class="modal-body">
+              <!-- Produce Type (read-only in edit mode) -->
+              <div class="form-group">
+                  <label class="form-label">Farm Produce</label>
+                  <input type="text" id="edit_produce_name" class="form-control" readonly>
+              </div>
+
+              <!-- Variant -->
+              <div class="form-group">
+                  <label for="edit_variant" class="form-label">Grade</label>
+                  <select name="variant" id="edit_variant" class="form-control" required>
+                      {% for grade in "ABCDE" %}
+                      <option value="{{ grade }}">Grade {{ grade }}</option>
+                      {% endfor %}
+                  </select>
+              </div>
+
+              <!-- Quantity -->
+              <div class="form-group">
+                  <label for="edit_quantity" class="form-label">Quantity (Tons)</label>
+                  <input type="number" name="quantity" id="edit_quantity" class="form-control" required>
+              </div>
+
+              <!-- Province -->
+              <div class="form-group">
+                  <label for="edit_province" class="form-label">Province</label>
+                  <input type="text" name="province" id="edit_province" class="form-control" required>
+              </div>
+          </div>
+
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="closeEditProduceModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+      </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteProduceModal" class="modal">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h3>Confirm Delete</h3>
+          <button onclick="closeDeleteProduceModal()" class="modal-close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+          </button>
+      </div>
+      
+      <form id="deleteProduceForm" method="post" action="">
+          {% csrf_token %}
+          
+          <div class="modal-body">
+              <p>Are you sure you want to delete <strong id="delete_produce_name"></strong>?</p>
+              <p>This action cannot be undone.</p>
+          </div>
+
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="closeDeleteProduceModal()">Cancel</button>
+              <button type="submit" class="btn btn-danger">Delete</button>
+          </div>
+      </form>
+  </div>
+</div>
+
+<style>
+/* General Form Styling */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.5rem;
+}
+
+.col-md-6 {
+    flex: 0 0 100%;
+    padding: 0 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .col-md-6 {
+        flex: 0 0 50%;
+    }
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: modalFadeIn 0.3s ease;
+}
+
+.modal-sm {
+    max-width: 400px;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background-color: #f3f4f6;
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Button Styling */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+/* Image Upload Styling */
+.image-upload-container {
+    position: relative;
+    border: 2px dashed var(--border-color);
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.image-upload-container:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.form-control-file {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.image-upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.image-upload-placeholder svg {
+    color: var(--primary-color);
+    opacity: 0.7;
+}
+
+.image-format-hint {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.image-preview {
+    margin-top: 1rem;
+    display: none;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 0.5rem;
+    object-fit: contain;
+}
+
+/* Checkbox Styling */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Product Card Styling */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.product-card {
+    background-color: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-actions {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.product-card:hover .product-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
+
+.edit-btn:hover {
+    background-color: #e8f5e9;
+    color: var(--primary-color);
+}
+
+.delete-btn:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+.product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.product-content {
+    padding: 1.25rem;
+}
+
+.product-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.product-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.product-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.product-farmer {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.filter-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    background-color: #f9fafb;
+    border-color: var(--primary-color);
+}
+
+.filter-tab.active {
+    background-color: #e8f5e9;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.view-toggle {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.view-toggle-button {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-toggle-button:hover {
+    background-color: #f3f4f6;
+    color: var(--text-color);
+}
+
+.view-toggle-button.active {
+    background-color: #e8f5e9;
+    color: var(--primary-color);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.variant-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    border: 1px solid var(--border-color);
+    background: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.variant-button:hover {
+    border-color: var(--primary-color);
+    background-color: #e8f5e9;
+}
+
+.variant-button.active {
+    background-color: #e8f5e9;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: #e5e7eb;
+    color: #6b7280;
+    margin-left: 6px;
+}
+
+.badge-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.variant-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.product-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-edit {
+    background-color: #e8f5e9;
+    color: var(--primary-color);
+}
+
+.btn-edit:hover {
+    background-color: #d4edda;
+}
+
+.btn-delete {
+    background-color: #fee2e2;
+    color: #dc3545;
+}
+
+.btn-delete:hover {
+    background-color: #fad7d7;
+}
+
+.products-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.products-grid.list-view .product-card {
+    display: flex;
+    flex-direction: row;
+}
+
+.products-grid.list-view .product-image {
+    width: 120px;
+    height: 120px;
+}
+
+.products-grid.list-view .product-content {
+    flex: 1;
+    padding: 12px;
+}
+</style>
+
+<script>
+// Global variables
+let currentProductId = null;
+
+// Open and close modals
+function openAddProduceModal() {
+    const modal = document.getElementById('addProduceModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Reset form
+    //document.getElementById('addProduceForm').reset();
+    //document.getElementById('imagePreview').style.display = 'none';
+}
+
+function closeAddProduceModal() {
+    const modal = document.getElementById('addProduceModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function openEditProduceModal(id, name, grade, quantity, province) {
+    const modal = document.getElementById('editProduceModal');
+    const form = document.getElementById('editProduceForm');
+    
+    // Set form action
+    form.action = `/cooperative/update-produce/${id}/`;
+    
+    // Set form values
+    document.getElementById('edit_produce_name').value = name;
+    document.getElementById('edit_variant').value = grade;
+    document.getElementById('edit_quantity').value = quantity;
+    document.getElementById('edit_province').value = province;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditProduceModal() {
+    const modal = document.getElementById('editProduceModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function confirmDeleteProduce(id, name) {
+    const modal = document.getElementById('deleteProduceModal');
+    const form = document.getElementById('deleteProduceForm');
+    
+    // Set form action
+    form.action = `/cooperative/delete-produce/${id}/`;
+    
+    // Set produce name in confirmation message
+    document.getElementById('delete_produce_name').textContent = name;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteProduceModal() {
+    const modal = document.getElementById('deleteProduceModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function setViewMode(mode) {
+    localStorage.setItem('produceViewMode', mode);
+    window.location.href = updateQueryStringParameter(window.location.href, 'view', mode);
+}
+
+function updateQueryStringParameter(uri, key, value) {
+    var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+    var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+    if (uri.match(re)) {
+        return uri.replace(re, '$1' + key + "=" + value + '$2');
+    }
+    return uri + separator + key + "=" + value;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize view mode from localStorage
+    const savedViewMode = localStorage.getItem('produceViewMode');
+    if (savedViewMode && !window.location.href.includes('view=')) {
+        setViewMode(savedViewMode);
+    }
+    
+    // Add event listeners for variant selection
+    const variantButtons = document.querySelectorAll('.variant-button');
+    variantButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            this.classList.toggle('active');
+            const checkbox = this.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+        });
+    });
+    
+    // Close modals when clicking outside
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
 
