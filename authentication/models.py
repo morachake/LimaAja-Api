@@ -23,6 +23,26 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
+        # check if user already exists with the same phone number
+         # Check if a user with this phone number already exists
+        try:
+            existing_user = self.model.objects.get(phone_number=phone_number)
+            # If we're creating a superuser with the same email as an existing user,
+            # we'll update that user instead of creating a new one
+            if existing_user.email == email:
+                for key, value in extra_fields.items():
+                    setattr(existing_user, key, value)
+                existing_user.set_password(password)
+                existing_user.save(using=self._db)
+                return existing_user
+            else:
+                # If the phone number is taken by a different user, append a suffix to make it unique
+                import random
+                phone_number = f"{phone_number}_{random.randint(1000, 9999)}"
+        except self.model.DoesNotExist:
+            pass
+
+        
         return self.create_user(email, full_name, phone_number, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -46,6 +66,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
 
     # Cooperative specific fields

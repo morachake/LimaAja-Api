@@ -1,0 +1,315 @@
+{% extends 'cooperative/dashboard_base.html' %}
+{% load static %}
+
+{% block dashboard_content %}
+<div class="main-container">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'cooperative_dashboard' %}?view=products">Farm Produce List</a>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+        <span>{{ produce_type.name }}</span>
+    </div>
+
+    <div class="produce-detail-container">
+        <!-- Left Column - Image and Info -->
+        <div class="produce-image-section">
+            {% if produce_type.image %}
+                <img src="{{ produce_type.image.url }}" alt="{{ produce_type.name }}" class="produce-main-image">
+            {% elif produce_type.image_url %}
+                <img src="{{ produce_type.image_url }}" alt="{{ produce_type.name }}" class="produce-main-image">
+            {% else %}
+                <img src="{% static 'images/placeholder.jpg' %}" alt="{{ produce_type.name }}" class="produce-main-image">
+            {% endif %}
+            
+            <div class="produce-info">
+                <h1>{{ produce_type.name }}</h1>
+                <div class="produce-meta">
+                    <span class="meta-item">
+                        <span class="meta-label">Available:</span>
+                        <span class="meta-value">{{ total_variants }} variants • {{ total_quantity }} Tons</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Variants Table -->
+        <div class="produce-variants-section">
+            <div class="variants-header">
+                <div class="variants-title">
+                    <span class="badge">All Variants</span>
+                    <span class="variant-count">{{ total_variants }}</span>
+                </div>
+                <button class="btn-primary" onclick="openAddProduceModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add New Produce
+                </button>
+            </div>
+
+            <div class="variants-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variant Type</th>
+                            <th>Price</th>
+                            <th>Qty. Available</th>
+                            <th>Provinces Available</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for variant in variants %}
+                        <tr>
+                            <td>
+                                <div class="variant-info">
+                                    <div class="variant-thumbnail">
+                                        {% if produce_type.image %}
+                                            <img src="{{ produce_type.image.url }}" alt="Grade {{ variant.grade }}">
+                                        {% elif produce_type.image_url %}
+                                            <img src="{{ produce_type.image_url }}" alt="Grade {{ variant.grade }}">
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder.jpg' %}" alt="Grade {{ variant.grade }}">
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="variant-name">Grade {{ variant.grade }}</div>
+                                        <div class="variant-farmers">{{ variant.farmers_count }} Farmers</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>RWF {{ variant.price|floatformat:0 }}</td>
+                            <td>{{ variant.quantity }} Tons</td>
+                            <td>{{ variant.provinces|join:", " }}</td>
+                            <td>
+                                <button class="btn-icon" onclick="showVariantActions(this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <circle cx="12" cy="5" r="1"></circle>
+                                        <circle cx="12" cy="19" r="1"></circle>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Breadcrumb */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.breadcrumb a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+/* Produce Detail Layout */
+.produce-detail-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+}
+
+/* Image Section */
+.produce-image-section {
+    position: sticky;
+    top: 24px;
+}
+
+.produce-main-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.produce-info h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+.produce-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.meta-label {
+    color: var(--text-secondary);
+}
+
+.meta-value {
+    font-weight: 500;
+}
+
+/* Variants Section */
+.produce-variants-section {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.variants-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.variants-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge {
+    background-color: #e8f5e9;
+    color: var(--primary-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.variant-count {
+    background-color: var(--primary-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Variants Table */
+.variants-table {
+    width: 100%;
+}
+
+.variants-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.variants-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.variants-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.variant-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.variant-thumbnail {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.variant-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.variant-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.variant-farmers {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: var(--hover-color);
+    color: var(--text-color);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .produce-detail-container {
+        grid-template-columns: 1fr;
+    }
+
+    .produce-image-section {
+        position: static;
+    }
+}
+</style>
+
+<script>
+function showVariantActions(button) {
+    // Implement variant actions menu
+    console.log('Show variant actions');
+}
+
+function openAddProduceModal() {
+    // Implement add produce modal
+    console.log('Open add produce modal');
+}
+</script>
+{% endblock %}
+

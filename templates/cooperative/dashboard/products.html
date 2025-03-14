@@ -1,0 +1,1095 @@
+
+{% load static %}
+
+{% block dashboard_content %}
+<div class="products-container">
+    <!-- Header with filters -->
+    <div class="products-header">
+        <div class="filter-tabs">
+            <a href="?view=products&category=all" class="filter-tab {% if not request.GET.category or request.GET.category == 'all' %}active{% endif %}">
+                All Produce
+                <span class="count">{{ total_produce }}</span>
+            </a>
+            <a href="?view=products&category=vegetables" class="filter-tab {% if request.GET.category == 'vegetables' %}active{% endif %}">
+                Vegetables
+                <span class="count">{{ vegetables_count }}</span>
+            </a>
+            <a href="?view=products&category=fruits" class="filter-tab {% if request.GET.category == 'fruits' %}active{% endif %}">
+                Fruits
+                <span class="count">{{ fruits_count }}</span>
+            </a>
+            <a href="?view=products&category=nuts" class="filter-tab {% if request.GET.category == 'nuts' %}active{% endif %}">
+                Nuts
+                <span class="count">{{ nuts_count }}</span>
+            </a>
+            <a href="?view=products&category=herbs" class="filter-tab {% if request.GET.category == 'herbs' %}active{% endif %}">
+                Herbs
+                <span class="count">{{ herbs_count }}</span>
+            </a>
+            <a href="?view=products&category=grains" class="filter-tab {% if request.GET.category == 'grains' %}active{% endif %}">
+                Grains
+                <span class="count">{{ grains_count }}</span>
+            </a>
+        </div>
+
+        <div class="header-actions">
+            <div class="view-toggle">
+                <button class="view-btn {% if view_mode == 'grid' %}active{% endif %}" onclick="setViewMode('grid')" title="Grid View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button class="view-btn {% if view_mode == 'list' %}active{% endif %}" onclick="setViewMode('list')" title="List View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <button class="btn-add-produce" onclick="openAddProduceModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add New Produce
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid/List View Container -->
+    <div class="view-container {% if view_mode == 'list' %}list-view{% endif %}">
+        {% if produce_items %}
+            {% if view_mode == 'grid' %}
+                <!-- Grid View -->
+                <div class="produce-grid">
+                    {% for produce in produce_items %}
+                    <div class="produce-card" onclick="window.location.href='{% url 'produce_detail' produce.produce_type.id %}'">
+                        {% if produce.produce_type.image %}
+                            <img src="{{ produce.produce_type.image.url }}" alt="{{ produce.produce_type.name }}" class="produce-image">
+                        {% elif produce.produce_type.image_url %}
+                            <img src="{{ produce.produce_type.image_url }}" alt="{{ produce.produce_type.name }}" class="produce-image">
+                        {% else %}
+                            <img src="{% static 'images/placeholder.jpg' %}" alt="{{ produce.produce_type.name }}" class="produce-image">
+                        {% endif %}
+                        <div class="produce-content">
+                            <div class="produce-header">
+                                <h3>{{ produce.produce_type.name }}</h3>
+                                <span class="price">RWF {{ produce.produce_type.base_price|floatformat:0 }}</span>
+                            </div>
+                            <div class="produce-meta">
+                                <div class="meta-item">
+                                    <span class="label">Available:</span>
+                                    <span class="value">{{ produce.variant.grade }} variants</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="label">Stock:</span>
+                                    <span class="value">{{ produce.quantity }} Tons</span>
+                                </div>
+                            </div>
+                            <div class="produce-actions">
+                                <button onclick="openEditProduceModal({{ produce.id }}, '{{ produce.produce_type.name }}', '{{ produce.variant.grade }}', {{ produce.quantity }}, '{{ produce.province }}')" class="btn-action edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button onclick="confirmDeleteProduce({{ produce.id }}, '{{ produce.produce_type.name }}')" class="btn-action delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- List View -->
+                <div class="produce-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Farm Produce Name</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Location</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produce in produce_items %}
+                            <tr onclick="window.location.href='{% url 'produce_detail' produce.produce_type.id %}'" style="cursor: pointer;">
+                                <td>
+                                    <div class="produce-info">
+                                        {% if produce.produce_type.image %}
+                                            <img src="{{ produce.produce_type.image.url }}" alt="{{ produce.produce_type.name }}">
+                                        {% elif produce.produce_type.image_url %}
+                                            <img src="{{ produce.produce_type.image_url }}" alt="{{ produce.produce_type.name }}">
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder.jpg' %}" alt="{{ produce.produce_type.name }}">
+                                        {% endif %}
+                                        <div>
+                                            <h4>{{ produce.produce_type.name }}</h4>
+                                            <span>{{ produce.variant.grade }} variants</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>RWF {{ produce.produce_type.base_price|floatformat:0 }}</td>
+                                <td>{{ produce.quantity }} Tons</td>
+                                <td>{{ produce.province }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button onclick="openEditProduceModal({{ produce.id }}, '{{ produce.produce_type.name }}', '{{ produce.variant.grade }}', {{ produce.quantity }}, '{{ produce.province }}')" class="btn-icon edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                        </button>
+                                        <button onclick="confirmDeleteProduce({{ produce.id }}, '{{ produce.produce_type.name }}')" class="btn-icon delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h18v18H3z"></path>
+                        <path d="M12 8v8"></path>
+                        <path d="M8 12h8"></path>
+                    </svg>
+                </div>
+                <h3>No produce found</h3>
+                <p>Get started by adding your first produce to the marketplace</p>
+                <button class="btn-add-produce" onclick="openAddProduceModal()">Add New Produce</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Produce Modal -->
+<div id="addProduceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 7h-9"></path>
+                    <path d="M14 17H5"></path>
+                    <circle cx="17" cy="17" r="3"></circle>
+                    <circle cx="7" cy="7" r="3"></circle>
+                </svg>
+                Add New Produce
+            </div>
+            <button class="modal-close" onclick="closeAddProduceModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        
+<form method="POST" action="{% url 'add_produce' %}" class="add-produce-form">
+    {% csrf_token %}
+    <div class="modal-body">
+        <div class="form-group">
+            <label>What is the name of the Farm Produce?</label>
+            <select class="form-control" id="produce_type" name="produce_type" required onchange="updateProducePreview()">
+                <option value="">Select Farm Produce</option>
+                {% for produce_type in produce_types %}
+                    <option value="{{ produce_type.id }}" 
+                            data-name="{{ produce_type.name }}"
+                            data-image="{{ produce_type.get_image_url }}"
+                            data-price="{{ produce_type.base_price }}">
+                        {{ produce_type.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="producePreview" class="produce-preview" style="display: none;">
+            <img src="/placeholder.svg" alt="" class="preview-image">
+            <div class="preview-info">
+                <h4 class="preview-name"></h4>
+                <p class="preview-price"></p>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Choose Applicable Variants of Farm Produce</label>
+            <div class="grade-buttons">
+                {% for grade in "ABCDE" %}
+                <button type="button" class="grade-button" data-grade="{{ grade }}">
+                    Grade {{ grade }}
+                    <svg class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <input type="radio" name="variants[]" value="{{ grade }}" hidden>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Enter Quantity of Farm Produce</label>
+            <div class="quantity-input">
+                <input type="number" class="form-control" id="quantity" name="quantity" min="0.1" step="0.1" required>
+                <div class="unit-select">Tons</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Choose Province of Farm Produce</label>
+            <select class="form-control" id="province" name="province" required>
+                <option value="">e.g Shamrock Banana</option>
+                <option value="Eastern">Eastern Province</option>
+                <option value="Western">Western Province</option>
+                <option value="Northern">Northern Province</option>
+                <option value="Southern">Southern Province</option>
+                <option value="Kigali">Kigali</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="modal-footer">
+        <button type="submit" class="btn-submit">Add Produce</button>
+    </div>
+</form>
+
+    </div>
+</div>
+
+<!-- Edit Produce Modal -->
+<div id="editProduceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4  stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Produce
+            </div>
+            <button class="modal-close" onclick="closeEditProduceModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="editProduceForm" method="post" action="">
+            {% csrf_token %}
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Farm Produce</label>
+                    <input type="text" id="edit_produce_name" class="form-control" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Grade</label>
+                    <select name="variant" id="edit_variant" class="form-control" required>
+                        {% for grade in "ABCDE" %}
+                        <option value="{{ grade }}">Grade {{ grade }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Quantity (Tons)</label>
+                    <input type="number" name="quantity" id="edit_quantity" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Province</label>
+                    <div class="select-wrapper">
+                        <select name="province" id="edit_province" class="form-control" required>
+                            <option value="Kigali City">Kigali City</option>
+                            <option value="Northern Province">Northern Province</option>
+                            <option value="Southern Province">Southern Province</option>
+                            <option value="Eastern Province">Eastern Province</option>
+                            <option value="Western Province">Western Province</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn-submit">Update Produce</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteProduceModal" class="modal">
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Delete Produce
+            </div>
+            <button class="modal-close" onclick="closeDeleteProduceModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="deleteProduceForm" method="post" action="">
+            {% csrf_token %}
+            
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="delete_produce_name"></strong>?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeDeleteProduceModal()">Cancel</button>
+                <button type="submit" class="btn-delete">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Main Container Styles */
+.products-container {
+    padding: 24px;
+    background-color: #f9fafb;
+}
+
+/* Header Styles */
+.products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.filter-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    font-size: 14px;
+    color: #374151;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    background-color: #f3f4f6;
+}
+
+.filter-tab.active {
+    background-color: #dcfce7;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.count {
+    margin-left: 8px;
+    padding: 2px 8px;
+    background-color: #f3f4f6;
+    border-radius: 9999px;
+    font-size: 12px;
+}
+
+/* View Toggle */
+.view-toggle {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.view-btn {
+    padding: 8px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.view-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.view-btn.active {
+    background-color: #dcfce7;
+    color: #28a745;
+}
+
+/* Grid View */
+.produce-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.produce-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.produce-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.produce-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.produce-content {
+    padding: 16px;
+}
+
+.produce-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.produce-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.price {
+    font-weight: 600;
+    color: #28a745;
+}
+
+.produce-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.label {
+    color: #6b7280;
+}
+
+.produce-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action.edit {
+    background-color: #dcfce7;
+    color: #28a745;
+}
+
+.btn-action.edit:hover {
+    background-color: #c6f6d5;
+}
+
+.btn-action.delete {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+.btn-action.delete:hover {
+    background-color: #fecaca;
+}
+
+/* List View */
+.produce-list table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.produce-list th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.produce-list td {
+    padding: 16px;
+    background: white;
+}
+
+.produce-list tr td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.produce-list tr td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.produce-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.produce-info img {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.produce-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.produce-info span {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon.edit {
+    background-color: #dcfce7;
+    color: #28a745;
+}
+
+.btn-icon.edit:hover {
+    background-color: #c6f6d5;
+}
+
+.btn-icon.delete {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+.btn-icon.delete:hover {
+    background-color: #fecaca;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-sm {
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-title svg {
+    color: #28a745;
+}
+
+.modal-close {
+    padding: 8px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 14px;
+    appearance: none;
+}
+
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #6b7280;
+    pointer-events: none;
+}
+
+/* Produce Preview */
+.produce-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    margin: 16px 0;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.preview-image {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.preview-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.preview-grade {
+    margin: 0;
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* Grade Buttons */
+.grade-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.grade-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    background: none;
+    font-size: 14px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.grade-button:hover {
+    border-color: #28a745;
+    background-color: #f0fdf4;
+}
+
+.grade-button.active {
+    background-color: #f0fdf4;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.plus-icon {
+    transition: transform 0.2s;
+}
+
+.grade-button.active .plus-icon {
+    transform: rotate(45deg);
+}
+
+/* Quantity Input */
+.quantity-input {
+    display: flex;
+    gap: 8px;
+}
+
+.quantity-input input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.unit-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Footer */
+.modal-footer {
+    padding: 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #218838;
+}
+
+.btn-cancel {
+    padding: 12px 24px;
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-delete {
+    padding: 12px 24px;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background-color: #dc2626;
+}
+
+/* Add Produce Button */
+.btn-add-produce {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-add-produce:hover {
+    background-color: #218838;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 48px;
+    background: white;
+    border-radius: 12px;
+}
+
+.empty-icon {
+    margin-bottom: 16px;
+    color: #6b7280;
+}
+
+.empty-state h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 0 0 24px 0;
+    color: #6b7280;
+}
+
+.text-muted {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Form Control */
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+</style>
+
+<script>
+function updateProducePreview() {
+    const select = document.getElementById('produce_type');
+    const preview = document.getElementById('producePreview');
+    const option = select.options[select.selectedIndex];
+
+    if (select.value) {
+        const name = option.getAttribute('data-name');
+        const image = option.getAttribute('data-image');
+        const price = option.getAttribute('data-price');
+
+        const previewImage = preview.querySelector('.preview-image');
+        previewImage.src = image;
+        previewImage.onerror = function() {
+            this.src = "{% static 'images/placeholder.jpg' %}";
+        };
+        
+        preview.querySelector('.preview-name').textContent = name;
+        preview.querySelector('.preview-price').textContent = `Grade A - RWF ${price}`;
+        
+        preview.style.display = 'flex';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+function setViewMode(mode) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', mode);
+    window.location.href = url.toString();
+}
+
+function openAddProduceModal() {
+    const modal = document.getElementById('addProduceModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddProduceModal() {
+    const modal = document.getElementById('addProduceModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function openEditProduceModal(id, name, grade, quantity, province) {
+    const modal = document.getElementById('editProduceModal');
+    const form = document.getElementById('editProduceForm');
+    
+    form.action = `/cooperative/update-produce/${id}/`;
+    document.getElementById('edit_produce_name').value = name;
+    document.getElementById('edit_variant').value = grade;
+    document.getElementById('edit_quantity').value = quantity;
+    
+    // Set the selected province in the dropdown
+    const provinceSelect = document.getElementById('edit_province');
+    for (let i = 0; i < provinceSelect.options.length; i++) {
+        if (provinceSelect.options[i].value === province) {
+            provinceSelect.selectedIndex = i;
+            break;
+        }
+    }
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditProduceModal() {
+    const modal = document.getElementById('editProduceModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function confirmDeleteProduce(id, name) {
+    const modal = document.getElementById('deleteProduceModal');
+    const form = document.getElementById('deleteProduceForm');
+    
+    form.action = `/cooperative/delete-produce/${id}/`;
+    document.getElementById('delete_produce_name').textContent = name;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteProduceModal() {
+    const modal = document.getElementById('deleteProduceModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const gradeButtons = document.querySelectorAll('.grade-button');
+    gradeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            
+            gradeButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.querySelector('input[type="radio"]').checked = false;
+            });
+            
+            
+            this.classList.add('active');
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+    
+    
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddProduceModal();
+                closeEditProduceModal();
+                closeDeleteProduceModal();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
