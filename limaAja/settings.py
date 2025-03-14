@@ -40,8 +40,13 @@ ALLOWED_HOSTS = ["*"]
 # Static files (CSS, JavaScript, Images)
 # Add this to your settings.py
 CSRF_TRUSTED_ORIGINS = ['https://limaaja-api-production.up.railway.app']
-
+# Add or update these settings
+CSRF_COOKIE_SECURE = True  # Use only with HTTPS
+CSRF_USE_SESSIONS = True
+SESSION_COOKIE_SECURE = True  # Use only with HTTPS
 # Application definition
+# Add this to your settings.py
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'limajaadmin@admin.com')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
