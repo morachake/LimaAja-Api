@@ -3,8 +3,8 @@ from .views import (
     cooperative_index, cooperative_login, cooperative_register, cooperative_verification,
     cooperative_dashboard, document_upload, dashboard_test,
     FarmerListView, FarmerDetailView, FarmerCreateView, FarmerUpdateView, FarmerDeleteView,
-    ProductListView, ProductDetailView, ProductCreateView, ProductUpdateView, ProductDeleteView,
-    add_produce
+    add_produce, update_produce, delete_produce, produce_detail,
+    order_detail, update_order_status
 )
 
 urlpatterns = [
@@ -15,8 +15,17 @@ urlpatterns = [
     path('verification/', cooperative_verification, name='cooperative_verification'),
     path('dashboard/', cooperative_dashboard, name='cooperative_dashboard'),
     path('document-upload/', document_upload, name='document_upload'),
-    path('dashboard-test/', dashboard_test, name='dashboard_test'),  # Added test route
-    path('add-produce/', add_produce, name='add_produce'),  # Add this line
+    path('dashboard-test/', dashboard_test, name='dashboard_test'),
+    
+    # Produce management URLs
+    path('produce/<int:produce_type_id>/', produce_detail, name='produce_detail'),
+    path('add-produce/', add_produce, name='add_produce'),
+    path('update-produce/<int:produce_id>/', update_produce, name='update_produce'),
+    path('delete-produce/<int:produce_id>/', delete_produce, name='delete_produce'),
+    
+    # Order management URLs
+    path('order/<int:order_id>/', order_detail, name='order_detail'),
+    path('order/<int:order_id>/update-status/', update_order_status, name='update_order_status'),
     
     # API endpoints for cooperative data
     path('api/', include([
@@ -26,13 +35,6 @@ urlpatterns = [
         path('farmers/create/', FarmerCreateView.as_view(), name='farmer-create'),
         path('farmers/<int:pk>/update/', FarmerUpdateView.as_view(), name='farmer-update'),
         path('farmers/<int:pk>/delete/', FarmerDeleteView.as_view(), name='farmer-delete'),
-        
-        # Product endpoints
-        path('products/', ProductListView.as_view(), name='product-list'),
-        path('products/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
-        path('products/create/', ProductCreateView.as_view(), name='product-create'),
-        path('products/<int:pk>/update/', ProductUpdateView.as_view(), name='product-update'),
-        path('products/<int:pk>/delete/', ProductDeleteView.as_view(), name='product-delete'),
     ])),
 ]
 

@@ -1,0 +1,641 @@
+
+{% load static %}
+
+{% block dashboard_content %}
+<div class="finance-container">
+    <h1 class="page-title">Your Finance Overview</h1>
+
+    <!-- Top Cards Grid -->
+    <div class="finance-grid">
+        <!-- Wallet Balance -->
+        <div class="finance-card wallet-card">
+            <div class="wallet-balance">
+                <div class="balance-header">
+                    <img src="{% static 'images/wallet-icon.png' %}" alt="Wallet" class="wallet-icon">
+                    <span class="label">Wallet Balance</span>
+                </div>
+                <div class="balance-amount">
+                    <span class="currency">RWF</span>
+                    <span class="amount">24,172,000</span>
+                </div>
+                <div class="wallet-actions">
+                    <button class="btn-request">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Request Money
+                    </button>
+                    <button class="btn-send">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        Send Money
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spending Overview -->
+        <div class="finance-card spending-card">
+            <div class="card-header">
+                <h3>Spending Overview</h3>
+                <div class="time-filter">
+                    <button class="active">This Week</button>
+                    <button>This Month</button>
+                    <button>This Year</button>
+                </div>
+            </div>
+            <div class="spending-chart">
+                <canvas id="spendingChart"></canvas>
+            </div>
+            <div class="spending-total">
+                <span class="label">Total Spending</span>
+                <span class="amount">RWF 972,000</span>
+            </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="finance-card cards-card">
+            <div class="card-header">
+                <h3>Cards</h3>
+                <button class="btn-see-all">See All</button>
+            </div>
+            <div class="bank-cards">
+                <div class="bank-card">
+                    <img src="{% static 'images/bank-logo.png' %}" alt="Bank of Rwanda" class="bank-logo">
+                    <div class="card-info">
+                        <h4>Bank of Rwanda</h4>
+                        <p>Rwanda Cocoa Cooperative</p>
+                        <span class="card-number">**** 0591</span>
+                    </div>
+                    <button class="btn-details">Details</button>
+                </div>
+                <div class="bank-card">
+                    <img src="{% static 'images/imi-logo.png' %}" alt="IMI BANK" class="bank-logo">
+                    <div class="card-info">
+                        <h4>IMI BANK</h4>
+                        <p>Rwanda Cocoa Cooperative</p>
+                        <span class="card-number">**** 0591</span>
+                    </div>
+                    <button class="btn-details">Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="transactions-section">
+        <div class="transactions-header">
+            <h2>Transactions</h2>
+            <div class="transaction-tabs">
+                <button class="tab active">
+                    All Transactions
+                    <span class="count">248</span>
+                </button>
+                <button class="tab">
+                    Received
+                    <span class="count">72</span>
+                </button>
+                <button class="tab">
+                    Sent
+                    <span class="count">138</span>
+                </button>
+            </div>
+            <div class="search-transactions">
+                <input type="text" placeholder="Search transactions...">
+            </div>
+        </div>
+
+        <div class="transactions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Activity</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>
+                            <div class="transaction-type {{ transaction.type|lower }}">
+                                {% if transaction.type == 'Sent' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                                {% else %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                                {% endif %}
+                                {{ transaction.type }}
+                            </div>
+                        </td>
+                        <td>RWF {{ transaction.amount|floatformat:0 }}</td>
+                        <td>
+                            <div class="payment-method">
+                                {% if transaction.payment_method == 'Credit Card' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                                {% else %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                                {% endif %}
+                                {{ transaction.payment_method }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ transaction.status|lower }}">
+                                {{ transaction.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="activity">
+                                {% if transaction.type == 'Sent' %}
+                                Sending to
+                                {% else %}
+                                Received from
+                                {% endif %}
+                                <span class="party">{{ transaction.party }}</span>
+                            </div>
+                        </td>
+                        <td>{{ transaction.date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Finance Container */
+.finance-container {
+    padding: 24px;
+    background-color: #f9fafb;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #111827;
+}
+
+/* Finance Grid */
+.finance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+@media (max-width: 1200px) {
+    .finance-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Finance Cards */
+.finance-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+}
+
+/* Wallet Card */
+.wallet-card {
+    background-color: #f0fdf4;
+}
+
+.wallet-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.balance-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wallet-icon {
+    width: 48px;
+    height: 48px;
+    padding: 12px;
+    background-color: #dcfce7;
+    border-radius: 12px;
+}
+
+.label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.balance-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.currency {
+    font-size: 16px;
+    font-weight: 500;
+    color: #059669;
+}
+
+.amount {
+    font-size: 32px;
+    font-weight: 600;
+    color: #059669;
+}
+
+.wallet-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.btn-request,
+.btn-send {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-request {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.btn-request:hover {
+    background-color: #f9fafb;
+}
+
+.btn-send {
+    background-color: #059669;
+    border: none;
+    color: white;
+}
+
+.btn-send:hover {
+    background-color: #047857;
+}
+
+/* Spending Card */
+.spending-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.spending-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.time-filter {
+    display: flex;
+    gap: 8px;
+}
+
+.time-filter button {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: none;
+    font-size: 12px;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.time-filter button.active {
+    background-color: #f0fdf4;
+    border-color: #059669;
+    color: #059669;
+}
+
+.spending-chart {
+    height: 200px;
+    margin-bottom: 24px;
+}
+
+.spending-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Cards Card */
+.cards-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.btn-see-all {
+    font-size: 14px;
+    color: #059669;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.bank-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.bank-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.bank-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+}
+
+.card-info {
+    flex: 1;
+}
+
+.card-info h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+}
+
+.card-info p {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 4px 0;
+}
+
+.card-number {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.btn-details {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: none;
+    font-size: 12px;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.btn-details:hover {
+    background-color: #f9fafb;
+}
+
+/* Transactions Section */
+.transactions-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.transactions-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.transactions-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.transaction-tabs {
+    display: flex;
+    gap: 16px;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.tab:hover {
+    background-color: #f9fafb;
+}
+
+.tab.active {
+    background-color: #f0fdf4;
+    color: #059669;
+}
+
+.count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background-color: #e5e7eb;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tab.active .count {
+    background-color: #059669;
+    color: white;
+}
+
+.search-transactions {
+    margin-left: auto;
+}
+
+.search-transactions input {
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 240px;
+}
+
+.search-transactions input:focus {
+    outline: none;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* Transactions Table */
+.transactions-table {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    padding: 12px 24px;
+    font-weight: 500;
+    font-size: 12px;
+    color: #6b7280;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+td {
+    padding: 16px 24px;
+    font-size: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.transaction-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.transaction-type.sent {
+    color: #dc2626;
+}
+
+.transaction-type.received {
+    color: #059669;
+}
+
+.payment-method {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.success {
+    background-color: #f0fdf4;
+    color: #059669;
+}
+
+.status-badge.pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.failed {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.activity {
+    color: #6b7280;
+}
+
+.party {
+    color: #111827;
+    font-weight: 500;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize spending chart
+    const ctx = document.getElementById('spendingChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Spending',
+                data: [150000, 290000, 170000, 320000, 260000, 180000, 220000],
+                borderColor: '#059669',
+                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+

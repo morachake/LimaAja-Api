@@ -1,6 +1,10 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from .models import Farmer, Product
+from .models import (
+    Farmer, Product, ProduceType, ProduceVariant, CooperativeProduce,
+    Customer, Order, OrderItem, OrderReview,
+    Transaction, BankAccount
+)
 from .serializers import FarmerSerializer, ProductSerializer, FarmerDetailSerializer
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login
@@ -12,6 +16,7 @@ import os
 from django.utils import timezone
 from django.http import JsonResponse
 from django.core.mail import send_mail
+from django.db.models import Sum, Count, Q
 
 User = get_user_model()
 
@@ -53,54 +58,6 @@ class FarmerDeleteView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return Farmer.objects.filter(cooperative=self.request.user)
-
-class ProductListView(generics.ListAPIView):
-    serializer_class = ProductSerializer
-    permission_classes = [IsApprovedCooperative]
-
-    def get_queryset(self):
-        return Product.objects.filter(cooperative=self.request.user)
-
-class ProductDetailView(generics.RetrieveAPIView):
-    serializer_class = ProductSerializer
-    permission_classes = [IsApprovedCooperative]
-
-    def get_queryset(self):
-        return Product.objects.filter(cooperative=self.request.user)
-
-class ProductCreateView(generics.CreateAPIView):
-    serializer_class = ProductSerializer
-    permission_classes = [IsApprovedCooperative]
-
-    def perform_create(self, serializer):
-        farmer = get_object_or_404(Farmer, id=self.request.data.get('farmer'), cooperative=self.request.user)
-        serializer.save(cooperative=self.request.user, farmer=farmer)
-
-class ProductUpdateView(generics.UpdateAPIView):
-    serializer_class = ProductSerializer
-    permission_classes = [IsApprovedCooperative]
-
-    def get_queryset(self):
-        return Product.objects.filter(cooperative=self.request.user)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        farmer_id = request.data.get('farmer')
-        if farmer_id:
-            farmer = get_object_or_404(Farmer, id=farmer_id, cooperative=self.request.user)
-            request.data['farmer'] = farmer.id
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
-class ProductDeleteView(generics.DestroyAPIView):
-    permission_classes = [IsApprovedCooperative]
-
-    def get_queryset(self):
-        return Product.objects.filter(cooperative=self.request.user)
-
 
 def cooperative_index(request):
     return render(request, 'cooperative/index.html')
@@ -195,6 +152,8 @@ def cooperative_verification(request):
                         })
                     
                     file_path = os.path.join('certificates', request.user.email, file.name)
+                    
+                    # Create directory  request.user.email, file.name)
                     
                     # Create directory if it doesn't exist
                     os.makedirs(os.path.join(settings.MEDIA_ROOT, 'certificates', request.user.email), exist_ok=True)
@@ -293,78 +252,266 @@ def cooperative_dashboard(request):
         messages.error(request, 'You do not have access to this page')
         return redirect('cooperative_login')
     
-    # Get the view parameter from the URL
     view = request.GET.get('view', 'overview')
+    category = request.GET.get('category', 'all')
+    status = request.GET.get('status', 'all')
     
-    # Handle form submissions
-    if request.method == 'POST':
-        action = request.POST.get('action')
+    if view == 'products':
+        # Filter produce based on category
+        produce_items = CooperativeProduce.objects.filter(cooperative=request.user)
+        if category != 'all':
+            produce_items = produce_items.filter(produce_type__category=category)
+    
+        # Get produce types for the form
+        produce_types = ProduceType.objects.all()
+    
+        # Get counts for each category
+        context = {
+            'view': view,
+            'produce_items': produce_items,
+            'produce_types': produce_types,
+            'total_produce': CooperativeProduce.objects.filter(cooperative=request.user).count(),
+            'vegetables_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='vegetables').count(),
+            'fruits_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='fruits').count(),
+            'nuts_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='nuts').count(),
+            'herbs_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='herbs').count(),
+            'grains_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='grains').count(),
+            'view_mode': request.GET.get('view_mode', 'grid'),
+        }
+    elif view == 'orders':
+        # Filter orders based on status
+        orders = Order.objects.filter(cooperative=request.user)
+        if status != 'all':
+            orders = orders.filter(status=status)
         
-        if action == 'update_profile':
-            # Update user profile
-            request.user.full_name = request.POST.get('full_name')
-            request.user.phone_number = request.POST.get('phone_number')
-            request.user.address = request.POST.get('address')
-            request.user.city = request.POST.get('city')
-            request.user.country = request.POST.get('country')
-            request.user.save()
-            messages.success(request, 'Profile updated successfully')
+        # Get counts for each status
+        context = {
+            'view': view,
+            'status': status,
+            'orders': orders,
+            'all_count': Order.objects.filter(cooperative=request.user).count(),
+            'new_count': Order.objects.filter(cooperative=request.user, status='new').count(),
+            'processing_count': Order.objects.filter(cooperative=request.user, status='processing').count(),
+            'delivery_count': Order.objects.filter(cooperative=request.user, status='delivery').count(),
+            'delivered_count': Order.objects.filter(cooperative=request.user, status='delivered').count(),
+            'cancelled_count': Order.objects.filter(cooperative=request.user, status='cancelled').count(),
+        }
+    elif view == 'finance':
+        # Get wallet balance (sum of received minus sent)
+        received_amount = Transaction.objects.filter(
+            cooperative=request.user, 
+            transaction_type='received',
+            status='success'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        sent_amount = Transaction.objects.filter(
+            cooperative=request.user, 
+            transaction_type='sent',
+            status='success'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        wallet_balance = received_amount - sent_amount
+        
+        # Get bank accounts
+        bank_accounts = BankAccount.objects.filter(cooperative=request.user)
+        
+        # Get recent transactions
+        transactions = Transaction.objects.filter(cooperative=request.user).order_by('-created_at')[:10]
+        
+        # Get transaction counts
+        all_transactions_count = Transaction.objects.filter(cooperative=request.user).count()
+        received_count = Transaction.objects.filter(cooperative=request.user, transaction_type='received').count()
+        sent_count = Transaction.objects.filter(cooperative=request.user, transaction_type='sent').count()
+        
+        # Get spending data for chart (last 7 days)
+        today = timezone.now().date()
+        spending_data = []
+        for i in range(7):
+            day = today - timezone.timedelta(days=i)
+            day_spending = Transaction.objects.filter(
+                cooperative=request.user,
+                transaction_type='sent',
+                status='success',
+                created_at__date=day
+            ).aggregate(total=Sum('amount'))['total'] or 0
             
-        elif action == 'change_password':
-            # Change password
-            current_password = request.POST.get('current_password')
-            new_password = request.POST.get('new_password')
-            confirm_password = request.POST.get('confirm_password')
-            
-            if not request.user.check_password(current_password):
-                messages.error(request, 'Current password is incorrect')
-            elif new_password != confirm_password:
-                messages.error(request, 'New passwords do not match')
-            else:
-                request.user.set_password(new_password)
-                request.user.save()
-                messages.success(request, 'Password changed successfully')
-    
-    # Get data for the dashboard
-    farmers = Farmer.objects.filter(cooperative=request.user)
-    products = Product.objects.filter(cooperative=request.user)
-    
-    context = {
-        'view': view,
-        'farmers': farmers,
-        'products': products
-    }
+            spending_data.append({
+                'day': day.strftime('%a'),
+                'amount': float(day_spending)
+            })
+        
+        # Reverse to show oldest to newest
+        spending_data.reverse()
+        
+        context = {
+            'view': view,
+            'wallet_balance': wallet_balance,
+            'bank_accounts': bank_accounts,
+            'transactions': transactions,
+            'all_transactions_count': all_transactions_count,
+            'received_count': received_count,
+            'sent_count': sent_count,
+            'spending_data': spending_data
+        }
+    else:
+        # Overview dashboard
+        context = {
+            'view': view,
+            'farmers': Farmer.objects.filter(cooperative=request.user),
+            'produce_items': CooperativeProduce.objects.filter(cooperative=request.user),
+            'recent_orders': Order.objects.filter(cooperative=request.user).order_by('-created_at')[:5],
+            'order_count': Order.objects.filter(cooperative=request.user).count(),
+            'produce_count': CooperativeProduce.objects.filter(cooperative=request.user).count(),
+            'farmer_count': Farmer.objects.filter(cooperative=request.user).count()
+        }
     
     return render(request, 'cooperative/dashboard.html', context)
 
 @login_required
+def produce_detail(request, produce_type_id):
+    produce_type = get_object_or_404(ProduceType, id=produce_type_id)
+    variants = CooperativeProduce.objects.filter(
+        cooperative=request.user,
+        produce_type=produce_type
+    ).select_related('variant')
+    
+    # Group variants by grade
+    variants_by_grade = {}
+    total_quantity = 0
+    for variant in variants:
+        if variant.variant.grade not in variants_by_grade:
+            variants_by_grade[variant.variant.grade] = {
+                'grade': variant.variant.grade,
+                'price': variant.produce_type.base_price * variant.variant.price_multiplier,
+                'quantity': variant.quantity,
+                'provinces': [variant.province],
+                'farmers_count': 3  # Placeholder - implement actual count
+            }
+        else:
+            variants_by_grade[variant.variant.grade]['quantity'] += variant.quantity
+            if variant.province not in variants_by_grade[variant.variant.grade]['provinces']:
+                variants_by_grade[variant.variant.grade]['provinces'].append(variant.province)
+        total_quantity += variant.quantity
+    
+    # Sort variants by grade
+    sorted_variants = sorted(variants_by_grade.values(), key=lambda x: x['grade'])
+    
+    context = {
+        'produce_type': produce_type,
+        'variants': sorted_variants,
+        'total_variants': len(variants_by_grade),
+        'total_quantity': total_quantity
+    }
+    
+    return render(request, 'cooperative/produce_detail.html', context)
+
+@login_required
 def add_produce(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
+        produce_type_id = request.POST.get('produce_type')
+        variant_grade = request.POST.get('variants[]')  # Changed from variants to variants[]
         quantity = request.POST.get('quantity')
-        farmer_id = request.POST.get('farmer')
+        province = request.POST.get('province')
         
         try:
-            farmer = Farmer.objects.get(id=farmer_id, cooperative=request.user)
-            
-            Product.objects.create(
-                cooperative=request.user,
-                farmer=farmer,
-                name=name,
-                description=description,
-                price=price,
-                quantity=quantity
+            produce_type = ProduceType.objects.get(id=produce_type_id)
+            variant = ProduceVariant.objects.get(
+                produce_type=produce_type,
+                grade=variant_grade
             )
             
-            messages.success(request, 'Product added successfully')
-            return redirect('cooperative_dashboard')
+            # Create the cooperative produce
+            CooperativeProduce.objects.create(
+                cooperative=request.user,
+                produce_type=produce_type,
+                variant=variant,
+                quantity=quantity,
+                province=province
+            )
             
-        except Farmer.DoesNotExist:
-            messages.error(request, 'Invalid farmer selected')
+            messages.success(request, 'Produce added successfully')
+            
+        except (ProduceType.DoesNotExist, ProduceVariant.DoesNotExist) as e:
+            messages.error(request, f'Error adding produce: {str(e)}')
+        except Exception as e:
+            messages.error(request, f'An unexpected error occurred: {str(e)}')
     
-    return redirect('cooperative_dashboard')
+    return redirect('/cooperative/dashboard/?view=products')
+
+@login_required
+def update_produce(request, produce_id):
+    if request.method == 'POST':
+        try:
+            produce = CooperativeProduce.objects.get(id=produce_id, cooperative=request.user)
+            
+            # Update fields
+            variant_grade = request.POST.get('variant')
+            quantity = request.POST.get('quantity')
+            province = request.POST.get('province')
+            
+            if variant_grade:
+                variant = ProduceVariant.objects.get(produce_type=produce.produce_type, grade=variant_grade)
+                produce.variant = variant
+            
+            if quantity:
+                produce.quantity = quantity
+                
+            if province:
+                produce.province = province
+            
+            produce.save()
+            messages.success(request, 'Produce updated successfully')
+            
+        except (CooperativeProduce.DoesNotExist, ProduceVariant.DoesNotExist) as e:
+            messages.error(request, f'Error updating produce: {str(e)}')
+        except Exception as e:
+            messages.error(request, f'An unexpected error occurred: {str(e)}')
+    
+    # Redirect back to the products page
+    return redirect('/cooperative/dashboard/?view=products')
+
+@login_required
+def delete_produce(request, produce_id):
+    if request.method == 'POST':
+        try:
+            produce = CooperativeProduce.objects.get(id=produce_id, cooperative=request.user)
+            produce.delete()
+            messages.success(request, 'Produce deleted successfully')
+        except CooperativeProduce.DoesNotExist:
+            messages.error(request, 'Produce not found')
+        except Exception as e:
+            messages.error(request, f'An unexpected error occurred: {str(e)}')
+    
+    # Redirect back to the products page
+    return redirect('/cooperative/dashboard/?view=products')
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, cooperative=request.user)
+    
+    context = {
+        'order': order,
+        'items': order.items.all(),
+        'review': OrderReview.objects.filter(order=order).first(),
+        'transactions': Transaction.objects.filter(order=order)
+    }
+    
+    return render(request, 'cooperative/dashboard/order_detail.html', context)
+
+@login_required
+def update_order_status(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, id=order_id, cooperative=request.user)
+        new_status = request.POST.get('status')
+        
+        if new_status in dict(Order.STATUS_CHOICES).keys():
+            order.status = new_status
+            order.save()
+            messages.success(request, f'Order status updated to {order.get_status_display()}')
+        else:
+            messages.error(request, 'Invalid status')
+    
+    return redirect('order_detail', order_id=order_id)
 
 def dashboard_test(request):
     """

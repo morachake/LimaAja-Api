@@ -1,16 +1,342 @@
-<div class="section-header">
-    <h2 class="section-title">Orders & Sales</h2>
+
+{% load static %}
+
+{% block dashboard_content %}
+<div class="orders-container">
+    <!-- Order Status Tabs -->
+    <div class="order-tabs">
+        <a href="?view=orders&status=all" class="tab {% if not status or status == 'all' %}active{% endif %}">
+            All Orders
+            <span class="count">1232</span>
+        </a>
+        <a href="?view=orders&status=new" class="tab {% if status == 'new' %}active{% endif %}">
+            New Order
+            <span class="count">2</span>
+        </a>
+        <a href="?view=orders&status=processing" class="tab {% if status == 'processing' %}active{% endif %}">
+            Order Processing
+            <span class="count">32</span>
+        </a>
+        <a href="?view=orders&status=delivery" class="tab {% if status == 'delivery' %}active{% endif %}">
+            On Delivery
+            <span class="count">32</span>
+        </a>
+        <a href="?view=orders&status=delivered" class="tab {% if status == 'delivered' %}active{% endif %}">
+            Delivered
+            <span class="count">32</span>
+        </a>
+        <a href="?view=orders&status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">
+            Cancelled
+            <span class="count">32</span>
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <input type="text" placeholder="Search orders..." class="search-input">
+    </div>
+
+    <!-- Orders Table -->
+    <div class="orders-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" class="select-all">
+                    </th>
+                    <th>Order ID</th>
+                    <th>Order Items</th>
+                    <th>Date</th>
+                    <th>Total Price</th>
+                    <th>Customer</th>
+                    <th>Order Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr onclick="window.location.href='{% url 'order_detail' order.id %}'">
+                    <td>
+                        <input type="checkbox" class="select-order">
+                    </td>
+                    <td>#{{ order.id }}</td>
+                    <td>
+                        <div class="order-items">
+                            <img src="{{ order.items.first.produce_type.get_image_url }}" alt="{{ order.items.first.produce_type.name }}">
+                            <div>
+                                <div class="item-name">{{ order.items.first.produce_type.name }}</div>
+                                <div class="item-count">{% if order.items.count > 1 %}+{{ order.items.count|add:"-1" }} more{% endif %}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ order.created_at|date:"d/m/Y" }}</td>
+                    <td>RWF {{ order.total_price|floatformat:0 }}</td>
+                    <td>
+                        <div class="customer-info">
+                            <div class="customer-name">{{ order.customer.full_name }}</div>
+                            <div class="customer-type">{{ order.customer.get_role_display }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ order.status|lower }}">{{ order.get_status_display }}</span>
+                    </td>
+                    <td>
+                        <button class="btn-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="12" cy="5" r="1"></circle>
+                                <circle cx="12" cy="19" r="1"></circle>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                            </div>
+                            <h3>No orders found</h3>
+                            <p>Orders from buyers will appear here</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<div class="empty-state">
-    <div class="empty-state-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-        </svg>
-    </div>
-    <h3>No orders yet</h3>
-    <p>Your orders will appear here once customers start purchasing your products</p>
-</div>
+<style>
+/* Orders Container */
+.orders-container {
+    padding: 24px;
+}
+
+/* Order Tabs */
+.order-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 14px;
+    color: #6b7280;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    background-color: #f3f4f6;
+}
+
+.tab.active {
+    background-color: #f0fdf4;
+    color: #059669;
+}
+
+.count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background-color: #e5e7eb;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tab.active .count {
+    background-color: #059669;
+    color: white;
+}
+
+/* Search Bar */
+.search-bar {
+    margin-bottom: 24px;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+/* Orders Table */
+.orders-table {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    padding: 12px 16px;
+    background-color: #f9fafb;
+    font-weight: 500;
+    font-size: 14px;
+    color: #6b7280;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+td {
+    padding: 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background-color: #f9fafb;
+}
+
+/* Order Items */
+.order-items {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.order-items img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.item-name {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.item-count {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Customer Info */
+.customer-info {
+    line-height: 1.4;
+}
+
+.customer-name {
+    font-weight: 500;
+}
+
+.customer-type {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.new {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.processing {
+    background-color: #e0f2fe;
+    color: #0284c7;
+}
+
+.status-badge.delivery {
+    background-color: #f0fdf4;
+    color: #059669;
+}
+
+.status-badge.delivered {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.status-badge.cancelled {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+/* Action Button */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.empty-icon {
+    margin-bottom: 16px;
+    color: #6b7280;
+}
+
+.empty-state h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #6b7280;
+}
+</style>
+{% endblock %}
 

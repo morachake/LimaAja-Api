@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lima Aja - Cooperative Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<style>
+  .hero-container {
+      max-width: 800px;
+      margin: 4rem auto;
+      text-align: center;
+  }
+  
+  .hero-logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 2rem;
+  }
+  
+  .hero-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-color);
+  }
+  
+  .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+  }
+  
+  .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+  }
+  
+  .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+  }
+  
+  .btn-outline:hover {
+      background-color: var(--primary-color);
+      color: white;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-container">
+  <img src="{% static 'images/logo.png' %}" alt="Lima Aja" class="hero-logo">
+  <h1 class="hero-title">Welcome to Lima Aja Cooperative Portal</h1>
+  <p class="hero-subtitle">Connect with buyers, manage your farmers, and grow your business</p>
+  
+  <div class="hero-buttons">
+      <a href="{% url 'cooperative_login' %}" class="btn btn-primary">Login</a>
+      <a href="{% url 'cooperative_register' %}" class="btn btn-outline">Register</a>
+  </div>
+</div>
+{% endblock %}
+

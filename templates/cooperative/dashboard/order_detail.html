@@ -1,0 +1,578 @@
+{% extends 'cooperative/dashboard_base.html' %}
+{% load static %}
+
+{% block dashboard_content %}
+<div class="order-detail-container">
+  <!-- Back Button -->
+  <a href="{% url 'cooperative_dashboard' %}?view=orders" class="back-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back to Orders
+  </a>
+
+  <!-- Order Header -->
+  <div class="order-header">
+      <div class="order-title">
+          <h1>Order #{{ order.order_number }}</h1>
+          <span class="status-badge {{ order.status|lower }}">{{ order.get_status_display }}</span>
+      </div>
+      <div class="order-date">
+          <span>Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</span>
+      </div>
+  </div>
+
+  <!-- Order Progress -->
+  <div class="order-progress">
+      <div class="progress-step {% if order.status == 'new' or order.status == 'processing' or order.status == 'delivery' or order.status == 'delivered' %}active{% endif %}">
+          <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+          </div>
+          <div class="step-label">Order Placed</div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step {% if order.status == 'processing' or order.status == 'delivery' or order.status == 'delivered' %}active{% endif %}">
+          <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+          </div>
+          <div class="step-label">Processing</div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step {% if order.status == 'delivery' or order.status == 'delivered' %}active{% endif %}">
+          <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+          </div>
+          <div class="step-label">On Delivery</div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step {% if order.status == 'delivered' %}active{% endif %}">
+          <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+          </div>
+          <div class="step-label">Delivered</div>
+      </div>
+  </div>
+
+  <!-- Order Content -->
+  <div class="order-content">
+      <!-- Order Items -->
+      <div class="order-section">
+          <h2>Order Items</h2>
+          <div class="order-items">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>Item</th>
+                          <th>Grade</th>
+                          <th>Quantity</th>
+                          <th>Unit Price</th>
+                          <th>Total</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for item in items %}
+                      <tr>
+                          <td>
+                              <div class="item-info">
+                                  <img src="{{ item.produce_type.get_image_url }}" alt="{{ item.produce_type.name }}">
+                                  <div>
+                                      <div class="item-name">{{ item.produce_type.name }}</div>
+                                      <div class="item-category">{{ item.produce_type.get_category_display }}</div>
+                                  </div>
+                              </div>
+                          </td>
+                          <td>Grade {{ item.variant.grade }}</td>
+                          <td>{{ item.quantity }} tons</td>
+                          <td>RWF {{ item.unit_price|floatformat:0 }}</td>
+                          <td>RWF {{ item.subtotal|floatformat:0 }}</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+                  <tfoot>
+                      <tr>
+                          <td colspan="4" class="text-right">Subtotal</td>
+                          <td>RWF {{ order.total_price|floatformat:0 }}</td>
+                      </tr>
+                      <tr>
+                          <td colspan="4" class="text-right">Shipping</td>
+                          <td>Free</td>
+                      </tr>
+                      <tr class="total-row">
+                          <td colspan="4" class="text-right">Total</td>
+                          <td>RWF {{ order.total_price|floatformat:0 }}</td>
+                      </tr>
+                  </tfoot>
+              </table>
+          </div>
+      </div>
+
+      <!-- Order Details -->
+      <div class="order-details-grid">
+          <!-- Buyer Information -->
+          <div class="order-section">
+              <h2>Buyer Information</h2>
+              <div class="buyer-info">
+                  <div class="info-group">
+                      <label>Name</label>
+                      <div>{{ order.customer.full_name }}</div>
+                  </div>
+                  <div class="info-group">
+                      <label>Email</label>
+                      <div>{{ order.customer.email }}</div>
+                  </div>
+                  <div class="info-group">
+                      <label>Phone</label>
+                      <div>{{ order.customer.phone_number }}</div>
+                  </div>
+                  <div class="info-group">
+                      <label>Customer Type</label>
+                      <div>{{ order.customer.get_role_display }}</div>
+                  </div>
+                  <div class="info-group">
+                      <label>Shipping Address</label>
+                      <div>{{ order.shipping_address }}</div>
+                  </div>
+                  <div class="info-group">
+                      <label>Payment Method</label>
+                      <div>{{ order.payment_method }}</div>
+                  </div>
+                  {% if order.notes %}
+                  <div class="info-group">
+                      <label>Notes</label>
+                      <div>{{ order.notes }}</div>
+                  </div>
+                  {% endif %}
+              </div>
+          </div>
+
+          <!-- Order Actions -->
+          <div class="order-section">
+              <h2>Order Actions</h2>
+              <div class="order-actions">
+                  {% if order.status == 'new' %}
+                  <form action="{% url 'update_order_status' order.id %}" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="processing">
+                      <button type="submit" class="btn-primary">Start Processing</button>
+                  </form>
+                  <form action="{% url 'update_order_status' order.id %}" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="cancelled">
+                      <button type="submit" class="btn-danger">Cancel Order</button>
+                  </form>
+                  {% elif order.status == 'processing' %}
+                  <form action="{% url 'update_order_status' order.id %}" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="delivery">
+                      <button type="submit" class="btn-primary">Mark as On Delivery</button>
+                  </form>
+                  {% elif order.status == 'delivery' %}
+                  <form action="{% url 'update_order_status' order.id %}" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="delivered">
+                      <button type="submit" class="btn-primary">Mark as Delivered</button>
+                  </form>
+                  {% endif %}
+                  
+                  <button class="btn-secondary" onclick="window.print()">Print Order</button>
+                  <a href="mailto:{{ order.customer.email }}" class="btn-outline">Contact Buyer</a>
+              </div>
+          </div>
+      </div>
+
+      <!-- Customer Review -->
+      {% if review %}
+      <div class="order-section">
+          <h2>Customer Review</h2>
+          <div class="customer-review">
+              <div class="review-rating">
+                  {% for i in "12345" %}
+                  <span class="star {% if i|add:"0" <= review.rating %}filled{% endif %}">★</span>
+                  {% endfor %}
+                  <span class="rating-text">{{ review.rating }} out of 5</span>
+              </div>
+              <div class="review-comment">
+                  {{ review.comment }}
+              </div>
+              <div class="review-date">
+                  Reviewed on {{ review.created_at|date:"F d, Y" }}
+              </div>
+          </div>
+      </div>
+      {% endif %}
+  </div>
+</div>
+
+<style>
+/* Order Detail Container */
+.order-detail-container {
+  padding: 24px;
+  background-color: #f9fafb;
+}
+
+/* Back Button */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+/* Order Header */
+.order-header {
+  margin-bottom: 32px;
+}
+
+.order-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.order-title h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.new {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.processing {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.status-badge.delivery {
+  background-color: #f0fdf4;
+  color: #059669;
+}
+
+.status-badge.delivered {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-badge.cancelled {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.order-date {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Order Progress */
+.order-progress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+.progress-step.active .step-icon {
+  background-color: #dcfce7;
+  color: #059669;
+}
+
+.step-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.progress-step.active .step-label {
+  color: #059669;
+}
+
+.progress-line {
+  flex: 1;
+  height: 2px;
+  background-color: #e5e7eb;
+}
+
+/* Order Content */
+.order-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.order-section {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.order-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+/* Order Items */
+.order-items table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-items th {
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.order-items td {
+  padding: 16px;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.item-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.item-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.item-category {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.total-row {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Order Details Grid */
+.order-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .order-details-grid {
+      grid-template-columns: 1fr;
+  }
+}
+
+/* Buyer Information */
+.buyer-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-group {
+  margin-bottom: 8px;
+}
+
+.info-group label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+/* Order Actions */
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: #059669;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #047857;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.btn-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn-danger:hover {
+  background-color: #fecaca;
+}
+
+.btn-outline {
+  background-color: white;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-outline:hover {
+  background-color: #f9fafb;
+}
+
+/* Customer Review */
+.customer-review {
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.star {
+  color: #d1d5db;
+  font-size: 20px;
+}
+
+.star.filled {
+  color: #fbbf24;
+}
+
+.rating-text {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.review-comment {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.review-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Print Styles */
+@media print {
+  .back-button,
+  .order-actions {
+      display: none;
+  }
+  
+  .order-detail-container {
+      padding: 0;
+      background-color: white;
+  }
+  
+  .order-section {
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
+  }
+}
+</style>
+{% endblock %}
+
