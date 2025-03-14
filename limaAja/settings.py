@@ -33,17 +33,19 @@ APPEND_SLASH = True
 SECRET_KEY = "django-insecure-&i_po%fq^tkl7@qbpn+51!&#o3ck0u(g81y+2ijoy&rh*6ue(u"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
-
+# DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = True  # Temporarily set to True for debugging
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 ALLOWED_HOSTS = ["*"]
 # Static files (CSS, JavaScript, Images)
 # Add this to your settings.py
 CSRF_TRUSTED_ORIGINS = ['https://limaaja-api-production.up.railway.app']
 # Add or update these settings
-CSRF_COOKIE_SECURE = True  # Use only with HTTPS
-CSRF_USE_SESSIONS = True
-SESSION_COOKIE_SECURE = True  # Use only with HTTPS
+CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SECURE = True
+CORS_ALLOW_CREDENTIALS = True
 # Application definition
 # Add this to your settings.py
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'limajaadmin@admin.com')
