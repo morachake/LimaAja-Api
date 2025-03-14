@@ -38,7 +38,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 ALLOWED_HOSTS = ["*"]
 # Static files (CSS, JavaScript, Images)
-
+# Add this to your settings.py
+CSRF_TRUSTED_ORIGINS = ['https://limaaja-api-production.up.railway.app']
 
 # Application definition
 
