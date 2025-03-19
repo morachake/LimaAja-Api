@@ -10,15 +10,18 @@
     <div class="withdrawable-balance-card">
       <div class="balance-content">
         <div class="balance-icon">
-          <img src="{% static 'images/rwanda-flag-circle.png' %}" alt="Rwanda Flag" onerror="this.src='/placeholder.svg?height=40&width=40'">
+          <img src="{% static 'images/rwanda-flag-circle.png' %}" alt="Rwanda Flag" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22%23166534%22%2F%3E%3Ctext%20x%3D%2220%22%20y%3D%2223%22%20font-family%3D%22Arial%22%20font-size%3D%2212%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%3ERW%3C%2Ftext%3E%3C%2Fsvg%3E'">
         </div>
         <div class="balance-label">Withdrawable Balance</div>
         <div class="balance-amount">
           <div class="currency">RWF</div>
-          <div class="amount">432,000.00</div>
+          <div class="amount">{{ wallet_balance|floatformat:2 }}</div>
+        </div>
+        <div class="balance-info">
+          This is the amount available for withdrawal from your product sales
         </div>
       </div>
-      <button class="request-money-btn">
+      <button class="request-money-btn" id="requestMoneyBtn">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -42,7 +45,7 @@
       <div class="wallet-content">
         <div class="total-balance">
           <div class="balance-label">Total Balance</div>
-          <div class="balance-value">RWF 972,000</div>
+          <div class="balance-value">RWF {{ wallet_balance|floatformat:2 }}</div>
         </div>
         
         <div class="time-filter">
@@ -62,24 +65,26 @@
           <div class="non-withdrawable">
             <div class="balance-type">
               <span>Non-Withdrawable Balance</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tooltip-icon" data-tooltip="Funds from recent sales that are still in the processing period">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
+              <span class="tooltip">Funds from recent sales that are still in the processing period</span>
             </div>
-            <div class="balance-value">RWF 540,000</div>
+            <div class="balance-value">RWF 0.00</div>
           </div>
           <div class="withdrawable">
             <div class="balance-type">
               <span>Withdrawable Balance</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tooltip-icon" data-tooltip="Funds that are available for withdrawal to your bank account">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
+              <span class="tooltip">Funds that are available for withdrawal to your bank account</span>
             </div>
-            <div class="balance-value">RWF 432,000</div>
+            <div class="balance-value">RWF {{ wallet_balance|floatformat:2 }}</div>
           </div>
         </div>
       </div>
@@ -105,37 +110,29 @@
       </div>
       
       <div class="bank-accounts-list">
-        <div class="bank-account-item">
-          <div class="bank-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <path d="M8 21V9"></path>
-            </svg>
+        {% if bank_accounts %}
+          {% for account in bank_accounts %}
+            <div class="bank-account-item">
+              <div class="bank-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <path d="M8 21V9"></path>
+                </svg>
+              </div>
+              <div class="bank-details">
+                <div class="bank-name">{{ account.bank_name }}</div>
+                <div class="account-name">{{ account.account_holder_name }}</div>
+                <div class="account-number">···· ···· {{ account.account_number|slice:"-4:" }}</div>
+              </div>
+              <button class="details-btn">Details</button>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="no-accounts-message">
+            No bank accounts added yet.
           </div>
-          <div class="bank-details">
-            <div class="bank-name">Bank of Rwanda</div>
-            <div class="account-name">Rwanda Cocoa Cooperative</div>
-            <div class="account-number">···· ···· 0781</div>
-          </div>
-          <button class="details-btn">Details</button>
-        </div>
-        
-        <div class="bank-account-item">
-          <div class="bank-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <path d="M8 21V9"></path>
-            </svg>
-          </div>
-          <div class="bank-details">
-            <div class="bank-name">I&M BANK</div>
-            <div class="account-name">Rwanda Cocoa Cooperative</div>
-            <div class="account-number">···· ···· 0781</div>
-          </div>
-          <button class="details-btn">Details</button>
-        </div>
+        {% endif %}
         
         <button class="add-bank-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -157,7 +154,7 @@
           </svg>
           Transactions
         </div>
-        <div class="transaction-count">210</div>
+        <div class="transaction-count">{{ all_transactions_count }}</div>
       </div>
       
       <div class="transactions-table">
@@ -171,219 +168,93 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 87,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 23,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 141,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>I&M BANK</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 123,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 45,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 64,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 98,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>I&M BANK</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 69,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>I&M BANK</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 274,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
-            <tr>
-              <td>
-                <div class="transaction-type received">
-                  <div class="type-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 5v14"></path>
-                      <path d="M19 12l-7 7-7-7"></path>
-                    </svg>
-                  </div>
-                  <span>Received</span>
-                </div>
-              </td>
-              <td>RWF 87,000</td>
-              <td>
-                <div class="payment-method">
-                  <span>Bank of Rwanda</span>
-                  <span class="account-number">···· ···· 0781</span>
-                </div>
-              </td>
-              <td>January 4, 2025 5:56 AM</td>
-            </tr>
+            {% if transactions %}
+              {% for transaction in transactions %}
+                <tr>
+                  <td>
+                    <div class="transaction-type {{ transaction.transaction_type }}">
+                      <div class="type-icon">
+                        {% if transaction.transaction_type == 'received' %}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14"></path>
+                            <path d="M19 12l-7 7-7-7"></path>
+                          </svg>
+                        {% else %}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 19V5"></path>
+                            <path d="M5 12l7-7 7 7"></path>
+                          </svg>
+                        {% endif %}
+                      </div>
+                      <span>{{ transaction.get_transaction_type_display }}</span>
+                    </div>
+                  </td>
+                  <td>RWF {{ transaction.amount|floatformat:2 }}</td>
+                  <td>
+                    <div class="payment-method">
+                      <span>{{ transaction.get_payment_method_display }}</span>
+                      {% if transaction.reference_number %}
+                        <span class="account-number">{{ transaction.reference_number }}</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>{{ transaction.created_at|date:"F j, Y g:i A" }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" class="no-transactions">
+                  No transactions found.
+                </td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Request Money Modal -->
+<div id="requestMoneyModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Request Money</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-description">
+        Request Lima-Aja to transfer your available funds to your bank account. Once approved, the funds will be transferred within 1-3 business days.
+      </p>
+      
+      <form id="requestMoneyForm" action="{% url 'request_money' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="amount">Amount (RWF)</label>
+          <input type="number" id="amount" name="amount" max="{{ wallet_balance }}" placeholder="Enter amount to withdraw" required>
+          <div class="amount-hint">Maximum: RWF {{ wallet_balance|floatformat:2 }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="bankAccount">Bank Account</label>
+          <select id="bankAccount" name="bank_account" required>
+            <option value="">Select bank account</option>
+            {% for account in bank_accounts %}
+              <option value="{{ account.id }}">{{ account.bank_name }} - ···· ···· {{ account.account_number|slice:"-4:" }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="notes">Notes (Optional)</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Add any additional information"></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="cancel-btn">Cancel</button>
+          <button type="submit" class="submit-btn">Submit Request</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -478,6 +349,12 @@
 .amount {
   font-size: 32px;
   font-weight: 700;
+}
+
+.balance-info {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 8px;
 }
 
 .request-money-btn {
@@ -606,6 +483,32 @@
   font-size: 12px;
   color: #6b7280;
   margin-bottom: 4px;
+  position: relative;
+}
+
+.tooltip-icon {
+  cursor: help;
+}
+
+.tooltip {
+  visibility: hidden;
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background-color: #1f2937;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 200px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip-icon:hover + .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Bank Accounts Section */
@@ -707,6 +610,13 @@
   border-color: #9ca3af;
 }
 
+.no-accounts-message {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 /* Transactions Section */
 .transactions-section {
   grid-area: transactions;
@@ -781,15 +691,23 @@ td {
   gap: 8px;
 }
 
+.transaction-type.received .type-icon {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.transaction-type.sent .type-icon {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 .type-icon {
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ecfdf5;
   border-radius: 50%;
-  color: #059669;
 }
 
 .payment-method {
@@ -806,6 +724,144 @@ td {
   font-size: 12px;
   color: #9ca3af;
 }
+
+.no-transactions {
+  text-align: center;
+  color: #6b7280;
+  padding: 32px 0;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  overflow: auto;
+}
+
+.modal-content {
+  background-color: white;
+  margin: 10% auto;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+  from {opacity: 0; transform: translateY(-20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+.modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-description {
+  margin-bottom: 24px;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #166534;
+  box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.1);
+}
+
+.amount-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancel-btn {
+  padding: 10px 16px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.submit-btn {
+  padding: 10px 16px;
+  background-color: #166534;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #14532d;
+}
 </style>
 
 <script>
@@ -818,6 +874,44 @@ document.addEventListener('DOMContentLoaded', function() {
     progressFill.style.transition = 'width 1s ease-in-out';
     progressFill.style.width = '55%';
   }, 300);
+  
+  // Modal functionality
+  const modal = document.getElementById('requestMoneyModal');
+  const requestBtn = document.getElementById('requestMoneyBtn');
+  const closeBtn = document.querySelector('.close-modal');
+  const cancelBtn = document.querySelector('.cancel-btn');
+  const form = document.getElementById('requestMoneyForm');
+  
+  requestBtn.addEventListener('click', function() {
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  });
+  
+  function closeModal() {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+  
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  
+  // Close modal when clicking outside
+  window.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+  
+  // Form validation
+  form.addEventListener('submit', function(e) {
+    const amount = document.getElementById('amount').value;
+    const maxAmount = parseFloat(document.getElementById('amount').getAttribute('max'));
+    
+    if (parseFloat(amount) > maxAmount) {
+      e.preventDefault();
+      alert('You cannot request more than your available balance of RWF ' + maxAmount.toFixed(2));
+    }
+  });
 });
 </script>
 {% endblock %}

@@ -36,11 +36,11 @@ class CooperativeAuthMiddleware:
             is_excluded = any(current_path.startswith(path) for path in excluded_paths)
             
             if not is_excluded:
-                logger.info(f"Middleware checking user {request.user.email}, is_approved: {request.user.is_approved}, has_certificates: {bool(request.user.certificates)}")
+                logger.debug(f"Middleware checking user {request.user.email}, is_approved: {request.user.is_approved}, has_certificates: {bool(request.user.certificates)}")
                 
                 # First check if user is approved - if so, they can access everything
                 if request.user.is_approved:
-                    logger.info(f"User {request.user.email} is approved, allowing access")
+                    logger.debug(f"User {request.user.email} is approved, allowing access")
                     # No redirection needed, user is approved
                     pass
                 # If user hasn't uploaded documents, redirect to verification
