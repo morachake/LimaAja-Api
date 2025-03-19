@@ -7,7 +7,7 @@ from .models import (
 )
 from .serializers import FarmerSerializer, ProductSerializer, FarmerDetailSerializer
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -17,6 +17,11 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.db.models import Sum, Count, Q
+from django.urls import reverse
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -75,14 +80,21 @@ def cooperative_login(request):
             if user is not None and user.role == 'cooperative':
                 login(request, user)
                 
+                # Force refresh user from database to ensure we have the latest is_approved status
+                user.refresh_from_db()
+                
+                logger.info(f"User {user.email} logged in. is_approved: {user.is_approved}, has_certificates: {bool(user.certificates)}")
+                
+                # If user is approved, go to dashboard regardless of certificates
+                if user.is_approved:
+                    logger.info(f"User {user.email} is approved, redirecting to dashboard")
+                    return redirect('cooperative_dashboard')
                 # If user has not uploaded documents yet, redirect to verification
-                if not user.certificates:
+                elif not user.certificates:
                     return redirect('cooperative_verification')
-                # If user is not approved, show message but still allow dashboard access
-                elif not user.is_approved:
-                    messages.info(request, 'Your account is pending approval.')
-              
-                return redirect('cooperative_dashboard')
+                # If user has uploaded documents but is not approved yet
+                else:
+                    return redirect('awaiting_verification')
             else:
                 messages.error(request, 'Invalid phone number or password')
         except User.DoesNotExist:
@@ -128,8 +140,17 @@ def cooperative_verification(request):
         messages.error(request, 'Only cooperatives can access this page')
         return redirect('cooperative_login')
     
+    # Force refresh user from database to ensure we have the latest is_approved status
+    request.user.refresh_from_db()
+    
+    # If user is already approved, redirect to dashboard
     if request.user.is_approved:
+        logger.info(f"User {request.user.email} is approved, redirecting to dashboard from verification")
         return redirect('cooperative_dashboard')
+    
+    # If user has already uploaded documents, redirect to awaiting verification
+    if request.user.certificates:
+        return redirect('awaiting_verification')
     
     if request.method == 'POST':
         certificates = []
@@ -152,8 +173,6 @@ def cooperative_verification(request):
                         })
                     
                     file_path = os.path.join('certificates', request.user.email, file.name)
-                    
-                    # Create directory  request.user.email, file.name)
                     
                     # Create directory if it doesn't exist
                     os.makedirs(os.path.join(settings.MEDIA_ROOT, 'certificates', request.user.email), exist_ok=True)
@@ -194,7 +213,8 @@ def cooperative_verification(request):
             
             return JsonResponse({
                 'success': True,
-                'message': 'Documents uploaded successfully. Your account is pending approval.'
+                'message': 'Documents uploaded successfully. Your account is pending approval.',
+                'redirect': reverse('awaiting_verification')
             })
         
         return JsonResponse({
@@ -210,6 +230,9 @@ def document_upload(request):
     if request.user.role != 'cooperative':
         messages.error(request, 'Only cooperatives can access this page')
         return redirect('cooperative_login')
+    
+    # Force refresh user from database to ensure we have the latest is_approved status
+    request.user.refresh_from_db()
     
     if request.user.is_approved:
         return redirect('cooperative_dashboard')
@@ -247,10 +270,49 @@ def document_upload(request):
 
 
 @login_required
+def awaiting_verification(request):
+    if request.user.role != 'cooperative':
+        messages.error(request, 'Only cooperatives can access this page')
+        return redirect('cooperative_login')
+    
+    # Force refresh user from database to ensure we have the latest is_approved status
+    request.user.refresh_from_db()
+    
+    # If user is already approved, redirect to dashboard
+    if request.user.is_approved:
+        logger.info(f"User {request.user.email} is approved, redirecting to dashboard from awaiting_verification")
+        return redirect('cooperative_dashboard')
+    
+    # If user hasn't uploaded documents and is not approved, redirect to verification
+    if not request.user.certificates and not request.user.is_approved:
+        return redirect('cooperative_verification')
+    
+    # Add debug information
+    logger.info(f"User {request.user.email} is in awaiting_verification view")
+    logger.info(f"is_approved status: {request.user.is_approved}")
+    logger.info(f"certificates: {bool(request.user.certificates)}")
+    
+    return render(request, 'cooperative/awaiting_verification.html')
+
+@login_required
 def cooperative_dashboard(request):
+    # Check if user is a cooperative
     if request.user.role != 'cooperative':
         messages.error(request, 'You do not have access to this page')
         return redirect('cooperative_login')
+    
+    # Force refresh user from database to ensure we have the latest is_approved status
+    request.user.refresh_from_db()
+    
+    # Check if user is approved
+    if not request.user.is_approved:
+        logger.info(f"User {request.user.email} is not approved, redirecting from dashboard")
+        if request.user.certificates:
+            return redirect('awaiting_verification')
+        else:
+            return redirect('cooperative_verification')
+    
+    logger.info(f"User {request.user.email} is approved, accessing dashboard")
     
     view = request.GET.get('view', 'overview')
     category = request.GET.get('category', 'all')
@@ -355,14 +417,80 @@ def cooperative_dashboard(request):
         }
     else:
         # Overview dashboard
+        produce_items = CooperativeProduce.objects.filter(cooperative=request.user).order_by('-created_at')
+        recent_orders = Order.objects.filter(cooperative=request.user).order_by('-created_at')[:5]
+        
+        # Get counts for dashboard cards
+        produce_count = produce_items.count()
+        farmer_count = Farmer.objects.filter(cooperative=request.user).count()
+        order_count = Order.objects.filter(cooperative=request.user).count()
+        
+        # Calculate total revenue
+        total_revenue = Order.objects.filter(
+            cooperative=request.user, 
+            status='delivered'
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+        
+        # Get category counts for produce summary
+        category_counts = {}
+        total_quantity = 0
+        most_common_category = None
+        max_count = 0
+        
+        for produce in produce_items:
+            category = produce.produce_type.get_category_display()
+            if category in category_counts:
+                category_counts[category] += 1
+            else:
+                category_counts[category] = 1
+                
+            if category_counts[category] > max_count:
+                max_count = category_counts[category]
+                most_common_category = category
+                
+            total_quantity += produce.quantity
+        
+        # Get order status counts
+        pending_orders_count = Order.objects.filter(
+            cooperative=request.user, 
+            status__in=['new', 'processing', 'delivery']
+        ).count()
+        
+        completed_orders_count = Order.objects.filter(
+            cooperative=request.user, 
+            status='delivered'
+        ).count()
+        
+        # Calculate average order value
+        avg_order_value = 0
+        if order_count > 0:
+            avg_order_value = Order.objects.filter(
+                cooperative=request.user
+            ).aggregate(avg=Sum('total_price') / order_count)['avg'] or 0
+        
+        # Get order status distribution
+        order_status_counts = {}
+        for status_choice, status_display in Order.STATUS_CHOICES:
+            count = Order.objects.filter(cooperative=request.user, status=status_choice).count()
+            if count > 0:
+                order_status_counts[status_display] = count
+        
         context = {
             'view': view,
             'farmers': Farmer.objects.filter(cooperative=request.user),
-            'produce_items': CooperativeProduce.objects.filter(cooperative=request.user),
-            'recent_orders': Order.objects.filter(cooperative=request.user).order_by('-created_at')[:5],
-            'order_count': Order.objects.filter(cooperative=request.user).count(),
-            'produce_count': CooperativeProduce.objects.filter(cooperative=request.user).count(),
-            'farmer_count': Farmer.objects.filter(cooperative=request.user).count()
+            'produce_items': produce_items[:5],
+            'recent_orders': recent_orders,
+            'produce_count': produce_count,
+            'farmer_count': farmer_count,
+            'order_count': order_count,
+            'total_revenue': total_revenue,
+            'category_counts': category_counts,
+            'most_common_category': most_common_category,
+            'total_quantity': total_quantity,
+            'pending_orders_count': pending_orders_count,
+            'completed_orders_count': completed_orders_count,
+            'avg_order_value': avg_order_value,
+            'order_status_counts': order_status_counts,
         }
     
     return render(request, 'cooperative/dashboard.html', context)
@@ -518,4 +646,26 @@ def dashboard_test(request):
     A test view to debug dashboard styling issues
     """
     return render(request, 'cooperative/dashboard_base_test.html')
+
+# Add this new view for logout
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('cooperative_login')
+
+@login_required
+def check_approval_status(request):
+    """
+    AJAX endpoint to check if a user's approval status has changed
+    """
+    if not request.user.is_authenticated or request.user.role != 'cooperative':
+        return JsonResponse({'is_approved': False})
+    
+    # Force refresh from database to get the latest status
+    request.user.refresh_from_db()
+    
+    # Log the check
+    logger.info(f"Checking approval status for {request.user.email}: {request.user.is_approved}")
+    
+    return JsonResponse({'is_approved': request.user.is_approved})
 

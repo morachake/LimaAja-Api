@@ -13,7 +13,7 @@ from .serializers import (
     UserSerializer, LoginSerializer, PasswordResetRequestSerializer, 
     PasswordResetConfirmSerializer, ChangePasswordSerializer, UserProfileSerializer,
     CustomTokenObtainPairSerializer, TokenVerifySerializer, EmailVerificationSerializer,
-    UserDetailsSerializer, CooperativeApprovalSerializer, AdminLoginAsCooperativeSerializer
+    UserDetailsSerializer, CooperativeApprovalSerializer, AdminLoginAsCooperativeSerializer,LogoutSerializer
 )
 
 User = get_user_model()
@@ -141,16 +141,23 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 class LogoutView(generics.GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    serializer_class = LogoutSerializer  # Add the serializer class
 
     def post(self, request):
         try:
-            refresh_token = request.data["refresh_token"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            refresh_token = request.data.get("refresh_token")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            return Response({"success": "Successfully logged out."}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": "Successfully logged out."}, status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        # For browser-based logout, we don't need to validate any data
+        # Just return a success response
+        return Response({"success": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 class TokenVerifyView(generics.GenericAPIView):
     serializer_class = TokenVerifySerializer

@@ -80,4 +80,6 @@ class CooperativeApprovalSerializer(serializers.Serializer):
 
 class AdminLoginAsCooperativeSerializer(serializers.Serializer):
     cooperative_id = serializers.IntegerField()
-
+    
+class LogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField(required=False)
