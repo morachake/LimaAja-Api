@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from .models import (
   Farmer, Product, ProduceType, ProduceVariant, CooperativeProduce,
   Customer, Order, OrderItem, OrderReview,
-  Transaction, BankAccount
+  Transaction, BankAccount, Category
 )
 from rest_framework.permissions import IsAuthenticated
 from .serializers import FarmerSerializer, ProductSerializer, FarmerDetailSerializer
@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.conf import settings
 import os
+from datetime import timedelta
 from django.utils import timezone
 from django.http import JsonResponse
 from django.core.mail import send_mail
@@ -328,7 +329,7 @@ def cooperative_dashboard(request):
         # Filter produce based on category
         produce_items = CooperativeProduce.objects.filter(cooperative=request.user)
         if category != 'all':
-            produce_items = produce_items.filter(produce_type__category=category)
+            produce_items = produce_items.filter(produce_type__category__slug=category)
 
         # Get produce types for the form
         produce_types = ProduceType.objects.all()
@@ -339,11 +340,11 @@ def cooperative_dashboard(request):
             'produce_items': produce_items,
             'produce_types': produce_types,
             'total_produce': CooperativeProduce.objects.filter(cooperative=request.user).count(),
-            'vegetables_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='vegetables').count(),
-            'fruits_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='fruits').count(),
-            'nuts_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='nuts').count(),
-            'herbs_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='herbs').count(),
-            'grains_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='grains').count(),
+            'vegetables_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category__slug='vegetables').count(),
+            'fruits_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category__slug='fruits').count(),
+            'nuts_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category__slug='nuts').count(),
+            'herbs_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category__slug='herbs').count(),
+            'grains_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category__slug='grains').count(),
             'view_mode': request.GET.get('view_mode', 'grid'),
         }
     elif view == 'orders':
@@ -431,162 +432,242 @@ def cooperative_dashboard(request):
             'farmers_count': farmers.count(),
         }
     else:
-        # Overview dashboard
-        produce_items = CooperativeProduce.objects.filter(cooperative=request.user).order_by('-created_at')
-        recent_orders = Order.objects.filter(cooperative=request.user).order_by('-created_at')[:5]
+        # Overview dashboard - Calculate all real statistics
+        today = timezone.now().date()
+        first_day_of_month = today.replace(day=1)
+        last_month_start = (first_day_of_month - timedelta(days=1)).replace(day=1)
+        last_month_end = first_day_of_month - timedelta(days=1)
         
-        # Get counts for dashboard cards
-        produce_count = produce_items.count()
-        farmer_count = Farmer.objects.filter(cooperative=request.user).count()
-        order_count = Order.objects.filter(cooperative=request.user).count()
+        # Farmer statistics
+        farmers = Farmer.objects.filter(cooperative=request.user)
+        farmer_count = farmers.count()
         
-        # Calculate total revenue
-        total_revenue = Order.objects.filter(
-            cooperative=request.user, 
-            status='delivered'
+        # New farmers this month
+        new_farmers_count = farmers.filter(created_at__gte=first_day_of_month).count()
+        
+        # Farmers added last month
+        last_month_farmers = farmers.filter(
+            created_at__gte=last_month_start,
+            created_at__lte=last_month_end
+        ).count()
+        
+        # Calculate growth percentage
+        farmer_growth = 0
+        if last_month_farmers > 0:
+            farmer_growth = round((new_farmers_count / last_month_farmers) * 100)
+        
+        # Order statistics
+        orders = Order.objects.filter(cooperative=request.user)
+        order_count = orders.count()
+        
+        # New orders this month
+        new_orders_count = orders.filter(created_at__gte=first_day_of_month).count()
+        
+        # Orders from last month
+        last_month_orders = orders.filter(
+            created_at__gte=last_month_start,
+            created_at__lte=last_month_end
+        ).count()
+        
+        # Calculate order growth percentage
+        order_growth = 0
+        if last_month_orders > 0:
+            order_growth = round((new_orders_count / last_month_orders) * 100)
+        
+        # Revenue statistics
+        total_revenue = orders.filter(status='delivered').aggregate(
+            total=Sum('total_price')
+        )['total'] or 0
+        
+        # Revenue this month
+        current_month_revenue = orders.filter(
+            status='delivered',
+            created_at__gte=first_day_of_month
         ).aggregate(total=Sum('total_price'))['total'] or 0
         
-        # Get category counts for produce summary
-        category_counts = {}
-        total_quantity = 0
-        most_common_category = None
-        max_count = 0
+        # Revenue last month
+        last_month_revenue = orders.filter(
+            status='delivered',
+            created_at__gte=last_month_start,
+            created_at__lte=last_month_end
+        ).aggregate(total=Sum('total_price'))['total'] or 0
         
-        for produce in produce_items:
-            category = produce.produce_type.get_category_display()
-            if category in category_counts:
-                category_counts[category] += 1
-            else:
-                category_counts[category] = 1
-                
-            if category_counts[category] > max_count:
-                max_count = category_counts[category]
-                most_common_category = category
-                
-            total_quantity += produce.quantity
+        # Calculate revenue growth
+        revenue_growth = 0
+        if last_month_revenue > 0:
+            revenue_growth = round((current_month_revenue / last_month_revenue - 1) * 100)
         
-        # Get order status counts
-        pending_orders_count = Order.objects.filter(
-            cooperative=request.user, 
-            status__in=['new', 'processing', 'delivery']
-        ).count()
+        # Order status counts for tracking
+        processing_count = orders.filter(status='processing').count()
+        transit_count = orders.filter(status='delivery').count()
+        delivered_count = orders.filter(status='delivered').count()
         
-        completed_orders_count = Order.objects.filter(
-            cooperative=request.user, 
-            status='delivered'
-        ).count()
+        # Calculate percentages for progress bars
+        total_tracked_orders = processing_count + transit_count + delivered_count
+        if total_tracked_orders > 0:
+            processing_percentage = round((processing_count / total_tracked_orders) * 100)
+            transit_percentage = round((transit_count / total_tracked_orders) * 100)
+            delivered_percentage = round((delivered_count / total_tracked_orders) * 100)
+        else:
+            processing_percentage = transit_percentage = delivered_percentage = 0
         
-        # Calculate average order value
-        avg_order_value = 0
-        if order_count > 0:
-            avg_order_value = Order.objects.filter(
-                cooperative=request.user
-            ).aggregate(avg=Sum('total_price') / order_count)['avg'] or 0
+        # Get recent orders
+        recent_orders = orders.order_by('-created_at')[:7]
         
-        # Get order status distribution
-        order_status_counts = {}
-        for status_choice, status_display in Order.STATUS_CHOICES:
-            count = Order.objects.filter(cooperative=request.user, status=status_choice).count()
-            if count > 0:
-                order_status_counts[status_display] = count
+        # Get produce items and category statistics
+        produce_items = CooperativeProduce.objects.filter(cooperative=request.user)
+        
+        # Calculate category statistics
+        categories_db = Category.objects.all().order_by('display_order')
+        categories = []
+        
+        for category in categories_db:
+            # Get produce items in this category for this cooperative
+            cat_items = produce_items.filter(produce_type__category__slug=category.slug)
+            cat_count = cat_items.count()
+            cat_quantity = cat_items.aggregate(total=Sum('quantity'))['total'] or 0
+            
+            # Calculate percentage based on inventory levels
+            max_expected = 100  # This could be a target or maximum expected inventory
+            percentage = min(round((cat_quantity / max_expected) * 100) if max_expected > 0 else 0, 100)
+            
+            categories.append({
+                'name': category.name,
+                'slug': category.slug,
+                'count': cat_count,
+                'quantity': cat_quantity,
+                'percentage': percentage,
+                'remaining': cat_quantity,
+                'icon': category.icon,
+                'color': category.color
+            })
         
         # Get recent farmers
-        recent_farmers = Farmer.objects.filter(cooperative=request.user).order_by('-created_at')[:5]
+        recent_farmers = farmers.order_by('-created_at')[:5]
         
         context = {
             'view': view,
             'farmers': recent_farmers,
             'produce_items': produce_items[:5],
             'recent_orders': recent_orders,
-            'produce_count': produce_count,
+            
+            # Farmer statistics
             'farmer_count': farmer_count,
+            'new_farmers_count': new_farmers_count,
+            'farmer_growth': farmer_growth,
+            
+            # Order statistics
             'order_count': order_count,
+            'new_orders_count': new_orders_count,
+            'order_growth': order_growth,
+            
+            # Revenue statistics
             'total_revenue': total_revenue,
-            'category_counts': category_counts,
-            'most_common_category': most_common_category,
-            'total_quantity': total_quantity,
-            'pending_orders_count': pending_orders_count,
-            'completed_orders_count': completed_orders_count,
-            'avg_order_value': avg_order_value,
-            'order_status_counts': order_status_counts,
+            'revenue_growth': revenue_growth,
+            'revenue_increase': current_month_revenue,
+            
+            # Order tracking
+            'processing_count': processing_count,
+            'transit_count': transit_count,
+            'delivered_count': delivered_count,
+            'processing_percentage': processing_percentage,
+            'transit_percentage': transit_percentage,
+            'delivered_percentage': delivered_percentage,
+            
+            # Categories
+            'categories': categories,
+            
+            # Other stats
+            'pending_orders_count': orders.filter(status__in=['new', 'processing', 'delivery']).count(),
+            'completed_orders_count': delivered_count,
         }
 
     return render(request, 'cooperative/dashboard.html', context)
 
 
-      
-
 
 @login_required
 def produce_detail(request, produce_type_id):
-  produce_type = get_object_or_404(ProduceType, id=produce_type_id)
-  variants = CooperativeProduce.objects.filter(
-      cooperative=request.user,
-      produce_type=produce_type
-  ).select_related('variant')
-  
-  # Group variants by grade
-  variants_by_grade = {}
-  total_quantity = 0
-  for variant in variants:
-      if variant.variant.grade not in variants_by_grade:
-          variants_by_grade[variant.variant.grade] = {
-              'grade': variant.variant.grade,
-              'price': variant.produce_type.base_price * variant.variant.price_multiplier,
-              'quantity': variant.quantity,
-              'provinces': [variant.province],
-              'farmers_count': 3  # Placeholder - implement actual count
-          }
-      else:
-          variants_by_grade[variant.variant.grade]['quantity'] += variant.quantity
-          if variant.province not in variants_by_grade[variant.variant.grade]['provinces']:
-              variants_by_grade[variant.variant.grade]['provinces'].append(variant.province)
-      total_quantity += variant.quantity
-  
-  # Sort variants by grade
-  sorted_variants = sorted(variants_by_grade.values(), key=lambda x: x['grade'])
-  
-  context = {
-      'produce_type': produce_type,
-      'variants': sorted_variants,
-      'total_variants': len(variants_by_grade),
-      'total_quantity': total_quantity
-  }
-  
-  return render(request, 'cooperative/produce_detail.html', context)
+    # Check if user is a cooperative
+    if request.user.role != 'cooperative':
+        messages.error(request, 'You do not have access to this page')
+        return redirect('cooperative_login')
+    
+    # Get the produce type
+    produce_type = get_object_or_404(ProduceType, id=produce_type_id)
+    
+    # Get all variants of this produce type for this cooperative
+    cooperative_produces = CooperativeProduce.objects.filter(
+        cooperative=request.user,
+        produce_type=produce_type
+    )
+    
+    # Group by location to get provinces
+    provinces = cooperative_produces.values_list('location', flat=True).distinct()
+    
+    # Calculate total quantity
+    total_quantity = cooperative_produces.aggregate(total=Sum('quantity'))['total'] or 0
+    
+    # Prepare variants data
+    variants = []
+    for produce in cooperative_produces:
+        variant_data = {
+            'id': produce.id,
+            'quantity': produce.quantity,
+            'grade': produce.grade,
+            'location': produce.location,
+            'price': produce.produce_type.price_per_unit,
+            'farmers_count': 1  # Placeholder, you might want to calculate this based on your data model
+        }
+        variants.append(variant_data)
+    
+    context = {
+        'view': 'products',
+        'produce_type': produce_type,
+        'variants': variants,
+        'total_variants': len(variants),
+        'total_quantity': total_quantity,
+        'provinces': provinces
+    }
+    
+    return render(request, 'cooperative/dashboard/produce_detail.html', context)
+
 
 @login_required
 def add_produce(request):
-  if request.method == 'POST':
-      produce_type_id = request.POST.get('produce_type')
-      variant_grade = request.POST.get('variants[]')  # Changed from variants to variants[]
-      quantity = request.POST.get('quantity')
-      province = request.POST.get('province')
-      
-      try:
-          produce_type = ProduceType.objects.get(id=produce_type_id)
-          variant = ProduceVariant.objects.get(
-              produce_type=produce_type,
-              grade=variant_grade
-          )
-          
-          # Create the cooperative produce
-          CooperativeProduce.objects.create(
-              cooperative=request.user,
-              produce_type=produce_type,
-              variant=variant,
-              quantity=quantity,
-              province=province
-          )
-          
-          messages.success(request, 'Produce added successfully')
-          
-      except (ProduceType.DoesNotExist, ProduceVariant.DoesNotExist) as e:
-          messages.error(request, f'Error adding produce: {str(e)}')
-      except Exception as e:
-          messages.error(request, f'An unexpected error occurred: {str(e)}')
-  
-  return redirect('/cooperative/dashboard/?view=products')
+    if request.method == 'POST':
+        try:
+            # Get form data
+            produce_type_id = request.POST.get('produce_type')
+            quantity = request.POST.get('quantity')
+            location = request.POST.get('location')
+            grade = request.POST.get('grade', 'A')  # Default to Grade A if not provided
+            
+            # Validate data
+            if not produce_type_id or not quantity or not location:
+                messages.error(request, 'Please fill in all required fields')
+                return redirect('cooperative_dashboard')
+            
+            # Get the produce type
+            produce_type = get_object_or_404(ProduceType, id=produce_type_id)
+            
+            # Create the cooperative produce
+            CooperativeProduce.objects.create(
+                cooperative=request.user,
+                produce_type=produce_type,
+                quantity=quantity,
+                location=location,
+                grade=grade
+            )
+            
+            messages.success(request, f'{produce_type.name} added successfully')
+        except Exception as e:
+            messages.error(request, f'Error adding produce: {str(e)}')
+        
+        return redirect('/cooperative/dashboard/?view=products')    
+    # If not POST, redirect to dashboard
+    return redirect('cooperative_dashboard')
+
 
 @login_required
 def update_produce(request, produce_id):

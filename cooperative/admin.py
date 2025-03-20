@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Farmer, Product, ProduceType, ProduceVariant, CooperativeProduce,
     Customer, Order, OrderItem, OrderReview,
-    Transaction, BankAccount
+    Transaction, BankAccount,Category
 )
 
 # Register basic models
@@ -47,4 +47,16 @@ class BankAccountAdmin(admin.ModelAdmin):
     list_filter = ('bank_name', 'is_primary')
     search_fields = ('account_holder_name', 'account_number')
 
-@admin.register(Category)
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'display_order', 'created_at')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name', 'description')
+    list_filter = ('created_at',)
+    ordering = ('display_order', 'name')
+
+
+class ProduceTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'unit', 'price_per_unit', 'is_active')
+    list_filter = ('category', 'is_active')
+    search_fields = ('name', 'description')

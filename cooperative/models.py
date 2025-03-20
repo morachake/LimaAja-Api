@@ -90,8 +90,8 @@ class ProduceType(models.Model):
     price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='produce_types/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True,blank=True, null=True)
     
     def __str__(self):
         return f"{self.name} ({self.category.name})"
@@ -109,20 +109,25 @@ class ProduceVariant(models.Model):
         return f"{self.produce_type.name} - Grade {self.grade}"
 
 class CooperativeProduce(models.Model):
-    cooperative = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cooperative_produce')
-    produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE)
-    variant = models.ForeignKey(ProduceVariant, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)  # in tons
-    province = models.CharField(max_length=100)
+    cooperative = models.ForeignKey(User, on_delete=models.CASCADE, related_name='produce_items')
+    produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE, related_name='cooperative_items')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    location = models.CharField(max_length=100)
+    grade = models.CharField(max_length=1, choices=[
+        ('A', 'Grade A'),
+        ('B', 'Grade B'),
+        ('C', 'Grade C'),
+        ('D', 'Grade D'),
+        ('E', 'Grade E'),
+    ], default='A')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.produce_type.name} - {self.quantity} tons"
+        return f"{self.produce_type.name} - {self.quantity} {self.produce_type.unit} ({self.location})"
     
-    @property
-    def price(self):
-        return self.produce_type.base_price * self.variant.price_multiplier
+    class Meta:
+        ordering = ['-created_at']
 
 # Order models
 class Customer(models.Model):
