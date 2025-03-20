@@ -14,7 +14,7 @@
   <div class="dashboard-header">
     <div class="welcome-section">
       <h1>Welcome back, {{ request.user.full_name }}</h1>
-      <p>You have {{ pending_orders_count|default:"2" }} new orders!</p>
+      <p>You have {{ pending_orders_count|default:"0" }} new orders!</p>
     </div>
     <div class="date-filter">
       <div class="date-filter-label">

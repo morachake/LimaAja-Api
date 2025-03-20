@@ -16,6 +16,7 @@
       <div class="sidebar">
           <div class="sidebar-header">
               <img src="/static/images/logo.png" alt="Lima-Aja Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iIzRkN2MwZiIvPjxwYXRoIGQ9Ik0xMiAyMEgyOE0yMCAxMlYyOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4='">
+              <h1>LIMA-AJA</h1>
           </div>
           <div class="sidebar-menu">
               <a href="{% url 'cooperative_dashboard' %}" class="menu-item {% if view == 'overview' %}active{% endif %}">
@@ -76,8 +77,8 @@
               <div class="user-profile">
                   <img src="/static/images/user-avatar.png" alt="User Avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI2U5ZjdlMCIvPjxjaXJjbGUgY3g9IjE4IiBjeT0iMTUiIHI9IjYiIGZpbGw9IiM0ZDdjMGYiLz48cGF0aCBkPSJNOCAyOWMwLTUuNTIzIDQuNDc3LTEwIDEwLTEwczEwIDQuNDc3IDEwIDEwSDhaIiBmaWxsPSIjNGQ3YzBmIi8+PC9zdmc+'">
                   <div class="user-info">
-                      <div class="name">Adediwura Adedigba</div>
-                      <div class="role">Admin</div>
+                      <div class="name">{{ request.user.full_name }}</div>
+                      <div class="role">Cooperative Admin</div>
                   </div>
                   <i class="fas fa-chevron-down"></i>
               </div>

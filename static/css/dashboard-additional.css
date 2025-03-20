@@ -25,21 +25,22 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
+/* Update the sidebar header logo size */
 .sidebar-header {
   padding: 16px 20px;
-  height: 60px;
+  height: 70px; /* Increased from 60px */
   display: flex;
   align-items: center;
 }
 
 .sidebar-header img {
-  width: 32px;
-  height: 32px;
+  width: 45px; /* Increased from 32px */
+  height: 45px; /* Increased from 32px */
 }
 
 .sidebar-header h1 {
   letter-spacing: 0.5px;
-  font-size: 16px;
+  font-size: 18px; /* Increased from 16px */
   font-weight: 600;
   margin-left: 12px;
 }
@@ -180,18 +181,16 @@
   border-radius: 50%;
 }
 
-.user-profile .user-info {
-  margin: 0 8px;
-}
-
+/* Add a cooperative name display in the header */
 .user-profile .user-info .name {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px; /* Increased from 14px */
+  font-weight: 600; /* Increased from 500 */
+  color: var(--text-primary);
 }
 
 .user-profile .user-info .role {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* Dashboard content refinements */
