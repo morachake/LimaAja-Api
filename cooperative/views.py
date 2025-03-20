@@ -719,38 +719,39 @@ def produce_detail(request, produce_type_id):
 
 @login_required
 def add_produce(request):
-    if request.method == 'POST':
-        try:
-            # Get form data
-            produce_type_id = request.POST.get('produce_type')
-            quantity = request.POST.get('quantity')
-            location = request.POST.get('location')
-            grade = request.POST.get('grade', 'A')  # Default to Grade A if not provided
-            
-            # Validate data
-            if not produce_type_id or not quantity or not location:
-                messages.error(request, 'Please fill in all required fields')
-                return redirect('cooperative_dashboard')
-            
-            # Get the produce type
-            produce_type = get_object_or_404(ProduceType, id=produce_type_id)
-            
-            # Create the cooperative produce
-            CooperativeProduce.objects.create(
-                cooperative=request.user,
-                produce_type=produce_type,
-                quantity=quantity,
-                location=location,
-                grade=grade
-            )
-            
-            messages.success(request, f'{produce_type.name} added successfully')
-        except Exception as e:
-            messages.error(request, f'Error adding produce: {str(e)}')
-        
-        return redirect('/cooperative/dashboard/?view=products')    
-    # If not POST, redirect to dashboard
-    return redirect('cooperative_dashboard')
+  if request.method == 'POST':
+      try:
+          # Get form data
+          produce_type_id = request.POST.get('produce_type')
+          quantity = request.POST.get('quantity')
+          location = request.POST.get('location')
+          grade = request.POST.get('grade', 'A')  # Default to Grade A if not provided
+          
+          # Validate data
+          if not produce_type_id or not quantity or not location:
+              messages.error(request, 'Please fill in all required fields')
+              return redirect('cooperative_dashboard')
+          
+          # Get the produce type
+          produce_type = get_object_or_404(ProduceType, id=produce_type_id)
+          
+          # Create the cooperative produce
+          CooperativeProduce.objects.create(
+              cooperative=request.user,
+              produce_type=produce_type,
+              quantity=quantity,
+              location=location,
+              grade=grade
+          )
+          
+          messages.success(request, f'{produce_type.name} added successfully')
+      except Exception as e:
+          messages.error(request, f'Error adding produce: {str(e)}')
+      
+      # Redirect back to the products page with view parameter
+      return redirect('/cooperative/dashboard/?view=products')    
+  # If not POST, redirect to dashboard
+  return redirect('cooperative_dashboard')
 
 
 @login_required
@@ -775,14 +776,14 @@ def update_produce(request, produce_id):
               produce.province = province
           
           produce.save()
-          messages.success(request, 'Produce updated successfully')
+          messages.success(request, f'Produce {produce.produce_type.name} updated successfully')
           
       except (CooperativeProduce.DoesNotExist, ProduceVariant.DoesNotExist) as e:
           messages.error(request, f'Error updating produce: {str(e)}')
       except Exception as e:
           messages.error(request, f'An unexpected error occurred: {str(e)}')
-  
-  # Redirect back to the products page
+
+  # Redirect back to the products page with view parameter
   return redirect('/cooperative/dashboard/?view=products')
 
 @login_required
@@ -790,14 +791,15 @@ def delete_produce(request, produce_id):
   if request.method == 'POST':
       try:
           produce = CooperativeProduce.objects.get(id=produce_id, cooperative=request.user)
+          produce_name = produce.produce_type.name
           produce.delete()
-          messages.success(request, 'Produce deleted successfully')
+          messages.success(request, f'Produce {produce_name} deleted successfully')
       except CooperativeProduce.DoesNotExist:
           messages.error(request, 'Produce not found')
       except Exception as e:
           messages.error(request, f'An unexpected error occurred: {str(e)}')
-  
-  # Redirect back to the products page
+
+  # Redirect back to the products page with view parameter
   return redirect('/cooperative/dashboard/?view=products')
 
 @login_required
