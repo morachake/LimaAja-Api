@@ -451,19 +451,26 @@ def cooperative_dashboard(request):
         }
     elif view == 'finance':
         # Get wallet balance (sum of received minus sent)
-        received_amount = Transaction.objects.filter(
-            cooperative=request.user, 
-            transaction_type='received',
-            status='success'
-        ).aggregate(total=Sum('amount'))['total'] or 0
         
-        sent_amount = Transaction.objects.filter(
+        # Get wallet balance (sum of delivered orders minus withdrawals)
+        # Calculate total from delivered orders
+        delivered_orders_total = Order.objects.filter(
+            cooperative=request.user,
+            status='delivered'
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+        
+        # Calculate withdrawals (sent transactions)
+        withdrawals_total = Transaction.objects.filter(
             cooperative=request.user, 
             transaction_type='sent',
-            status='success'
+            status__in=['success', 'pending']
         ).aggregate(total=Sum('amount'))['total'] or 0
         
-        wallet_balance = received_amount - sent_amount
+        # Calculate the available balance
+        wallet_balance = delivered_orders_total - withdrawals_total
+        
+        # Ensure balance is not negative
+        wallet_balance = max(0, wallet_balance)
         
         # Get bank accounts
         bank_accounts = BankAccount.objects.filter(cooperative=request.user)
@@ -830,6 +837,8 @@ def update_order_status(request, order_id):
   
   return redirect('order_detail', order_id=order_id)
 
+
+
 @login_required
 def request_money(request):
   if request.method == 'POST':
@@ -841,24 +850,29 @@ def request_money(request):
           # Validate amount
           amount = float(amount)
           
-          # Get wallet balance
-          received_amount = Transaction.objects.filter(
-              cooperative=request.user, 
-              transaction_type='received',
-              status='success'
-          ).aggregate(total=Sum('amount'))['total'] or 0
+          # Get wallet balance from delivered orders
+          delivered_orders_total = Order.objects.filter(
+              cooperative=request.user,
+              status='delivered'
+          ).aggregate(total=Sum('total_price'))['total'] or 0
           
-          sent_amount = Transaction.objects.filter(
+          # Calculate withdrawals
+          withdrawals_total = Transaction.objects.filter(
               cooperative=request.user, 
               transaction_type='sent',
-              status='success'
+              status__in=['success', 'pending']
           ).aggregate(total=Sum('amount'))['total'] or 0
           
-          wallet_balance = received_amount - sent_amount
+          # Calculate available balance
+          wallet_balance = max(0, delivered_orders_total - withdrawals_total)
           
           # Check if amount is valid
           if amount <= 0:
               messages.error(request, 'Amount must be greater than zero')
+              return redirect('/cooperative/dashboard/?view=finance')
+          
+          if wallet_balance <= 0:
+              messages.error(request, 'You have no funds available for withdrawal')
               return redirect('/cooperative/dashboard/?view=finance')
           
           if amount > wallet_balance:
