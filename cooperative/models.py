@@ -39,33 +39,67 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
-
-# New models for produce management
-class ProduceType(models.Model):
-    CATEGORY_CHOICES = [
-        ('vegetables', 'Vegetables'),
-        ('fruits', 'Fruits'),
-        ('nuts', 'Nuts'),
-        ('herbs', 'Herbs'),
-        ('grains', 'Grains'),
-        ('other', 'Other'),
-    ]
     
+    
+class Category(models.Model):
     name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
     description = models.TextField(blank=True, null=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
-    base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='produce/', blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)  # For external images
+    icon = models.CharField(max_length=50, blank=True, null=True, help_text="Font Awesome icon class")
+    color = models.CharField(max_length=20, blank=True, null=True, help_text="Color code for the category")
+    display_order = models.PositiveIntegerField(default=0, help_text="Order to display categories")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['display_order', 'name']
     
     def __str__(self):
         return self.name
     
-    def get_image_url(self):
-        if self.image:
-            return self.image.url
-        return self.image_url or '/placeholder.svg?height=400&width=600'
+    def get_produce_count(self, cooperative=None):
+        """Get count of produce items in this category for a cooperative"""
+        query = self.produce_types.all()
+        if cooperative:
+            return CooperativeProduce.objects.filter(
+                produce_type__category=self.slug,
+                cooperative=cooperative
+            ).count()
+        return query.count()
+    
+    def get_total_quantity(self, cooperative=None):
+        """Get total quantity of produce items in this category for a cooperative"""
+        if cooperative:
+            return CooperativeProduce.objects.filter(
+                produce_type__category=self.slug,
+                cooperative=cooperative
+            ).aggregate(total=models.Sum('quantity'))['total'] or 0
+        return 0
+    
+# New models for produce management
+class ProduceType(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE, 
+        related_name='produce_types'
+    )
+    unit = models.CharField(max_length=20, default='kg')
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to='produce_types/', blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.name} ({self.category.name})"
 
+
+
+    
+    
 class ProduceVariant(models.Model):
     produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE, related_name='variants')
     grade = models.CharField(max_length=10)  # e.g., "A", "B", "C"

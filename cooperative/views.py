@@ -5,6 +5,7 @@ from .models import (
   Customer, Order, OrderItem, OrderReview,
   Transaction, BankAccount
 )
+from rest_framework.permissions import IsAuthenticated
 from .serializers import FarmerSerializer, ProductSerializer, FarmerDetailSerializer
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -846,3 +847,40 @@ def set_primary_bank_account(request, account_id):
     
     return redirect('/cooperative/dashboard/?view=finance')
 
+
+
+# API Views for Farmers
+class FarmerListView(generics.ListAPIView):
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Farmer.objects.filter(cooperative=self.request.user)
+
+class FarmerDetailView(generics.RetrieveAPIView):
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Farmer.objects.filter(cooperative=self.request.user)
+
+class FarmerCreateView(generics.CreateAPIView):
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        serializer.save(cooperative=self.request.user)
+
+class FarmerUpdateView(generics.UpdateAPIView):
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Farmer.objects.filter(cooperative=self.request.user)
+
+class FarmerDeleteView(generics.DestroyAPIView):
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Farmer.objects.filter(cooperative=self.request.user)

@@ -47,3 +47,4 @@ class BankAccountAdmin(admin.ModelAdmin):
     list_filter = ('bank_name', 'is_primary')
     search_fields = ('account_holder_name', 'account_number')
 
+@admin.register(Category)

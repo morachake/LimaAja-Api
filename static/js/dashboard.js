@@ -61,3 +61,44 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 })
 
+// Dashboard JavaScript
+
+// document.addEventListener("DOMContentLoaded", () => {
+//   // Mobile sidebar toggle
+//   const sidebarToggle = document.querySelector(".cooperative-info .toggle")
+//   const sidebar = document.querySelector(".sidebar")
+
+//   if (sidebarToggle) {
+//     sidebarToggle.addEventListener("click", () => {
+//       sidebar.classList.toggle("open")
+//     })
+//   }
+
+//   // Close sidebar when clicking outside on mobile
+//   document.addEventListener("click", (event) => {
+//     const isClickInsideSidebar = sidebar.contains(event.target)
+//     const isClickOnToggle = sidebarToggle && sidebarToggle.contains(event.target)
+
+//     if (!isClickInsideSidebar && !isClickOnToggle && window.innerWidth < 992) {
+//       sidebar.classList.remove("open")
+//     }
+//   })
+
+//   // Handle window resize
+//   window.addEventListener("resize", () => {
+//     if (window.innerWidth >= 992) {
+//       sidebar.classList.remove("open")
+//     }
+//   })
+
+//   // Initialize any charts or interactive elements
+//   initializeCharts()
+// })
+
+// function initializeCharts() {
+//   // This function would initialize any charts using a library like Chart.js
+//   // For now, it's just a placeholder
+//   console.log("Charts initialized")
+// }
+
+

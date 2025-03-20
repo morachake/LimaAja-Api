@@ -1,177 +1,273 @@
 {% extends 'cooperative/dashboard_base.html' %}
-{% load static %}
 
-{% block dashboard_content %}
-  {% if view == 'overview' %}
-      <div class="main-container">
-          <h2 class="section-title">Dashboard Overview</h2>
-          
-          <!-- Dashboard Cards -->
-          <div class="dashboard-cards">
-              <div class="dashboard-card">
-                  <div class="card-header">
-                      <div class="card-title">Total Produce</div>
-                      <div class="card-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M3 2h18v8H3zM3 14h18v8H3z"></path>
-                          </svg>
-                      </div>
-                  </div>
-                  <div class="card-value">{{ produce_items.count }}</div>
-                  <div class="card-description">Total produce items listed</div>
-              </div>
-              
+{% block title %}
+{% if view == 'overview' %}Dashboard - Lima-Aja Cooperative{% endif %}
+{% if view == 'products' %}Farm Produce - Lima-Aja Cooperative{% endif %}
+{% if view == 'orders' %}Orders - Lima-Aja Cooperative{% endif %}
+{% if view == 'finance' %}Finance - Lima-Aja Cooperative{% endif %}
+{% if view == 'farmers' %}Farmers - Lima-Aja Cooperative{% endif %}
+{% if view == 'settings' %}Settings - Lima-Aja Cooperative{% endif %}
+{% endblock %}
 
+{% block content %}
+{% if view == 'overview' %}
+  <div class="dashboard-header">
+    <div class="welcome-section">
+      <h1>Welcome back, {{ request.user.full_name }}</h1>
+      <p>You have {{ pending_orders_count|default:"2" }} new orders!</p>
+    </div>
+    <div class="date-filter">
+      <div class="date-filter-label">
+        <span class="dot"></span>
+        This Month
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="date-range">
+        <i class="far fa-calendar"></i>
+        Jan 25, 2025 - March 24, 2025
+        <i class="fas fa-chevron-down"></i>
+      </div>
+    </div>
+  </div>
 
-              <div class="dashboard-card">
-                  <div class="card-header">
-                      <div class="card-title">Farmers</div>
-                      <div class="card-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                              <circle cx="9" cy="7" r="4"></circle>
-                              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                          </svg>
-                      </div>
-                  </div>
-                  <div class="card-value">{{ farmers.count }}</div>
-                  <div class="card-description">Registered farmers</div>
-              </div>
-              
-              
-              <div class="dashboard-card">
-                  <div class="card-header">
-                      <div class="card-title">Orders</div>
-                      <div class="card-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <circle cx="9" cy="21" r="1"></circle>
-                              <circle cx="20" cy="21" r="1"></circle>
-                              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                          </svg>
-                      </div>
-                  </div>
-                  <div class="card-value">0</div>
-                  <div class="card-description">Pending orders</div>
-              </div>
-              
-              <div class="dashboard-card">
-                  <div class="card-header">
-                      <div class="card-title">Revenue</div>
-                      <div class="card-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <line x1="12" y1="1" x2="12" y2="23"></line>
-                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                          </svg>
-                      </div>
-                  </div>
-                  <div class="card-value">0</div>
-                  <div class="card-description">Total revenue (RWF)</div>
-              </div>
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-title">
+          <i class="fas fa-users"></i>
+          No of Farmers
+        </div>
+        <div class="more-options"><i class="fas fa-ellipsis-h"></i></div>
+      </div>
+      <div class="stat-value">{{ farmer_count }}</div>
+      <div class="stat-change positive">
+        <span class="change-value">+{{ farmer_growth }}%</span>
+      </div>
+      <div class="stat-meta">Added {{ new_farmers_count }} Last Month</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-title">
+          <i class="fas fa-shopping-cart"></i>
+          No of Orders
+        </div>
+        <div class="more-options"><i class="fas fa-ellipsis-h"></i></div>
+      </div>
+      <div class="stat-value">{{ order_count }}</div>
+      <div class="stat-change positive">
+        <span class="change-value">+{{ order_growth }}%</span>
+      </div>
+      <div class="stat-meta">Added {{ new_orders_count }} Last Month</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-title">
+          <i class="fas fa-link"></i>
+          Total Revenue
+        </div>
+        <div class="more-options"><i class="fas fa-ellipsis-h"></i></div>
+      </div>
+      <div class="stat-value">RWF {{ total_revenue|floatformat:2 }}</div>
+      <div class="stat-change {% if revenue_growth >= 0 %}positive{% else %}negative{% endif %}">
+        <span class="change-value">{% if revenue_growth >= 0 %}+{% endif %}{{ revenue_growth }}%</span>
+      </div>
+      <div class="stat-meta">Added {{ revenue_increase|floatformat:2 }} Last Month</div>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <div class="orders-section">
+      <div class="card table-card">
+        <div class="table-header">
+          <div class="table-title">
+            <i class="fas fa-shopping-cart"></i>
+            Most Recent Orders
           </div>
-          
-          <!-- Dashboard Tables -->
-          <div class="dashboard-tables">
-              <div class="table-container">
-                  <div class="table-header">
-                      <div class="table-title">Recent Produce</div>
-                      <a href="?view=products" class="table-action">
-                          View All
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <polyline points="9 18 15 12 9 6"></polyline>
-                          </svg>
-                      </a>
-                  </div>
-                  <div class="table-content">
-                      {% if produce_items %}
-                          <table class="data-table">
-                              <thead>
-                                  <tr>
-                                      <th>Produce</th>
-                                      <th>Price</th>
-                                      <th>Quantity</th>
-                                      <th>Location</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  {% for produce in produce_items|slice:":5" %}
-                                  <tr>
-                                      <td>
-                                          <div style="display: flex; align-items: center; gap: 10px;">
-                                              {% if produce.produce_type.image %}
-                                                  <img src="{{ produce.produce_type.image.url }}" alt="{{ produce.produce_type.name }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
-                                              {% elif produce.produce_type.image_url %}
-                                                  <img src="{{ produce.produce_type.image_url }}" alt="{{ produce.produce_type.name }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
-                                              {% else %}
-                                                  <img src="{% static 'images/placeholder.jpg' %}" alt="{{ produce.produce_type.name }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
-                                              {% endif %}
-                                              <div>
-                                                  <div style="font-weight: 500;">{{ produce.produce_type.name }}</div>
-                                                  <div style="font-size: 12px; color: var(--text-secondary);">Grade {{ produce.variant.grade }}</div>
-                                              </div>
-                                          </div>
-                                      </td>
-                                      <td>RWF {{ produce.price|floatformat:2 }}</td>
-                                      <td>{{ produce.quantity }} Tons</td>
-                                      <td>{{ produce.province }}</td>
-                                  </tr>
-                                  {% endfor %}
-                              </tbody>
-                          </table>
-                      {% else %}
-                          <div class="empty-state">
-                              <div class="empty-state-icon">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                      <path d="M3 2h18v8H3zM3 14h18v8H3z"></path>
-                                  </svg>
-                              </div>
-                              <h3>No produce added yet</h3>
-                              <p>Start adding your produce to showcase to buyers.</p>
-                              <a href="?view=products" class="btn btn-primary" style="display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background-color: var(--primary-color); color: white; border-radius: 4px; text-decoration: none;">Add Produce</a>
-                          </div>
+          <a href="{% url 'cooperative_dashboard' %}?view=orders" class="see-all">
+            See All
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Order Items</th>
+                <th>Date</th>
+                <th>Total Price</th>
+                <th>Customer</th>
+                <th>Order Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in recent_orders %}
+              <tr>
+                <td class="order-id">#{{ order.id }}</td>
+                <td>
+                  {% with first_item=order.items.first %}
+                    {% if first_item %}
+                      {{ first_item.produce.produce_type.name }}
+                      {% if order.items.count > 1 %}
+                        & {{ order.items.count|add:"-1" }} more
                       {% endif %}
-                  </div>
-              </div>
-              
-              <div class="table-container">
-                  <div class="table-header">
-                      <div class="table-title">Recent Orders</div>
-                      <a href="?view=orders" class="table-action">
-                          View All
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <polyline points="9 18 15 12 9 6"></polyline>
-                          </svg>
-                      </a>
-                  </div>
-                  <div class="table-content">
-                      <div class="empty-state">
-                          <div class="empty-state-icon">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <circle cx="9" cy="21" r="1"></circle>
-                                  <circle cx="20" cy="21" r="1"></circle>
-                                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                              </svg>
-                          </div>
-                          <h3>No orders yet</h3>
-                          <p>Orders from buyers will appear here.</p>
-                      </div>
-                  </div>
-              </div>
+                    {% else %}
+                      No items
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                <td>{{ order.created_at|date:"d/m/Y" }}</td>
+                <td>RWF {{ order.total_price|floatformat:0 }}</td>
+                <td>{{ order.customer.name }}</td>
+                <td>
+                  {% if order.status == 'new' %}
+                    <div class="status-badge new">
+                      <span>New Order</span>
+                      <i class="fas fa-chevron-down"></i>
+                    </div>
+                  {% elif order.status == 'processing' %}
+                    <div class="status-badge processing">
+                      <span>Processing</span>
+                      <i class="fas fa-chevron-down"></i>
+                    </div>
+                  {% elif order.status == 'delivery' %}
+                    <div class="status-badge transit">
+                      <span>In Transit</span>
+                      <i class="fas fa-chevron-down"></i>
+                    </div>
+                  {% elif order.status == 'delivered' %}
+                    <div class="status-badge delivered">
+                      <span>Delivered</span>
+                    </div>
+                  {% elif order.status == 'cancelled' %}
+                    <div class="status-badge cancelled">
+                      <span>Cancelled</span>
+                      <i class="fas fa-chevron-down"></i>
+                    </div>
+                  {% endif %}
+                </td>
+                <td class="action-dropdown">
+                  <i class="fas fa-ellipsis-h"></i>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="empty-table">
+                  <p>No orders yet.</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-widgets">
+      <div class="card widget-card">
+        <div class="widget-header">
+          <div class="widget-title">
+            <i class="fas fa-chart-line"></i>
+            Order Tracking
           </div>
+          <div class="more-options"><i class="fas fa-ellipsis-h"></i></div>
+        </div>
+        <div class="order-tracking-content">
+          <div class="total-orders">
+            <div class="total-orders-header">
+              <div>
+                <div class="label">Total Orders</div>
+                <div class="value">{{ order_count }}</div>
+              </div>
+              <div class="time-filter">
+                <span>This Month</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+            </div>
+            <div class="change {% if order_growth >= 0 %}positive{% else %}negative{% endif %}">
+              {% if order_growth >= 0 %}+{% endif %}{{ order_growth }}% vs Last Month
+            </div>
+          </div>
+          <div class="order-status-bars">
+            <div class="status-item">
+              <div class="status-label">
+                <span class="dot processing"></span>
+                <span>Order Processing</span>
+              </div>
+              <div class="status-count">{{ processing_count }}</div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">
+                <span class="dot transit"></span>
+                <span>In Transit</span>
+              </div>
+              <div class="status-count">{{ transit_count }}</div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">
+                <span class="dot delivered"></span>
+                <span>Delivered</span>
+              </div>
+              <div class="status-count">{{ delivered_count }}</div>
+            </div>
+            <div class="status-bars">
+              <div class="bar-container">
+                <div class="bar processing" style="width: {{ processing_percentage }}%"></div>
+                <div class="bar transit" style="width: {{ transit_percentage }}%"></div>
+                <div class="bar delivered" style="width: {{ delivered_percentage }}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-  {% elif view == 'products' %}
-      {% include 'cooperative/dashboard/products.html' %}
-  {% elif view == 'orders' %}
-      {% include 'cooperative/dashboard/orders.html' %}
-  {% elif view == 'finance' %}
-      {% include 'cooperative/dashboard/finance.html' %}
-  {% elif view == 'settings' %}
-      {% include 'cooperative/dashboard/settings.html' %}
-  {% else %}
-      <div class="empty-state">
-          <h2>Page under construction</h2>
-          <p>This section is coming soon!</p>
+
+      <div class="card widget-card">
+        <div class="widget-header">
+          <div class="widget-title">
+            <i class="fas fa-tags"></i>
+            Categories
+          </div>
+          <a href="{% url 'cooperative_dashboard' %}?view=products" class="see-all">
+            See All
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+        <div class="categories-content">
+          {% for category in categories %}
+          <div class="category-item">
+            <div class="category-icon {{ category.name|lower }}">
+              <img src="/static/images/{{ category.name|lower }}.jpg" alt="{{ category.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiM4NGNjMTYiLz48dGV4dCB4PSIyMCIgeT0iMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj57eyBjYXRlZ29yeS5uYW1lfGZpcnN0IH19PC90ZXh0Pjwvc3ZnPg=='">
+            </div>
+            <div class="category-info">
+              <div class="category-name">{{ category.name }}</div>
+              <div class="category-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: {{ category.percentage }}%"></div>
+                </div>
+                <div class="category-count">{{ category.remaining }} left</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
-  {% endif %}
+    </div>
+  </div>
+
+{% elif view == 'products' %}
+  {% include 'cooperative/dashboard/products.html' %}
+{% elif view == 'orders' %}
+  {% include 'cooperative/dashboard/orders.html' %}
+{% elif view == 'finance' %}
+  {% include 'cooperative/dashboard/finance.html' %}
+{% elif view == 'farmers' %}
+  {% include 'cooperative/dashboard/farmers.html' %}
+{% elif view == 'settings' %}
+  {% include 'cooperative/dashboard/settings.html' %}
+{% endif %}
 {% endblock %}
 
