@@ -1,342 +1,658 @@
-
 {% load static %}
 
 {% block dashboard_content %}
 <div class="orders-container">
-    <!-- Order Status Tabs -->
-    <div class="order-tabs">
-        <a href="?view=orders&status=all" class="tab {% if not status or status == 'all' %}active{% endif %}">
-            All Orders
-            <span class="count">1232</span>
-        </a>
-        <a href="?view=orders&status=new" class="tab {% if status == 'new' %}active{% endif %}">
-            New Order
-            <span class="count">2</span>
-        </a>
-        <a href="?view=orders&status=processing" class="tab {% if status == 'processing' %}active{% endif %}">
-            Order Processing
-            <span class="count">32</span>
-        </a>
-        <a href="?view=orders&status=delivery" class="tab {% if status == 'delivery' %}active{% endif %}">
-            On Delivery
-            <span class="count">32</span>
-        </a>
-        <a href="?view=orders&status=delivered" class="tab {% if status == 'delivered' %}active{% endif %}">
-            Delivered
-            <span class="count">32</span>
-        </a>
-        <a href="?view=orders&status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">
-            Cancelled
-            <span class="count">32</span>
-        </a>
-    </div>
+  <!-- Order Status Tabs -->
+  <div class="order-tabs">
+      <a href="?view=orders&status=all" class="tab {% if not status or status == 'all' %}active{% endif %}">
+          All Orders
+          <span class="count">{{ all_count }}</span>
+      </a>
+      <a href="?view=orders&status=new" class="tab {% if status == 'new' %}active{% endif %}">
+          New Order
+          <span class="count">{{ new_count }}</span>
+      </a>
+      <a href="?view=orders&status=processing" class="tab {% if status == 'processing' %}active{% endif %}">
+          Order Processing
+          <span class="count">{{ processing_count }}</span>
+      </a>
+      <a href="?view=orders&status=delivery" class="tab {% if status == 'delivery' %}active{% endif %}">
+          On Delivery
+          <span class="count">{{ delivery_count }}</span>
+      </a>
+      <a href="?view=orders&status=delivered" class="tab {% if status == 'delivered' %}active{% endif %}">
+          Delivered
+          <span class="count">{{ delivered_count }}</span>
+      </a>
+      <a href="?view=orders&status=cancelled" class="tab {% if status == 'cancelled' %}active{% endif %}">
+          Cancelled
+          <span class="count">{{ cancelled_count }}</span>
+      </a>
+  </div>
 
-    <!-- Search Bar -->
-    <div class="search-bar">
-        <input type="text" placeholder="Search orders..." class="search-input">
-    </div>
+  <!-- Search and Filter Bar -->
+  <div class="orders-actions">
+      <div class="search-bar">
+          <input type="text" placeholder="Search orders..." class="search-input">
+          <button class="search-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+          </button>
+      </div>
+      <div class="filter-actions">
+          <button class="filter-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+              Filter
+          </button>
+          <button class="export-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export
+          </button>
+      </div>
+  </div>
 
-    <!-- Orders Table -->
-    <div class="orders-table">
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                        <input type="checkbox" class="select-all">
-                    </th>
-                    <th>Order ID</th>
-                    <th>Order Items</th>
-                    <th>Date</th>
-                    <th>Total Price</th>
-                    <th>Customer</th>
-                    <th>Order Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders %}
-                <tr onclick="window.location.href='{% url 'order_detail' order.id %}'">
-                    <td>
-                        <input type="checkbox" class="select-order">
-                    </td>
-                    <td>#{{ order.id }}</td>
-                    <td>
-                        <div class="order-items">
-                            <img src="{{ order.items.first.produce_type.get_image_url }}" alt="{{ order.items.first.produce_type.name }}">
-                            <div>
-                                <div class="item-name">{{ order.items.first.produce_type.name }}</div>
-                                <div class="item-count">{% if order.items.count > 1 %}+{{ order.items.count|add:"-1" }} more{% endif %}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>{{ order.created_at|date:"d/m/Y" }}</td>
-                    <td>RWF {{ order.total_price|floatformat:0 }}</td>
-                    <td>
-                        <div class="customer-info">
-                            <div class="customer-name">{{ order.customer.full_name }}</div>
-                            <div class="customer-type">{{ order.customer.get_role_display }}</div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge {{ order.status|lower }}">{{ order.get_status_display }}</span>
-                    </td>
-                    <td>
-                        <button class="btn-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="1"></circle>
-                                <circle cx="12" cy="5" r="1"></circle>
-                                <circle cx="12" cy="19" r="1"></circle>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8">
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="9" cy="21" r="1"></circle>
-                                    <circle cx="20" cy="21" r="1"></circle>
-                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                                </svg>
-                            </div>
-                            <h3>No orders found</h3>
-                            <p>Orders from buyers will appear here</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <!-- Orders Table -->
+  <div class="orders-table">
+      <table>
+          <thead>
+              <tr>
+                  <th>
+                      <input type="checkbox" class="select-all">
+                  </th>
+                  <th>Order ID</th>
+                  <th>Order Items</th>
+                  <th>Date</th>
+                  <th>Total Price</th>
+                  <th>Customer</th>
+                  <th>Order Status</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for order in orders %}
+              <tr onclick="window.location.href='{% url 'order_detail' order.id %}'">
+                  <td onclick="event.stopPropagation()">
+                      <input type="checkbox" class="select-order">
+                  </td>
+                  <td>#{{ order.order_number }}</td>
+                  <td>
+                      <div class="order-items">
+                          {% for item in order.items.all|slice:":3" %}
+                              <div class="item-thumbnail">
+                                  {% if item.produce_type.image %}
+                                      <img src="{{ item.produce_type.image.url }}" alt="{{ item.produce_type.name }}">
+                                  {% elif item.produce_type.image_url %}
+                                      <img src="{{ item.produce_type.image_url }}" alt="{{ item.produce_type.name }}">
+                                  {% else %}
+                                      <img src="{% static 'images/placeholder.jpg' %}" alt="{{ item.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTVlN2ViIi8+PHRleHQgeD0iMjAiIHk9IjIwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNmI3MjgwIj5JbWc8L3RleHQ+PC9zdmc+'">
+                                  {% endif %}
+                              </div>
+                          {% endfor %}
+                          {% if order.items.count > 3 %}
+                              <div class="item-more">+{{ order.items.count|add:"-3" }}</div>
+                          {% endif %}
+                      </div>
+                  </td>
+                  <td>{{ order.created_at|date:"M d, Y" }}</td>
+                  <td>RWF {{ order.total_price|floatformat:0 }}</td>
+                  <td>
+                      <div class="customer-info">
+                          <div class="customer-name">{{ order.customer.full_name }}</div>
+                          <div class="customer-type">{{ order.customer.get_role_display }}</div>
+                      </div>
+                  </td>
+                  <td>
+                      <span class="status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+                  </td>
+                  <td onclick="event.stopPropagation()">
+                      <div class="action-buttons">
+                          <button class="btn-icon view" title="View Details" onclick="window.location.href='{% url 'order_detail' order.id %}'">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                  <circle cx="12" cy="12" r="3"></circle>
+                              </svg>
+                          </button>
+                          <button class="btn-icon print" title="Print Order">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                  <rect x="6" y="14" width="12" height="8"></rect>
+                              </svg>
+                          </button>
+                          <div class="dropdown">
+                              <button class="btn-icon more" title="More Actions">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <circle cx="12" cy="12" r="1"></circle>
+                                      <circle cx="12" cy="5" r="1"></circle>
+                                      <circle cx="12" cy="19" r="1"></circle>
+                                  </svg>
+                              </button>
+                              <div class="dropdown-menu">
+                                  <a href="{% url 'order_detail' order.id %}">View Details</a>
+                                  {% if order.status == 'new' %}
+                                      <a href="#" onclick="updateOrderStatus({{ order.id }}, 'processing')">Process Order</a>
+                                  {% elif order.status == 'processing' %}
+                                      <a href="#" onclick="updateOrderStatus({{ order.id }}, 'delivery')">Mark as Shipped</a>
+                                  {% elif order.status == 'delivery' %}
+                                      <a href="#" onclick="updateOrderStatus({{ order.id }}, 'delivered')">Mark as Delivered</a>
+                                  {% endif %}
+                                  {% if order.status != 'cancelled' and order.status != 'delivered' %}
+                                      <a href="#" onclick="updateOrderStatus({{ order.id }}, 'cancelled')" class="text-danger">Cancel Order</a>
+                                  {% endif %}
+                              </div>
+                          </div>
+                      </div>
+                  </td>
+              </tr>
+              {% empty %}
+              <tr>
+                  <td colspan="8">
+                      <div class="empty-state">
+                          <div class="empty-icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <circle cx="9" cy="21" r="1"></circle>
+                                  <circle cx="20" cy="21" r="1"></circle>
+                                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                              </svg>
+                          </div>
+                          <h3>No orders found</h3>
+                          <p>Orders from buyers will appear here</p>
+                      </div>
+                  </td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+      <span class="page-info">Showing 1-{{ orders|length }} of {{ all_count }} orders</span>
+      <div class="page-controls">
+          <button class="page-btn" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+          </button>
+          <span class="page-number">Page 1</span>
+          <button class="page-btn" {% if orders|length < 10 %}disabled{% endif %}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+          </button>
+      </div>
+  </div>
 </div>
 
 <style>
 /* Orders Container */
 .orders-container {
-    padding: 24px;
+  padding: 24px;
+  background-color: #f9fafb;
 }
 
 /* Order Tabs */
 .order-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 9999px;
-    font-size: 14px;
-    color: #6b7280;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 14px;
+  color: #6b7280;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s;
+  background-color: white;
+  border: 1px solid #e5e7eb;
 }
 
 .tab:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .tab.active {
-    background-color: #f0fdf4;
-    color: #059669;
+  background-color: #f0fdf4;
+  color: #4d7c0f;
+  border-color: #4d7c0f;
 }
 
 .count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    border-radius: 9999px;
-    background-color: #e5e7eb;
-    font-size: 12px;
-    font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .tab.active .count {
-    background-color: #059669;
-    color: white;
+  background-color: #4d7c0f;
+  color: white;
 }
 
-/* Search Bar */
+/* Orders Actions */
+.orders-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
 .search-bar {
-    margin-bottom: 24px;
+  position: relative;
+  width: 300px;
 }
 
 .search-input {
-    width: 100%;
-    max-width: 320px;
-    padding: 8px 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
+  width: 100%;
+  padding: 10px 40px 10px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
 }
 
-.search-input:focus {
-    outline: none;
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+.search-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-btn, .export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover, .export-btn:hover {
+  background-color: #f3f4f6;
+  color: #374151;
 }
 
 /* Orders Table */
 .orders-table {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
 }
 
 th {
-    padding: 12px 16px;
-    background-color: #f9fafb;
-    font-weight: 500;
-    font-size: 14px;
-    color: #6b7280;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  background-color: #f9fafb;
+  font-weight: 500;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 td {
-    padding: 16px;
-    font-size: 14px;
-    border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
 }
 
 tr:last-child td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 tr:hover td {
-    background-color: #f9fafb;
+  background-color: #f9fafb;
 }
 
 /* Order Items */
 .order-items {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.order-items img {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    object-fit: cover;
+.item-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
-.item-name {
-    font-weight: 500;
-    margin-bottom: 2px;
+.item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.item-count {
-    font-size: 12px;
-    color: #6b7280;
+.item-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 /* Customer Info */
 .customer-info {
-    line-height: 1.4;
+  line-height: 1.4;
 }
 
 .customer-name {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 .customer-type {
-    font-size: 12px;
-    color: #6b7280;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 /* Status Badge */
 .status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .status-badge.new {
-    background-color: #fef3c7;
-    color: #d97706;
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
 .status-badge.processing {
-    background-color: #e0f2fe;
-    color: #0284c7;
+  background-color: #e0f2fe;
+  color: #0284c7;
 }
 
 .status-badge.delivery {
-    background-color: #f0fdf4;
-    color: #059669;
+  background-color: #f0fdf4;
+  color: #059669;
 }
 
 .status-badge.delivered {
-    background-color: #dcfce7;
-    color: #16a34a;
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
 .status-badge.cancelled {
-    background-color: #fee2e2;
-    color: #dc2626;
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
-/* Action Button */
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .btn-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: none;
-    border-radius: 6px;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-icon:hover {
-    background-color: #f3f4f6;
-    color: #111827;
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.btn-icon.view:hover {
+  color: #4d7c0f;
+  background-color: #f0fdf4;
+}
+
+.btn-icon.print:hover {
+  color: #0284c7;
+  background-color: #e0f2fe;
+}
+
+/* Dropdown */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: 180px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 8px 0;
+  z-index: 10;
+  display: none;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 8px 16px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f3f4f6;
+}
+
+.dropdown-menu a.text-danger {
+  color: #dc2626;
+}
+
+.dropdown-menu a.text-danger:hover {
+  background-color: #fee2e2;
 }
 
 /* Empty State */
 .empty-state {
-    text-align: center;
-    padding: 48px 24px;
+  text-align: center;
+  padding: 48px 24px;
 }
 
 .empty-icon {
-    margin-bottom: 16px;
-    color: #6b7280;
+  margin-bottom: 16px;
+  color: #6b7280;
 }
 
 .empty-state h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .empty-state p {
-    color: #6b7280;
+  color: #6b7280;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: white;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-number {
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .orders-actions {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .search-bar {
+    width: 100%;
+  }
+  
+  .filter-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .orders-table {
+    overflow-x: auto;
+  }
+  
+  table {
+    min-width: 900px;
+  }
 }
 </style>
+
+<script>
+function updateOrderStatus(orderId, status) {
+  // Create a form to submit the status update
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = `/cooperative/update-order-status/${orderId}/`;
+  
+  // Add CSRF token
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const csrfInput = document.createElement('input');
+  csrfInput.type = 'hidden';
+  csrfInput.name = 'csrfmiddlewaretoken';
+  csrfInput.value = csrfToken;
+  form.appendChild(csrfInput);
+  
+  // Add status input
+  const statusInput = document.createElement('input');
+  statusInput.type = 'hidden';
+  statusInput.name = 'status';
+  statusInput.value = status;
+  form.appendChild(statusInput);
+  
+  // Append form to body and submit
+  document.body.appendChild(form);
+  form.submit();
+  
+  // Prevent default link behavior
+  return false;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Add CSRF token to the page for AJAX requests
+  const csrfToken = '{{ csrf_token }}';
+  
+  // Initialize checkboxes
+  const selectAll = document.querySelector('.select-all');
+  const selectItems = document.querySelectorAll('.select-order');
+  
+  if (selectAll) {
+    selectAll.addEventListener('change', function() {
+      selectItems.forEach(item => {
+        item.checked = selectAll.checked;
+      });
+    });
+  }
+  
+  // Handle row clicks
+  document.querySelectorAll('tr[onclick]').forEach(row => {
+    row.style.cursor = 'pointer';
+  });
+});
+</script>
 {% endblock %}
 

@@ -1013,4 +1013,3 @@ def set_primary_bank_account(request, account_id):
             messages.error(request, f'Error updating primary bank account: {str(e)}')
     
     return redirect('/cooperative/dashboard/?view=finance')
-
