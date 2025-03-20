@@ -295,206 +295,226 @@ def awaiting_verification(request):
   
   return render(request, 'cooperative/awaiting_verification.html')
 
+
+
+# Add these new views for bank account management
+
 @login_required
 def cooperative_dashboard(request):
-  # Check if user is a cooperative
-  if request.user.role != 'cooperative':
-      messages.error(request, 'You do not have access to this page')
-      return redirect('cooperative_login')
-  
-  # Force refresh user from database to ensure we have the latest is_approved status
-  request.user.refresh_from_db()
-  
-  # Check if user is approved
-  if not request.user.is_approved:
-      logger.info(f"User {request.user.email} is not approved, redirecting from dashboard")
-      if request.user.certificates:
-          return redirect('awaiting_verification')
-      else:
-          return redirect('cooperative_verification')
-  
-  logger.info(f"User {request.user.email} is approved, accessing dashboard")
-  
-  view = request.GET.get('view', 'overview')
-  category = request.GET.get('category', 'all')
-  status = request.GET.get('status', 'all')
-  
-  if view == 'products':
-      # Filter produce based on category
-      produce_items = CooperativeProduce.objects.filter(cooperative=request.user)
-      if category != 'all':
-          produce_items = produce_items.filter(produce_type__category=category)
-  
-      # Get produce types for the form
-      produce_types = ProduceType.objects.all()
-  
-      # Get counts for each category
-      context = {
-          'view': view,
-          'produce_items': produce_items,
-          'produce_types': produce_types,
-          'total_produce': CooperativeProduce.objects.filter(cooperative=request.user).count(),
-          'vegetables_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='vegetables').count(),
-          'fruits_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='fruits').count(),
-          'nuts_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='nuts').count(),
-          'herbs_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='herbs').count(),
-          'grains_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='grains').count(),
-          'view_mode': request.GET.get('view_mode', 'grid'),
-      }
-  elif view == 'orders':
-      # Filter orders based on status
-      orders = Order.objects.filter(cooperative=request.user)
-      if status != 'all':
-          orders = orders.filter(status=status)
+    # Check if user is a cooperative
+    if request.user.role != 'cooperative':
+        messages.error(request, 'You do not have access to this page')
+        return redirect('cooperative_login')
+
+    # Force refresh user from database to ensure we have the latest is_approved status
+    request.user.refresh_from_db()
+
+    # Check if user is approved
+    if not request.user.is_approved:
+        logger.info(f"User {request.user.email} is not approved, redirecting from dashboard")
+        if request.user.certificates:
+            return redirect('awaiting_verification')
+        else:
+            return redirect('cooperative_verification')
+
+    logger.info(f"User {request.user.email} is approved, accessing dashboard")
+
+    view = request.GET.get('view', 'overview')
+    category = request.GET.get('category', 'all')
+    status = request.GET.get('status', 'all')
+
+    if view == 'products':
+        # Filter produce based on category
+        produce_items = CooperativeProduce.objects.filter(cooperative=request.user)
+        if category != 'all':
+            produce_items = produce_items.filter(produce_type__category=category)
+
+        # Get produce types for the form
+        produce_types = ProduceType.objects.all()
+
+        # Get counts for each category
+        context = {
+            'view': view,
+            'produce_items': produce_items,
+            'produce_types': produce_types,
+            'total_produce': CooperativeProduce.objects.filter(cooperative=request.user).count(),
+            'vegetables_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='vegetables').count(),
+            'fruits_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='fruits').count(),
+            'nuts_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='nuts').count(),
+            'herbs_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='herbs').count(),
+            'grains_count': CooperativeProduce.objects.filter(cooperative=request.user, produce_type__category='grains').count(),
+            'view_mode': request.GET.get('view_mode', 'grid'),
+        }
+    elif view == 'orders':
+        # Filter orders based on status
+        orders = Order.objects.filter(cooperative=request.user)
+        if status != 'all':
+            orders = orders.filter(status=status)
+        
+        # Get counts for each status
+        context = {
+            'view': view,
+            'status': status,
+            'orders': orders,
+            'all_count': Order.objects.filter(cooperative=request.user).count(),
+            'new_count': Order.objects.filter(cooperative=request.user, status='new').count(),
+            'processing_count': Order.objects.filter(cooperative=request.user, status='processing').count(),
+            'delivery_count': Order.objects.filter(cooperative=request.user, status='delivery').count(),
+            'delivered_count': Order.objects.filter(cooperative=request.user, status='delivered').count(),
+            'cancelled_count': Order.objects.filter(cooperative=request.user, status='cancelled').count(),
+        }
+    elif view == 'finance':
+        # Get wallet balance (sum of received minus sent)
+        received_amount = Transaction.objects.filter(
+            cooperative=request.user, 
+            transaction_type='received',
+            status='success'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        sent_amount = Transaction.objects.filter(
+            cooperative=request.user, 
+            transaction_type='sent',
+            status='success'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        wallet_balance = received_amount - sent_amount
+        
+        # Get bank accounts
+        bank_accounts = BankAccount.objects.filter(cooperative=request.user)
+        
+        # Get recent transactions
+        transactions = Transaction.objects.filter(cooperative=request.user).order_by('-created_at')[:10]
+        
+        # Get transaction counts
+        all_transactions_count = Transaction.objects.filter(cooperative=request.user).count()
+        received_count = Transaction.objects.filter(cooperative=request.user, transaction_type='received').count()
+        sent_count = Transaction.objects.filter(cooperative=request.user, transaction_type='sent').count()
+        
+        # Get spending data for chart (last 7 days)
+        today = timezone.now().date()
+        spending_data = []
+        for i in range(7):
+            day = today - timezone.timedelta(days=i)
+            day_spending = Transaction.objects.filter(
+                cooperative=request.user,
+                transaction_type='sent',
+                status='success',
+                created_at__date=day
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            spending_data.append({
+                'day': day.strftime('%a'),
+                'amount': float(day_spending)
+            })
+        
+        # Reverse to show oldest to newest
+        spending_data.reverse()
+        
+        context = {
+            'view': view,
+            'wallet_balance': wallet_balance,
+            'bank_accounts': bank_accounts,
+            'transactions': transactions,
+            'all_transactions_count': all_transactions_count,
+            'received_count': received_count,
+            'sent_count': sent_count,
+            'spending_data': spending_data
+        }
+    elif view == 'farmers':
+        # Get all farmers for this cooperative
+        farmers = Farmer.objects.filter(cooperative=request.user).order_by('-created_at')
+        
+        context = {
+            'view': view,
+            'farmers': farmers,
+            'farmers_count': farmers.count(),
+        }
+    else:
+        # Overview dashboard
+        produce_items = CooperativeProduce.objects.filter(cooperative=request.user).order_by('-created_at')
+        recent_orders = Order.objects.filter(cooperative=request.user).order_by('-created_at')[:5]
+        
+        # Get counts for dashboard cards
+        produce_count = produce_items.count()
+        farmer_count = Farmer.objects.filter(cooperative=request.user).count()
+        order_count = Order.objects.filter(cooperative=request.user).count()
+        
+        # Calculate total revenue
+        total_revenue = Order.objects.filter(
+            cooperative=request.user, 
+            status='delivered'
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+        
+        # Get category counts for produce summary
+        category_counts = {}
+        total_quantity = 0
+        most_common_category = None
+        max_count = 0
+        
+        for produce in produce_items:
+            category = produce.produce_type.get_category_display()
+            if category in category_counts:
+                category_counts[category] += 1
+            else:
+                category_counts[category] = 1
+                
+            if category_counts[category] > max_count:
+                max_count = category_counts[category]
+                most_common_category = category
+                
+            total_quantity += produce.quantity
+        
+        # Get order status counts
+        pending_orders_count = Order.objects.filter(
+            cooperative=request.user, 
+            status__in=['new', 'processing', 'delivery']
+        ).count()
+        
+        completed_orders_count = Order.objects.filter(
+            cooperative=request.user, 
+            status='delivered'
+        ).count()
+        
+        # Calculate average order value
+        avg_order_value = 0
+        if order_count > 0:
+            avg_order_value = Order.objects.filter(
+                cooperative=request.user
+            ).aggregate(avg=Sum('total_price') / order_count)['avg'] or 0
+        
+        # Get order status distribution
+        order_status_counts = {}
+        for status_choice, status_display in Order.STATUS_CHOICES:
+            count = Order.objects.filter(cooperative=request.user, status=status_choice).count()
+            if count > 0:
+                order_status_counts[status_display] = count
+        
+        # Get recent farmers
+        recent_farmers = Farmer.objects.filter(cooperative=request.user).order_by('-created_at')[:5]
+        
+        context = {
+            'view': view,
+            'farmers': recent_farmers,
+            'produce_items': produce_items[:5],
+            'recent_orders': recent_orders,
+            'produce_count': produce_count,
+            'farmer_count': farmer_count,
+            'order_count': order_count,
+            'total_revenue': total_revenue,
+            'category_counts': category_counts,
+            'most_common_category': most_common_category,
+            'total_quantity': total_quantity,
+            'pending_orders_count': pending_orders_count,
+            'completed_orders_count': completed_orders_count,
+            'avg_order_value': avg_order_value,
+            'order_status_counts': order_status_counts,
+        }
+
+    return render(request, 'cooperative/dashboard.html', context)
+
+
       
-      # Get counts for each status
-      context = {
-          'view': view,
-          'status': status,
-          'orders': orders,
-          'all_count': Order.objects.filter(cooperative=request.user).count(),
-          'new_count': Order.objects.filter(cooperative=request.user, status='new').count(),
-          'processing_count': Order.objects.filter(cooperative=request.user, status='processing').count(),
-          'delivery_count': Order.objects.filter(cooperative=request.user, status='delivery').count(),
-          'delivered_count': Order.objects.filter(cooperative=request.user, status='delivered').count(),
-          'cancelled_count': Order.objects.filter(cooperative=request.user, status='cancelled').count(),
-      }
-  elif view == 'finance':
-      # Get wallet balance (sum of received minus sent)
-      received_amount = Transaction.objects.filter(
-          cooperative=request.user, 
-          transaction_type='received',
-          status='success'
-      ).aggregate(total=Sum('amount'))['total'] or 0
-      
-      sent_amount = Transaction.objects.filter(
-          cooperative=request.user, 
-          transaction_type='sent',
-          status='success'
-      ).aggregate(total=Sum('amount'))['total'] or 0
-      
-      wallet_balance = received_amount - sent_amount
-      
-      # Get bank accounts
-      bank_accounts = BankAccount.objects.filter(cooperative=request.user)
-      
-      # Get recent transactions
-      transactions = Transaction.objects.filter(cooperative=request.user).order_by('-created_at')[:10]
-      
-      # Get transaction counts
-      all_transactions_count = Transaction.objects.filter(cooperative=request.user).count()
-      received_count = Transaction.objects.filter(cooperative=request.user, transaction_type='received').count()
-      sent_count = Transaction.objects.filter(cooperative=request.user, transaction_type='sent').count()
-      
-      # Get spending data for chart (last 7 days)
-      today = timezone.now().date()
-      spending_data = []
-      for i in range(7):
-          day = today - timezone.timedelta(days=i)
-          day_spending = Transaction.objects.filter(
-              cooperative=request.user,
-              transaction_type='sent',
-              status='success',
-              created_at__date=day
-          ).aggregate(total=Sum('amount'))['total'] or 0
-          
-          spending_data.append({
-              'day': day.strftime('%a'),
-              'amount': float(day_spending)
-          })
-      
-      # Reverse to show oldest to newest
-      spending_data.reverse()
-      
-      context = {
-          'view': view,
-          'wallet_balance': wallet_balance,
-          'bank_accounts': bank_accounts,
-          'transactions': transactions,
-          'all_transactions_count': all_transactions_count,
-          'received_count': received_count,
-          'sent_count': sent_count,
-          'spending_data': spending_data
-      }
-  else:
-      # Overview dashboard
-      produce_items = CooperativeProduce.objects.filter(cooperative=request.user).order_by('-created_at')
-      recent_orders = Order.objects.filter(cooperative=request.user).order_by('-created_at')[:5]
-      
-      # Get counts for dashboard cards
-      produce_count = produce_items.count()
-      farmer_count = Farmer.objects.filter(cooperative=request.user).count()
-      order_count = Order.objects.filter(cooperative=request.user).count()
-      
-      # Calculate total revenue
-      total_revenue = Order.objects.filter(
-          cooperative=request.user, 
-          status='delivered'
-      ).aggregate(total=Sum('total_price'))['total'] or 0
-      
-      # Get category counts for produce summary
-      category_counts = {}
-      total_quantity = 0
-      most_common_category = None
-      max_count = 0
-      
-      for produce in produce_items:
-          category = produce.produce_type.get_category_display()
-          if category in category_counts:
-              category_counts[category] += 1
-          else:
-              category_counts[category] = 1
-              
-          if category_counts[category] > max_count:
-              max_count = category_counts[category]
-              most_common_category = category
-              
-          total_quantity += produce.quantity
-      
-      # Get order status counts
-      pending_orders_count = Order.objects.filter(
-          cooperative=request.user, 
-          status__in=['new', 'processing', 'delivery']
-      ).count()
-      
-      completed_orders_count = Order.objects.filter(
-          cooperative=request.user, 
-          status='delivered'
-      ).count()
-      
-      # Calculate average order value
-      avg_order_value = 0
-      if order_count > 0:
-          avg_order_value = Order.objects.filter(
-              cooperative=request.user
-          ).aggregate(avg=Sum('total_price') / order_count)['avg'] or 0
-      
-      # Get order status distribution
-      order_status_counts = {}
-      for status_choice, status_display in Order.STATUS_CHOICES:
-          count = Order.objects.filter(cooperative=request.user, status=status_choice).count()
-          if count > 0:
-              order_status_counts[status_display] = count
-      
-      context = {
-          'view': view,
-          'farmers': Farmer.objects.filter(cooperative=request.user),
-          'produce_items': produce_items[:5],
-          'recent_orders': recent_orders,
-          'produce_count': produce_count,
-          'farmer_count': farmer_count,
-          'order_count': order_count,
-          'total_revenue': total_revenue,
-          'category_counts': category_counts,
-          'most_common_category': most_common_category,
-          'total_quantity': total_quantity,
-          'pending_orders_count': pending_orders_count,
-          'completed_orders_count': completed_orders_count,
-          'avg_order_value': avg_order_value,
-          'order_status_counts': order_status_counts,
-      }
-  
-  return render(request, 'cooperative/dashboard.html', context)
+
 
 @login_required
 def produce_detail(request, produce_type_id):
@@ -741,4 +761,88 @@ def check_approval_status(request):
   logger.info(f"Checking approval status for {request.user.email}: {request.user.is_approved}")
   
   return JsonResponse({'is_approved': request.user.is_approved})
+
+# Add these new views for bank account management
+
+@login_required
+def add_bank_account(request):
+    if request.method == 'POST':
+        bank_name = request.POST.get('bank_name')
+        account_number = request.POST.get('account_number')
+        account_holder_name = request.POST.get('account_holder_name')
+        is_primary = request.POST.get('is_primary') == 'on'
+        
+        # Check if user already has 2 bank accounts
+        existing_accounts = BankAccount.objects.filter(cooperative=request.user).count()
+        if existing_accounts >= 2:
+            messages.error(request, 'You can have a maximum of 2 bank accounts. Please delete an existing account first.')
+            return redirect('/cooperative/dashboard/?view=finance')
+        
+        try:
+            # Create bank account
+            BankAccount.objects.create(
+                cooperative=request.user,
+                bank_name=bank_name,
+                account_number=account_number,
+                account_holder_name=account_holder_name,
+                is_primary=is_primary
+            )
+            
+            messages.success(request, 'Bank account added successfully')
+        except Exception as e:
+            messages.error(request, f'Error adding bank account: {str(e)}')
+    
+    return redirect('/cooperative/dashboard/?view=finance')
+
+@login_required
+def delete_bank_account(request, account_id):
+    if request.method == 'POST':
+        try:
+            account = BankAccount.objects.get(id=account_id, cooperative=request.user)
+            
+            # Check if this is the only account and it's being used in pending transactions
+            is_only_account = BankAccount.objects.filter(cooperative=request.user).count() == 1
+            has_pending_transactions = Transaction.objects.filter(
+                cooperative=request.user,
+                status='pending',
+                description__icontains=account.account_number
+            ).exists()
+            
+            if is_only_account and has_pending_transactions:
+                messages.error(request, 'Cannot delete this account as it is being used in pending transactions')
+                return redirect('/cooperative/dashboard/?view=finance')
+            
+            # If this is a primary account, set another account as primary
+            if account.is_primary:
+                other_account = BankAccount.objects.filter(cooperative=request.user).exclude(id=account_id).first()
+                if other_account:
+                    other_account.is_primary = True
+                    other_account.save()
+            
+            account.delete()
+            messages.success(request, 'Bank account deleted successfully')
+        except BankAccount.DoesNotExist:
+            messages.error(request, 'Bank account not found')
+        except Exception as e:
+            messages.error(request, f'Error deleting bank account: {str(e)}')
+    
+    return redirect('/cooperative/dashboard/?view=finance')
+
+@login_required
+def set_primary_bank_account(request, account_id):
+    if request.method == 'POST':
+        try:
+            account = BankAccount.objects.get(id=account_id, cooperative=request.user)
+            
+            # Set this account as primary
+            account.is_primary = True
+            account.save()
+            
+            messages.success(request, 'Primary bank account updated successfully')
+        except BankAccount.DoesNotExist:
+            messages.error(request, 'Bank account not found')
+        except Exception as e:
+            messages.error(request, f'Error updating primary bank account: {str(e)}')
+    
+    return redirect('/cooperative/dashboard/?view=finance')
 

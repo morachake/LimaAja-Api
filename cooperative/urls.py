@@ -19,6 +19,12 @@ urlpatterns = [
     path('dashboard/order/<int:order_id>/update-status/', views.update_order_status, name='update_order_status'),
     path('dashboard/request-money/', views.request_money, name='request_money'),
     
+    
+    path('dashboard/add-bank-account/', views.add_bank_account, name='add_bank_account'),
+    path('dashboard/delete-bank-account/<int:account_id>/', views.delete_bank_account, name='delete_bank_account'),
+    path('dashboard/set-primary-bank-account/<int:account_id>/', views.set_primary_bank_account, name='set_primary_bank_account'),
+  
+    
     # API endpoints
     path('api/farmers/', views.FarmerListView.as_view(), name='farmer-list'),
     path('api/farmers/<int:pk>/', views.FarmerDetailView.as_view(), name='farmer-detail'),

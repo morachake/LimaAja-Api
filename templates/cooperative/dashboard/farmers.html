@@ -1,114 +1,234 @@
-<div class="section-header">
-    <h2 class="section-title">Farmers Management</h2>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFarmerModal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Add Farmer
-    </button>
+{% extends 'cooperative/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Farmers - Lima-Aja Cooperative Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>Farmers Management</h1>
+    <p>Manage your cooperative's farmers</p>
 </div>
 
-<div class="table-container mt-4">
-    <div class="table-content">
-        {% if farmers %}
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Address</th>
-                        <th>Joining Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for farmer in farmers %}
-                    <tr>
-                        <td>{{ farmer.name }}</td>
-                        <td>{{ farmer.phone_number }}</td>
-                        <td>{{ farmer.address }}</td>
-                        <td>{{ farmer.joining_date }}</td>
-                        <td>
-                            {% if farmer.is_active %}
-                                <span class="status-badge status-active">Active</span>
-                            {% else %}
-                                <span class="status-badge status-inactive">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-icon edit-farmer" data-id="{{ farmer.id }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </button>
-                                <button class="btn-icon delete-farmer" data-id="{{ farmer.id }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
-                <h3>No farmers added yet</h3>
-                <p>Start by adding your first farmer to the cooperative</p>
-                <button class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addFarmerModal">Add Farmer</button>
-            </div>
-        {% endif %}
+<div class="card table-card">
+    <div class="table-header">
+        <h3><i class="fas fa-users"></i> Farmers List</h3>
+        <button class="btn btn-primary" id="add-farmer-btn"><i class="fas fa-plus"></i> Add Farmer</button>
     </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Location</th>
+                <th>Date Added</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for farmer in farmers %}
+            <tr>
+                <td>{{ farmer.name }}</td>
+                <td>{{ farmer.phone_number }}</td>
+                <td>{{ farmer.location }}</td>
+                <td>{{ farmer.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <div class="farmer-actions">
+                        <button class="edit-farmer" data-id="{{ farmer.id }}" data-name="{{ farmer.name }}" data-phone="{{ farmer.phone_number }}" data-location="{{ farmer.location }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-farmer" data-id="{{ farmer.id }}" data-name="{{ farmer.name }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 30px;">
+                    <p>No farmers added yet. Click "Add Farmer" to add your first farmer.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
-<!-- Add Farmer Modal -->
-<div class="modal fade" id="addFarmerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Farmer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addFarmerForm" method="post" action="{% url 'farmer-create' %}">
-                    {% csrf_token %}
+<!-- Add/Edit Farmer Modal -->
+<div class="modal-backdrop" id="farmer-modal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modal-title">Add New Farmer</h2>
+            <button class="close-btn" id="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="farmer-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="farmer-id" name="farmer_id">
+                <div class="farmer-form-grid">
                     <div class="form-group">
-                        <label for="farmerName" class="form-label">Farmer Name</label>
-                        <input type="text" class="form-control" id="farmerName" name="name" required>
+                        <label for="farmer-name">Farmer Name</label>
+                        <input type="text" id="farmer-name" name="name" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="farmerPhone" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="farmerPhone" name="phone_number" required>
+                        <label for="farmer-phone">Phone Number</label>
+                        <input type="tel" id="farmer-phone" name="phone_number" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <label for="farmerAddress" class="form-label">Address</label>
-                        <textarea class="form-control" id="farmerAddress" name="address" rows="2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="joiningDate" class="form-label">Joining Date</label>
-                        <input type="date" class="form-control" id="joiningDate" name="joining_date" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="addFarmerForm" class="btn btn-primary">Add Farmer</button>
-            </div>
+                </div>
+                <div class="form-group">
+                    <label for="farmer-location">Location/Region</label>
+                    <input type="text" id="farmer-location" name="location" class="form-control" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancel-farmer">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-farmer">Save Farmer</button>
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop" id="delete-modal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Confirm Delete</h2>
+            <button class="close-btn" id="close-delete-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete the farmer <strong id="delete-farmer-name"></strong>?</p>
+            <p>This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancel-delete">Cancel</button>
+            <form id="delete-farmer-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="delete-farmer-id" name="farmer_id">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal elements
+        const farmerModal = document.getElementById('farmer-modal');
+        const deleteModal = document.getElementById('delete-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const farmerForm = document.getElementById('farmer-form');
+        const farmerId = document.getElementById('farmer-id');
+        const farmerName = document.getElementById('farmer-name');
+        const farmerPhone = document.getElementById('farmer-phone');
+        const farmerLocation = document.getElementById('farmer-location');
+        const deleteFarmerName = document.getElementById('delete-farmer-name');
+        const deleteFarmerId = document.getElementById('delete-farmer-id');
+        
+        // Buttons
+        const addFarmerBtn = document.getElementById('add-farmer-btn');
+        const closeModalBtn = document.getElementById('close-modal');
+        const cancelFarmerBtn = document.getElementById('cancel-farmer');
+        const saveFarmerBtn = document.getElementById('save-farmer');
+        const closeDeleteModalBtn = document.getElementById('close-delete-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        
+        // Edit and delete buttons
+        const editButtons = document.querySelectorAll('.edit-farmer');
+        const deleteButtons = document.querySelectorAll('.delete-farmer');
+        
+        // Open add farmer modal
+        addFarmerBtn.addEventListener('click', function() {
+            modalTitle.textContent = 'Add New Farmer';
+            farmerForm.reset();
+            farmerId.value = '';
+            farmerModal.style.display = 'flex';
+        });
+        
+        // Close farmer modal
+        function closeFarmerModal() {
+            farmerModal.style.display = 'none';
+        }
+        
+        closeModalBtn.addEventListener('click', closeFarmerModal);
+        cancelFarmerBtn.addEventListener('click', closeFarmerModal);
+        
+        // Close delete modal
+        function closeDeleteModal() {
+            deleteModal.style.display = 'none';
+        }
+        
+        closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        
+        // Edit farmer
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+                const phone = this.dataset.phone;
+                const location = this.dataset.location;
+                
+                modalTitle.textContent = 'Edit Farmer';
+                farmerId.value = id;
+                farmerName.value = name;
+                farmerPhone.value = phone;
+                farmerLocation.value = location;
+                
+                farmerModal.style.display = 'flex';
+            });
+        });
+        
+        // Delete farmer
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+                
+                deleteFarmerId.value = id;
+                deleteFarmerName.textContent = name;
+                
+                deleteModal.style.display = 'flex';
+            });
+        });
+        
+        // Save farmer
+        saveFarmerBtn.addEventListener('click', function() {
+            if (farmerForm.checkValidity()) {
+                const isEdit = farmerId.value !== '';
+                const url = isEdit ? `/cooperative/api/farmers/${farmerId.value}/update/` : '/cooperative/api/farmers/create/';
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const formData = new FormData(farmerForm);
+                
+                fetch(url, {
+                    method: method,
+                    body: JSON.stringify({
+                        name: formData.get('name'),
+                        phone_number: formData.get('phone_number'),
+                        location: formData.get('location')
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.detail || 'An error occurred');
+                        });
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                });
+            } else {
+                farmerForm.reportValidity();
+            }
+        });
+    });
+</script>
+{% endblock %}
 
