@@ -1,232 +1,551 @@
 
-{% block title %}Farmers - Lima-Aja Cooperative Dashboard{% endblock %}
+{% load static %}
 
-{% block content %}
-<div class="page-title">
-    <h1>Farmers Management</h1>
-    <p>Manage your cooperative's farmers</p>
-</div>
+{% block dashboard_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">Farmers</h4>
 
-<div class="card table-card">
-    <div class="table-header">
-        <h3><i class="fas fa-users"></i> Farmers List</h3>
-        <button class="btn btn-primary" id="add-farmer-btn"><i class="fas fa-plus"></i> Add Farmer</button>
-    </div>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Phone Number</th>
-                <th>Location</th>
-                <th>Date Added</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for farmer in farmers %}
-            <tr>
-                <td>{{ farmer.name }}</td>
-                <td>{{ farmer.phone_number }}</td>
-                <td>{{ farmer.location }}</td>
-                <td>{{ farmer.created_at|date:"M d, Y" }}</td>
-                <td>
-                    <div class="farmer-actions">
-                        <button class="edit-farmer" data-id="{{ farmer.id }}" data-name="{{ farmer.name }}" data-phone="{{ farmer.phone_number }}" data-location="{{ farmer.location }}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-farmer" data-id="{{ farmer.id }}" data-name="{{ farmer.name }}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 30px;">
-                    <p>No farmers added yet. Click "Add Farmer" to add your first farmer.</p>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- Add/Edit Farmer Modal -->
-<div class="modal-backdrop" id="farmer-modal" style="display: none;">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 id="modal-title">Add New Farmer</h2>
-            <button class="close-btn" id="close-modal">&times;</button>
+                <div class="page-title-right">
+                    <button type="button" class="btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#addFarmerModal">
+                        <i class="mdi mdi-plus me-1"></i> Add New Farmer
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="farmer-form" method="post">
-                {% csrf_token %}
-                <input type="hidden" id="farmer-id" name="farmer_id">
-                <div class="farmer-form-grid">
-                    <div class="form-group">
-                        <label for="farmer-name">Farmer Name</label>
-                        <input type="text" id="farmer-name" name="name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="farmer-phone">Phone Number</label>
-                        <input type="tel" id="farmer-phone" name="phone_number" class="form-control" required>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-centered table-nowrap mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone Number</th>
+                                    <th>Province</th>
+                                    <th>Date Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for farmer in farmers %}
+                                <tr>
+                                    <td>{{ farmer.name }}</td>
+                                    <td>{{ farmer.phone_number }}</td>
+                                    <td>{{ farmer.location }}</td>
+                                    <td>{{ farmer.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-info edit-farmer-btn" 
+                                            data-id="{{ farmer.id }}"
+                                            data-name="{{ farmer.name }}"
+                                            data-phone="{{ farmer.phone_number }}"
+                                            data-location="{{ farmer.location }}"
+                                            data-bs-toggle="modal" data-bs-target="#editFarmerModal">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger delete-farmer-btn"
+                                            data-id="{{ farmer.id }}"
+                                            data-name="{{ farmer.name }}"
+                                            data-bs-toggle="modal" data-bs-target="#deleteFarmerModal">
+                                            <i class="mdi mdi-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No farmers added yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="farmer-location">Location/Region</label>
-                    <input type="text" id="farmer-location" name="location" class="form-control" required>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Farmer Modal -->
+<div class="modal fade" id="addFarmerModal" tabindex="-1" aria-labelledby="addFarmerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFarmerModalLabel">
+                    <i class="fas fa-user-plus" style="color: #4d7c0f;"></i>
+                    Add New Farmer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'farmer_create' %}" method="post" id="addFarmerForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Farmer Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Province</label>
+                        <select class="form-select" id="location" name="location" required>
+                            <option value="" selected disabled>Select a province</option>
+                            <option value="Kigali City">Kigali City</option>
+                            <option value="Northern Province">Northern Province</option>
+                            <option value="Southern Province">Southern Province</option>
+                            <option value="Eastern Province">Eastern Province</option>
+                            <option value="Western Province">Western Province</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="addFarmerBtn">Save Farmer</button>
                 </div>
             </form>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="cancel-farmer">Cancel</button>
-            <button type="button" class="btn btn-primary" id="save-farmer">Save Farmer</button>
-        </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal-backdrop" id="delete-modal" style="display: none;">
-    <div class="modal">
-        <div class="modal-header">
-            <h2>Confirm Delete</h2>
-            <button class="close-btn" id="close-delete-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p>Are you sure you want to delete the farmer <strong id="delete-farmer-name"></strong>?</p>
-            <p>This action cannot be undone.</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="cancel-delete">Cancel</button>
-            <form id="delete-farmer-form" method="post">
+<!-- Edit Farmer Modal -->
+<div class="modal fade" id="editFarmerModal" tabindex="-1" aria-labelledby="editFarmerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFarmerModalLabel">
+                    <i class="fas fa-user-edit" style="color: #4d7c0f;"></i>
+                    Edit Farmer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editFarmerForm" method="post">
                 {% csrf_token %}
-                <input type="hidden" id="delete-farmer-id" name="farmer_id">
-                <button type="submit" class="btn btn-danger">Delete</button>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label">Farmer Name</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_phone_number" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="edit_phone_number" name="phone_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_location" class="form-label">Province</label>
+                        <select class="form-select" id="edit_location" name="location" required>
+                            <option value="Kigali City">Kigali City</option>
+                            <option value="Northern Province">Northern Province</option>
+                            <option value="Southern Province">Southern Province</option>
+                            <option value="Eastern Province">Eastern Province</option>
+                            <option value="Western Province">Western Province</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="updateFarmerBtn">Update Farmer</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Delete Farmer Modal -->
+<div class="modal fade" id="deleteFarmerModal" tabindex="-1" aria-labelledby="deleteFarmerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteFarmerModalLabel">
+                    <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                    Delete Farmer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteFarmerForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-times text-warning" style="font-size: 48px;"></i>
+                        <h4 class="mt-3">Confirm Deletion</h4>
+                        <p>Are you sure you want to delete the farmer <strong id="delete_farmer_name"></strong>?</p>
+                        <p class="text-danger">This action cannot be undone.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Delete Farmer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add custom styles for modals -->
+<style>
+    /* Improved modal styling */
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        max-width: 550px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 20px 24px;
+        background-color: #f9fafb;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #f0f0f0;
+        padding: 16px 24px;
+        background-color: #f9fafb;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .form-control, .form-select {
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        font-size: 14px;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4d7c0f;
+        box-shadow: 0 0 0 3px rgba(77, 124, 15, 0.1);
+        outline: none;
+    }
+
+    .btn-primary {
+        background-color: #4d7c0f;
+        border-color: #4d7c0f;
+        padding: 12px 20px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #3f6a0a;
+        border-color: #3f6a0a;
+    }
+
+    .btn-secondary {
+        background-color: #f3f4f6;
+        border-color: #e5e7eb;
+        color: #4b5563;
+        padding: 12px 20px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: #e5e7eb;
+    }
+
+    .btn-danger {
+        background-color: #ef4444;
+        border-color: #ef4444;
+        color: white;
+        padding: 12px 20px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-danger:hover {
+        background-color: #dc2626;
+        border-color: #dc2626;
+    }
+
+    /* Modal positioning and visibility fixes */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999 !important; /* Ensure it's above everything */
+        backdrop-filter: blur(4px); /* Add blur effect to background */
+    }
+
+    .modal.show {
+        display: flex !important;
+    }
+
+    .modal-dialog {
+        position: relative;
+        margin: 1.75rem auto;
+        max-width: 550px;
+        width: 100%;
+        pointer-events: auto;
+        z-index: 10000 !important; /* Even higher z-index */
+        background-color: rgba(255, 255, 255, 0.05); /* Subtle background */
+        border-radius: 16px; /* Rounded corners */
+        padding: 8px; /* Add padding around the content */
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        max-width: 550px;
+        width: 100%;
+        margin: 0 auto;
+        background-color: white; /* Ensure white background */
+        position: relative;
+        z-index: 10001 !important; /* Highest z-index */
+        pointer-events: auto;
+        overflow: hidden; /* Ensure content doesn't overflow */
+    }
+
+    /* Modal backdrop - enhanced */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 9998 !important; /* Just below modal */
+    }
+
+    /* Animation for modals */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+        transform: translateY(-50px);
+    }
+
+    .modal.show .modal-dialog {
+        transform: translateY(0);
+    }
+
+    /* Improved form spacing */
+    .mb-3 {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Delete modal styling */
+    .text-warning {
+        color: #f59e0b;
+    }
+
+    .text-danger {
+        color: #ef4444;
+    }
+
+    /* Modal title */
+    .modal-title {
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Close button */
+    .btn-close {
+        background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b7280'%3E%3Cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3E%3C/svg%3E") center/1em auto no-repeat;
+        opacity: 0.5;
+        padding: 1rem;
+        margin: -1rem -1rem -1rem auto;
+    }
+
+    .btn-close:hover {
+        opacity: 0.75;
+    }
+
+    /* Fix for modal content to be clickable */
+    .modal-content {
+        position: relative;
+        z-index: 10001 !important; /* Highest z-index */
+        pointer-events: auto;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Modal elements
-        const farmerModal = document.getElementById('farmer-modal');
-        const deleteModal = document.getElementById('delete-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const farmerForm = document.getElementById('farmer-form');
-        const farmerId = document.getElementById('farmer-id');
-        const farmerName = document.getElementById('farmer-name');
-        const farmerPhone = document.getElementById('farmer-phone');
-        const farmerLocation = document.getElementById('farmer-location');
-        const deleteFarmerName = document.getElementById('delete-farmer-name');
-        const deleteFarmerId = document.getElementById('delete-farmer-id');
+        // Make sure Bootstrap is properly loaded
+        if (typeof bootstrap === 'undefined') {
+            console.error('Bootstrap is not loaded. Please check your script includes.');
+            return;
+        }
         
-        // Buttons
-        const addFarmerBtn = document.getElementById('add-farmer-btn');
-        const closeModalBtn = document.getElementById('close-modal');
-        const cancelFarmerBtn = document.getElementById('cancel-farmer');
-        const saveFarmerBtn = document.getElementById('save-farmer');
-        const closeDeleteModalBtn = document.getElementById('close-delete-modal');
-        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        // Initialize all modals
+        var modalElements = document.querySelectorAll('.modal');
+        var modalInstances = {};
         
-        // Edit and delete buttons
-        const editButtons = document.querySelectorAll('.edit-farmer');
-        const deleteButtons = document.querySelectorAll('.delete-farmer');
-        
-        // Open add farmer modal
-        addFarmerBtn.addEventListener('click', function() {
-            modalTitle.textContent = 'Add New Farmer';
-            farmerForm.reset();
-            farmerId.value = '';
-            farmerModal.style.display = 'flex';
+        modalElements.forEach(function(modalEl) {
+            // Create modal instance and store it
+            modalInstances[modalEl.id] = new bootstrap.Modal(modalEl, {
+                backdrop: 'static', // Prevent closing when clicking outside
+                keyboard: true,
+                focus: true
+            });
+            
+            // Ensure modal is hidden initially
+            modalEl.style.display = 'none';
         });
         
-        // Close farmer modal
-        function closeFarmerModal() {
-            farmerModal.style.display = 'none';
-        }
-        
-        closeModalBtn.addEventListener('click', closeFarmerModal);
-        cancelFarmerBtn.addEventListener('click', closeFarmerModal);
-        
-        // Close delete modal
-        function closeDeleteModal() {
-            deleteModal.style.display = 'none';
-        }
-        
-        closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
-        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
-        
-        // Edit farmer
+        // Edit farmer button click
+        const editButtons = document.querySelectorAll('.edit-farmer-btn');
         editButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.dataset.id;
-                const name = this.dataset.name;
-                const phone = this.dataset.phone;
-                const location = this.dataset.location;
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default button behavior
+                e.stopPropagation(); // Stop event propagation
+            
+                const farmerId = this.getAttribute('data-id');
+                const farmerName = this.getAttribute('data-name');
+                const farmerPhone = this.getAttribute('data-phone');
+                const farmerLocation = this.getAttribute('data-location');
                 
-                modalTitle.textContent = 'Edit Farmer';
-                farmerId.value = id;
-                farmerName.value = name;
-                farmerPhone.value = phone;
-                farmerLocation.value = location;
+                // Set form values
+                document.getElementById('edit_name').value = farmerName;
+                document.getElementById('edit_phone_number').value = farmerPhone;
                 
-                farmerModal.style.display = 'flex';
+                // Set the select dropdown value
+                const locationSelect = document.getElementById('edit_location');
+                for (let i = 0; i < locationSelect.options.length; i++) {
+                    if (locationSelect.options[i].value === farmerLocation) {
+                        locationSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // Set form action
+                document.getElementById('editFarmerForm').action = `/cooperative/api/farmers/${farmerId}/update/`;
+                
+                // Show the modal
+                const editModal = document.getElementById('editFarmerModal');
+                editModal.style.display = 'flex';
+                editModal.style.zIndex = '9999';
+                modalInstances['editFarmerModal'].show();
             });
         });
         
-        // Delete farmer
+        // Delete farmer button click
+        const deleteButtons = document.querySelectorAll('.delete-farmer-btn');
         deleteButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.dataset.id;
-                const name = this.dataset.name;
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default button behavior
+                e.stopPropagation(); // Stop event propagation
+            
+                const farmerId = this.getAttribute('data-id');
+                const farmerName = this.getAttribute('data-name');
                 
-                deleteFarmerId.value = id;
-                deleteFarmerName.textContent = name;
+                // Set farmer name in confirmation message
+                document.getElementById('delete_farmer_name').textContent = farmerName;
                 
+                // Set form action
+                document.getElementById('deleteFarmerForm').action = `/cooperative/api/farmers/${farmerId}/delete/`;
+                
+                // Show the modal
+                const deleteModal = document.getElementById('deleteFarmerModal');
                 deleteModal.style.display = 'flex';
+                deleteModal.style.zIndex = '9999';
+                modalInstances['deleteFarmerModal'].show();
             });
         });
         
-        // Save farmer
-        saveFarmerBtn.addEventListener('click', function() {
-            if (farmerForm.checkValidity()) {
-                const isEdit = farmerId.value !== '';
-                const url = isEdit ? `/cooperative/api/farmers/${farmerId.value}/update/` : '/cooperative/api/farmers/create/';
-                const method = isEdit ? 'PUT' : 'POST';
-                
-                const formData = new FormData(farmerForm);
-                
-                fetch(url, {
-                    method: method,
-                    body: JSON.stringify({
-                        name: formData.get('name'),
-                        phone_number: formData.get('phone_number'),
-                        location: formData.get('location')
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        return response.json().then(data => {
-                            throw new Error(data.detail || 'An error occurred');
-                        });
-                    }
-                })
-                .catch(error => {
-                    alert('Error: ' + error.message);
-                });
-            } else {
-                farmerForm.reportValidity();
+        // Add New Farmer button
+        const addFarmerBtn = document.querySelector('.btn-primary[data-bs-toggle="modal"][data-bs-target="#addFarmerModal"]');
+        if (addFarmerBtn) {
+            addFarmerBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default button behavior
+                e.stopPropagation(); // Stop event propagation
+            
+            // Show the modal
+            const addModal = document.getElementById('addFarmerModal');
+            addModal.style.display = 'flex';
+            addModal.style.zIndex = '9999';
+            modalInstances['addFarmerModal'].show();
+        });
+    }
+
+    // Form validation
+    document.getElementById('addFarmerForm').addEventListener('submit', function(e) {
+        if (document.getElementById('location').value === '') {
+            e.preventDefault();
+            alert('Please select a province');
+            return false;
+        }
+        
+        document.getElementById('addFarmerBtn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        document.getElementById('addFarmerBtn').disabled = true;
+    });
+
+    document.getElementById('editFarmerForm').addEventListener('submit', function() {
+        document.getElementById('updateFarmerBtn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+        document.getElementById('updateFarmerBtn').disabled = true;
+    });
+
+    document.getElementById('deleteFarmerForm').addEventListener('submit', function() {
+        document.getElementById('confirmDeleteBtn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+        document.getElementById('confirmDeleteBtn').disabled = true;
+    });
+    
+    // Close buttons for modals
+    document.querySelectorAll('.modal .btn-close, .modal .btn-secondary').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default button behavior
+            e.stopPropagation(); // Stop event propagation
+            
+            const modalId = this.closest('.modal').id;
+            if (modalInstances[modalId]) {
+                modalInstances[modalId].hide();
             }
         });
     });
+    
+    // Ensure modals are properly shown
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(trigger => {
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetModalId = this.getAttribute('data-bs-target').substring(1);
+            const targetModal = document.getElementById(targetModalId);
+            
+            if (targetModal) {
+                targetModal.style.display = 'flex';
+                targetModal.style.zIndex = '9999';
+                
+                if (modalInstances[targetModalId]) {
+                    modalInstances[targetModalId].show();
+                }
+            }
+        });
+    });
+});
 </script>
+<script src="https://kit.fontawesome.com/5ca5999766.js" crossorigin="anonymous"></script>
 {% endblock %}
 

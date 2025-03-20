@@ -6,10 +6,18 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class Farmer(models.Model):
+    PROVINCE_CHOICES = [
+        ('Kigali City', 'Kigali City'),
+        ('Northern Province', 'Northern Province'),
+        ('Southern Province', 'Southern Province'),
+        ('Eastern Province', 'Eastern Province'),
+        ('Western Province', 'Western Province'),
+    ]
+    
     cooperative = models.ForeignKey(User, on_delete=models.CASCADE, related_name='farmers')
     name = models.CharField(max_length=100, default='')
     phone_number = models.CharField(max_length=20, default='')
-    location = models.CharField(max_length=100, default='')
+    location = models.CharField(max_length=100, default='', choices=PROVINCE_CHOICES, help_text="Province in Rwanda")
     created_at = models.DateTimeField(default=timezone.now)  # Changed from auto_now_add
     updated_at = models.DateTimeField(auto_now=True)
     

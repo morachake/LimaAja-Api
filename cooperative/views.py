@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from .models import (
   Farmer, Product, ProduceType, ProduceVariant, CooperativeProduce,
   Customer, Order, OrderItem, OrderReview,
@@ -22,6 +23,8 @@ from django.db.models import Sum, Count, Q
 from django.urls import reverse
 import logging
 import uuid
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -47,28 +50,109 @@ class FarmerDetailView(generics.RetrieveAPIView):
   def get_queryset(self):
       return Farmer.objects.filter(cooperative=self.request.user)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FarmerCreateView(generics.CreateAPIView):
-  serializer_class = FarmerSerializer
-  permission_classes = [IsApprovedCooperative]
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
-  def perform_create(self, serializer):
-      serializer.save(cooperative=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(cooperative=self.request.user)
+        
+    def post(self, request, *args, **kwargs):
+        # Check if this is a form submission
+        if request.content_type == 'application/x-www-form-urlencoded':
+            # Handle form submission
+            data = {
+                'name': request.POST.get('name'),
+                'phone_number': request.POST.get('phone_number'),
+                'location': request.POST.get('location')
+            }
+            serializer = self.get_serializer(data=data)
+            if serializer.is_valid():
+                self.perform_create(serializer)
+                messages.success(request, 'Farmer added successfully')
+                return redirect('/cooperative/dashboard/?view=farmers')
+            else:
+                for field, errors in serializer.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
+                return redirect('/cooperative/dashboard/?view=farmers')
+        
+        # Handle API request
+        return super().post(request, *args, **kwargs)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FarmerUpdateView(generics.UpdateAPIView):
-  serializer_class = FarmerSerializer
-  permission_classes = [IsApprovedCooperative]
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
-  def get_queryset(self):
-      return Farmer.objects.filter(cooperative=self.request.user)
+    def get_queryset(self):
+        return Farmer.objects.filter(cooperative=self.request.user)
+        
+    def put(self, request, *args, **kwargs):
+        # Check if this is a form submission
+        if request.content_type == 'application/x-www-form-urlencoded':
+            # Handle form submission
+            instance = self.get_object()
+            data = {
+                'name': request.POST.get('name'),
+                'phone_number': request.POST.get('phone_number'),
+                'location': request.POST.get('location')
+            }
+            serializer = self.get_serializer(instance, data=data)
+            if serializer.is_valid():
+                self.perform_update(serializer)
+                messages.success(request, 'Farmer updated successfully')
+                return redirect('/cooperative/dashboard/?view=farmers')
+            else:
+                for field, errors in serializer.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
+                return redirect('/cooperative/dashboard/?view=farmers')
+        
+        # Handle API request
+        return super().put(request, *args, **kwargs)
+    
+    # Override this to handle POST requests for form submissions
+    def post(self, request, *args, **kwargs):
+        return self.put(request, *args, **kwargs)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FarmerDeleteView(generics.DestroyAPIView):
-  permission_classes = [IsApprovedCooperative]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
-  def get_queryset(self):
-      return Farmer.objects.filter(cooperative=self.request.user)
+    def get_queryset(self):
+        return Farmer.objects.filter(cooperative=self.request.user)
+        
+    def delete(self, request, *args, **kwargs):
+        # Check if this is a form submission
+        if request.content_type == 'application/x-www-form-urlencoded':
+            try:
+                # Handle form submission
+                instance = self.get_object()
+                farmer_name = instance.name
+                self.perform_destroy(instance)
+                messages.success(request, f'Farmer "{farmer_name}" deleted successfully')
+            except Exception as e:
+                messages.error(request, f'Error deleting farmer: {str(e)}')
+            
+            # Redirect back to farmers page
+            return redirect('/cooperative/dashboard/?view=farmers')
+        
+        # Handle API request
+        return super().delete(request, *args, **kwargs)
+    
+    # Override this to handle POST requests for form submissions
+    def post(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)
 
 def cooperative_index(request):
   return render(request, 'cooperative/index.html')
+
+
 
 # login for coopreratives
 def cooperative_login(request):
@@ -928,40 +1012,3 @@ def set_primary_bank_account(request, account_id):
     
     return redirect('/cooperative/dashboard/?view=finance')
 
-
-
-# API Views for Farmers
-class FarmerListView(generics.ListAPIView):
-    serializer_class = FarmerSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return Farmer.objects.filter(cooperative=self.request.user)
-
-class FarmerDetailView(generics.RetrieveAPIView):
-    serializer_class = FarmerSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return Farmer.objects.filter(cooperative=self.request.user)
-
-class FarmerCreateView(generics.CreateAPIView):
-    serializer_class = FarmerSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        serializer.save(cooperative=self.request.user)
-
-class FarmerUpdateView(generics.UpdateAPIView):
-    serializer_class = FarmerSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return Farmer.objects.filter(cooperative=self.request.user)
-
-class FarmerDeleteView(generics.DestroyAPIView):
-    serializer_class = FarmerSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return Farmer.objects.filter(cooperative=self.request.user)

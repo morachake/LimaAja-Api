@@ -25,11 +25,11 @@ urlpatterns = [
     path('dashboard/set-primary-bank-account/<int:account_id>/', views.set_primary_bank_account, name='set_primary_bank_account'),
   
     
-    # API endpoints
-    path('api/farmers/', views.FarmerListView.as_view(), name='farmer-list'),
-    path('api/farmers/<int:pk>/', views.FarmerDetailView.as_view(), name='farmer-detail'),
-    path('api/farmers/create/', views.FarmerCreateView.as_view(), name='farmer-create'),
-    path('api/farmers/<int:pk>/update/', views.FarmerUpdateView.as_view(), name='farmer-update'),
-    path('api/farmers/<int:pk>/delete/', views.FarmerDeleteView.as_view(), name='farmer-delete'),
+      # API endpoints
+    path('api/farmers/create/', views.FarmerCreateView.as_view(), name='farmer_create'),
+    path('api/farmers/<int:pk>/update/', views.FarmerUpdateView.as_view(), name='farmer_update'),
+    path('api/farmers/<int:pk>/delete/', views.FarmerDeleteView.as_view(), name='farmer_delete'),
+    path('api/farmers/', views.FarmerListView.as_view(), name='farmer_list'),
+    path('api/farmers/<int:pk>/', views.FarmerDetailView.as_view(), name='farmer_detail'),
 ]
 
