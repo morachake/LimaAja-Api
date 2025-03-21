@@ -1,467 +1,243 @@
-{% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Awaiting Verification - Lima Aja{% endblock %}
-
-{% block extra_css %}
-<style>
-    .auth-container {
-        max-width: 600px;
-        margin: 3rem auto;
-        padding: 0;
-    }
-    
-    .auth-card {
-        background-color: var(--white);
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-    }
-    
-    .auth-header {
-        background-color: var(--primary-color);
-        color: white;
-        padding: 1.5rem;
-        text-align: center;
-        position: relative;
-    }
-    
-    .auth-header h2 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
-    }
-    
-    .auth-body {
-        padding: 2rem;
-    }
-    
-    .verification-status {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    
-    .status-icon {
-        width: 80px;
-        height: 80px;
-        background-color: #f8f9fa;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        border: 3px solid #e2e8f0;
-    }
-    
-    .status-icon i {
-        font-size: 2rem;
-        color: var(--primary-color);
-    }
-    
-    .verification-status p {
-        margin-bottom: 1rem;
-        color: var(--text-color);
-        line-height: 1.6;
-    }
-    
-    .verification-progress {
-        margin: 2rem 0;
-    }
-    
-    .progress-container {
-        background-color: #f1f5f9;
-        border-radius: 8px;
-        height: 10px;
-        margin-bottom: 1rem;
-        overflow: hidden;
-    }
-    
-    .progress-bar {
-        height: 100%;
-        width: 30%;
-        background-color: var(--primary-color);
-        border-radius: 8px;
-        animation: pulse 2s infinite;
-    }
-    
-    .progress-label {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-    
-    .verification-steps {
-        margin: 2rem 0;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .step {
-        padding: 1rem;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-    }
-    
-    .step:last-child {
-        border-bottom: none;
-    }
-    
-    .step-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-    
-    .step-complete .step-icon {
-        background-color: #dcfce7;
-        color: var(--success);
-    }
-    
-    .step-current .step-icon {
-        background-color: #e0f2fe;
-        color: var(--info);
-    }
-    
-    .step-pending .step-icon {
-        background-color: #f1f5f9;
-        color: var(--text-secondary);
-    }
-    
-    .step-content {
-        flex-grow: 1;
-    }
-    
-    .step-title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-    }
-    
-    .step-description {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-    
-    .verification-contact {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-top: 2rem;
-    }
-    
-    .verification-contact h3 {
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        color: var(--text-color);
-    }
-    
-    .contact-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-    
-    .contact-item i {
-        width: 20px;
-        margin-right: 0.75rem;
-        color: var(--primary-color);
-    }
-    
-    .auth-footer {
-        padding: 1.5rem;
-        text-align: center;
-        border-top: 1px solid #e2e8f0;
-    }
-    
-    .btn-secondary {
-        background-color: #f1f5f9;
-        color: var(--text-color);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 6px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.2s;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #e2e8f0;
-    }
-    
-    .document-list {
-        margin: 1.5rem 0;
-    }
-    
-    .document-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        margin-bottom: 0.75rem;
-    }
-    
-    .document-icon {
-        width: 40px;
-        height: 40px;
-        background-color: #f1f5f9;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-    }
-    
-    .document-icon i {
-        color: var(--primary-color);
-    }
-    
-    .document-info {
-        flex-grow: 1;
-    }
-    
-    .document-name {
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-    
-    .document-status {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 12px;
-        display: inline-block;
-    }
-    
-    .status-uploaded {
-        background-color: #dcfce7;
-        color: var(--success);
-    }
-    
-    .success-message {
-        background-color: #dcfce7;
-        color: var(--success);
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        display: none;
-        text-align: center;
-        font-weight: 500;
-    }
-    
-    @keyframes pulse {
-        0% {
-            opacity: 0.6;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verification - Lima Aja</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --light-green: #e9f7e0;
+            --pattern-opacity: 0.3;
         }
-        50% {
-            opacity: 1;
-        }
-        100% {
-            opacity: 0.6;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h2>Awaiting Verification</h2>
-        </div>
         
-        <div class="auth-body">
-            <!-- Success message (hidden by default) -->
-            <div id="success-message" class="success-message">
-                <i class="fas fa-check-circle"></i> Your account has been approved! Redirecting to dashboard...
-            </div>
+        .verification-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .verification-left {
+            display: none;
+            background-color: var(--light-green);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .verification-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234d7c0f' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: var(--pattern-opacity);
+        }
+        
+        .verification-logo {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .verification-content {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .verification-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+        
+        .verification-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .verification-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            border-radius: 12px;
+            background-color: var(--secondary-color);
+        }
+        
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .step-content h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.125rem;
+            color: var(--primary-color);
+        }
+        
+        .step-content p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .contact-support {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .contact-support h3 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1.125rem;
+        }
+        
+        .contact-support p {
+            margin: 0 0 1rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .contact-methods {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .contact-method {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .back-to-home {
+            margin-top: 2.5rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .verification-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
             
-            <div class="verification-status">
-                <div class="status-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <p>Your account is currently under review by our team. We are verifying the documents you've submitted.</p>
-                <p>This process usually takes 1-2 business days. You will receive an email notification once your account is approved.</p>
-            </div>
+            .verification-left {
+                display: block;
+            }
             
-            <div class="verification-progress">
-                <div class="progress-container">
-                    <div class="progress-bar"></div>
-                </div>
-                <div class="progress-label">
-                    <span>Verification in progress</span>
-                    <span>30%</span>
-                </div>
-            </div>
-            
-            <div class="verification-steps">
-                <div class="step step-complete">
-                    <div class="step-icon">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="step-content">
-                        <div class="step-title">Registration Completed</div>
-                        <div class="step-description">You've successfully created your account</div>
-                    </div>
-                </div>
-                
-                <div class="step step-complete">
-                    <div class="step-icon">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="step-content">
-                        <div class="step-title">Documents Uploaded</div>
-                        <div class="step-description">Required documents have been submitted</div>
-                    </div>
-                </div>
-                
-                <div class="step step-current">
-                    <div class="step-icon">
-                        <i class="fas fa-spinner"></i>
-                    </div>
-                    <div class="step-content">
-                        <div class="step-title">Verification in Progress</div>
-                        <div class="step-description">Our team is reviewing your documents</div>
-                    </div>
-                </div>
-                
-                <div class="step step-pending">
-                    <div class="step-icon">
-                        <i class="fas fa-hourglass-half"></i>
-                    </div>
-                    <div class="step-content">
-                        <div class="step-title">Account Approval</div>
-                        <div class="step-description">Final approval of your cooperative account</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="document-list">
-                <h3>Submitted Documents</h3>
-                
-                <div class="document-item">
-                    <div class="document-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="document-info">
-                        <div class="document-name">Business Registration Certificate</div>
-                        <div class="document-status status-uploaded">Uploaded</div>
-                    </div>
-                </div>
-                
-                <div class="document-item">
-                    <div class="document-icon">
-                        <i class="fas fa-id-card"></i>
-                    </div>
-                    <div class="document-info">
-                        <div class="document-name">Cooperative ID</div>
-                        <div class="document-status status-uploaded">Uploaded</div>
-                    </div>
-                </div>
-                
-                <div class="document-item">
-                    <div class="document-icon">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
-                    <div class="document-info">
-                        <div class="document-name">Tax Registration Document</div>
-                        <div class="document-status status-uploaded">Uploaded</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="verification-contact">
-                <h3>Need Help?</h3>
-                <div class="contact-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>support@limaaja.com</span>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-phone"></i>
-                    <span>+62 123 456 7890</span>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-clock"></i>
-                    <span>Monday - Friday, 9:00 AM - 5:00 PM WIB</span>
-                </div>
+            .verification-content {
+                padding: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="verification-left">
+            <div class="verification-pattern"></div>
+            <div class="verification-logo">LIMA-AJA</div>
+            <div style="position: absolute; bottom: 2rem; left: 2rem; right: 2rem; text-align: center; color: var(--primary-color);">
+                <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">
+                    Sell Farm Produce,<br>
+                    Earn, Get Support,<br>
+                    And Grow.
+                </h2>
             </div>
         </div>
         
-        <div class="auth-footer">
-            <a href="{% url 'logout' %}" class="btn btn-secondary">Logout</a>
+        <div class="verification-right">
+            <div class="verification-content">
+                <div class="auth-logo">
+                    <img src="{% static 'images/logo.png' %}" alt="Lima Aja Logo" style="width: 80px; height: 80px;">
+                </div>
+                
+                <h1 style="font-size: 2rem; margin: 1rem 0 0.5rem;">Verification in Progress</h1>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Your account is awaiting verification by our team</p>
+                
+                <div style="position: relative; width: 100%; height: 6px; background-color: #f3f4f6; border-radius: 3px; margin-bottom: 2rem;">
+                    <div style="position: absolute; top: 0; left: 0; height: 100%; width: 30%; background-color: var(--primary-color); border-radius: 3px;">
+                        <div style="position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 50%; background-color: var(--primary-color);"></div>
+                    </div>
+                </div>
+                
+                <div class="verification-steps">
+                    <div class="verification-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Application Submitted</h3>
+                            <p>Your cooperative registration has been successfully submitted to our system.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="verification-step" style="background-color: rgba(237, 233, 254, 0.5);">
+                        <div class="step-number" style="background-color: #8b5cf6;">2</div>
+                        <div class="step-content">
+                            <h3>Under Review</h3>
+                            <p>Our team is currently reviewing your application. This typically takes 1-2 business days.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="verification-step" style="background-color: rgba(236, 253, 245, 0.5); opacity: 0.6;">
+                        <div class="step-number" style="background-color: #10b981;">3</div>
+                        <div class="step-content">
+                            <h3>Account Activation</h3>
+                            <p>Once approved, you'll receive an email notification and can start using Lima Aja.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-support">
+                    <h3>Need Help?</h3>
+                    <p>If you have any questions or concerns about your application, please contact our support team.</p>
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <i class="fas fa-envelope"></i>
+                            <span>support@lima-aja.com</span>
+                        </div>
+                        <div class="contact-method">
+                            <i class="fas fa-phone"></i>
+                            <span>+62 123 456 7890</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="back-to-home">
+                    <a href="{% url 'cooperative:index' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i>
+                        Back to Home
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-<script>
-    // Check approval status every 30 seconds
-    function checkApprovalStatus() {
-        fetch('/cooperative/check-approval-status/')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Checking approval status:', data);
-                if (data.is_approved) {
-                    // Show success message
-                    const successMessage = document.getElementById('success-message');
-                    successMessage.style.display = 'block';
-                    
-                    // Update steps
-                    const steps = document.querySelectorAll('.step');
-                    steps.forEach(step => {
-                        step.classList.remove('step-current', 'step-pending');
-                        step.classList.add('step-complete');
-                        const icon = step.querySelector('.step-icon i');
-                        icon.className = 'fas fa-check';
-                    });
-                    
-                    // Update progress bar
-                    const progressBar = document.querySelector('.progress-bar');
-                    progressBar.style.width = '100%';
-                    progressBar.style.animation = 'none';
-                    
-                    // Update progress label
-                    const progressLabel = document.querySelector('.progress-label span:last-child');
-                    progressLabel.textContent = '100%';
-                    
-                    // Redirect to dashboard after a short delay
-                    setTimeout(() => {
-                        window.location.href = '/cooperative/dashboard/';
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                console.error('Error checking approval status:', error);
-            });
-    }
-
-    // Check immediately on page load
-    checkApprovalStatus();
-    
-    // Then check every 30 seconds
-    setInterval(checkApprovalStatus, 30000);
-    
-    // Simulate progress updates (for visual effect only)
-    let currentProgress = 30;
-    const progressInterval = setInterval(() => {
-        if (currentProgress < 90) {
-            currentProgress += Math.floor(Math.random() * 5) + 1;
-            if (currentProgress > 90) currentProgress = 90;
-            
-            const progressBar = document.querySelector('.progress-bar');
-            const progressLabel = document.querySelector('.progress-label span:last-child');
-            
-            progressBar.style.width = `${currentProgress}%`;
-            progressLabel.textContent = `${currentProgress}%`;
-        } else {
-            clearInterval(progressInterval);
-        }
-    }, 15000); // Update every 15 seconds
-</script>
-{% endblock %}
+</body>
+</html>
 
