@@ -12,8 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'email', 'phone_number', 'password', 'password2', 'role', 
-                  'profile_picture', 'address', 'city', 'country', 'certificates', 'payment_details', 
-                  'payment_methods', 'is_approved')
+                  'profile_picture', 'address', 'city', 'province', 'postal_code', 'country', 
+                  'certificates', 'payment_details', 'payment_methods', 'is_approved',
+                  'registration_number', 'tax_id', 'year_established', 'cooperative_type', 'website',
+                  'manager_name', 'manager_email', 'manager_phone', 'manager_role', 'manager_bio',
+                  'contact_name', 'contact_email', 'contact_phone', 'contact_role')
         extra_kwargs = {
             'full_name': {'required': True},
             'email': {'required': True},
@@ -30,7 +33,8 @@ class UserSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)
         return user
-
+    
+    
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(max_length=128, write_only=True)
@@ -50,9 +54,25 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'email', 'phone_number', 'role', 'profile_picture', 
-                  'address', 'city', 'country', 'created_at', 'updated_at', 'certificates', 
-                  'payment_details', 'payment_methods', 'is_approved')
+                  'address', 'city', 'province', 'postal_code', 'country', 
+                  'created_at', 'updated_at', 'certificates', 'payment_details', 
+                  'payment_methods', 'is_approved', 'registration_number', 'tax_id', 
+                  'year_established', 'cooperative_type', 'website',
+                  'manager_name', 'manager_email', 'manager_phone', 'manager_role', 'manager_bio',
+                  'contact_name', 'contact_email', 'contact_phone', 'contact_role')
         read_only_fields = ('id', 'email', 'role', 'created_at', 'updated_at', 'is_approved')
+
+class CooperativeProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'email', 'phone_number', 'profile_picture', 
+                  'address', 'city', 'province', 'postal_code', 'country', 
+                  'registration_number', 'tax_id', 'year_established', 'cooperative_type', 'website',
+                  'manager_name', 'manager_email', 'manager_phone', 'manager_role', 'manager_bio',
+                  'contact_name', 'contact_email', 'contact_phone', 'contact_role',
+                  'payment_details', 'is_approved')
+        read_only_fields = ('id', 'email', 'is_approved')
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
