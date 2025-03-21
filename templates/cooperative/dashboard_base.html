@@ -9,6 +9,103 @@
   <link rel="stylesheet" href="/static/css/dashboard.css">
   <link rel="stylesheet" href="/static/css/dashboard-additional.css">
   {% block extra_css %}{% endblock %}
+  <style>
+    /* Inline styles for the modal to avoid any conflicts */
+    #basic-logout-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+    }
+    
+    .basic-modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .basic-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .basic-modal-header h3 {
+      margin: 0;
+      color: #333;
+    }
+    
+    .basic-close-button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .basic-modal-body {
+      margin-bottom: 20px;
+    }
+    
+    .basic-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .basic-btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .basic-btn-secondary {
+      background-color: #f3f4f6;
+      color: #374151;
+    }
+    
+    .basic-btn-danger {
+      background-color: #ef4444;
+      color: white;
+    }
+    
+    .basic-loading {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+    
+    .basic-spinner {
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #4d7c0f;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard-container">
@@ -47,6 +144,10 @@
                   <i class="fas fa-question-circle"></i>
                   Help Center
               </a>
+              <button id="sidebar-logout-btn" class="menu-item logout-btn">
+                  <i class="fas fa-sign-out-alt"></i>
+                  Logout
+              </button>
           </div>
       </div>
 
@@ -64,23 +165,60 @@
                   </div>
               </div>
               <div class="header-actions">
-                  <div class="action-item">
-                      <i class="fas fa-bell"></i>
-                      {% if new_notifications %}
-                      <span class="badge">{{ new_notifications }}</span>
-                      {% endif %}
+                  <div class="dropdown">
+                      <button class="action-item" id="notifications-toggle">
+                          <i class="fas fa-bell"></i>
+                          {% if new_notifications %}
+                          <span class="badge">{{ new_notifications }}</span>
+                          {% endif %}
+                      </button>
                   </div>
                   <div class="action-item">
                       <i class="fas fa-comment-alt"></i>
                   </div>
               </div>
-              <div class="user-profile">
-                  <img src="/static/images/user-avatar.png" alt="User Avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI2U5ZjdlMCIvPjxjaXJjbGUgY3g9IjE4IiBjeT0iMTUiIHI9IjYiIGZpbGw9IiM0ZDdjMGYiLz48cGF0aCBkPSJNOCAyOWMwLTUuNTIzIDQuNDc3LTEwIDEwLTEwczEwIDQuNDc3IDEwIDEwSDhaIiBmaWxsPSIjNGQ3YzBmIi8+PC9zdmc+'">
-                  <div class="user-info">
-                      <div class="name">{{ request.user.full_name }}</div>
-                      <div class="role">Cooperative Admin</div>
+              <div class="dropdown">
+                  <button class="user-profile" id="profile-toggle">
+                      <img src="/static/images/user-avatar.png" alt="User Avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI2U5ZjdlMCIvPjxjaXJjbGUgY3g9IjE4IiBjeT0iMTUiIHI9IjYiIGZpbGw9IiM0ZDdjMGYiLz48cGF0aCBkPSJNOCAyOWMwLTUuNTIzIDQuNDc3LTEwIDEwLTEwczEwIDQuNDc3IDEwIDEwSDhaIiBmaWxsPSIjNGQ3YzBmIi8+PC9zdmc+'">
+                      <div class="user-info">
+                          <div class="name">{{ request.user.full_name }}</div>
+                          <div class="role">Cooperative Admin</div>
+                      </div>
+                      <i class="fas fa-chevron-down"></i>
+                  </button>
+                  
+                  <!-- Profile Dropdown -->
+                  <div class="dropdown-content profile-dropdown">
+                      <div class="dropdown-header">
+                          <div class="profile-header">
+                              <img src="/static/images/user-avatar.png" alt="User Avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIzNiIgY3k9IjM2IiByPSIzNiIgZmlsbD0iI2U5ZjdlMCIvPjxjaXJjbGUgY3g9IjM2IiBjeT0iMzAiIHI9IjEyIiBmaWxsPSIjNGQ3YzBmIi8+PHBhdGggZD0iTTE2IDU4YzAtMTEuMDQ2IDguOTU0LTIwIDIwLTIwczIwIDguOTU0IDIwIDIwSDE2WiIgZmlsbD0iIzRkN2MwZiIvPjwvc3ZnPg=='">
+                              <div>
+                                  <h3>{{ request.user.full_name }}</h3>
+                                  <p>{{ request.user.email }}</p>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="dropdown-body">
+                          <a href="#" class="dropdown-item" id="profile-link">
+                              <i class="fas fa-user"></i>
+                              <span>My Profile</span>
+                          </a>
+                          <a href="{% url 'cooperative_dashboard' %}?view=settings" class="dropdown-item">
+                              <i class="fas fa-cog"></i>
+                              <span>Account Settings</span>
+                          </a>
+                          <a href="#" class="dropdown-item">
+                              <i class="fas fa-question-circle"></i>
+                              <span>Help & Support</span>
+                          </a>
+                      </div>
+                      <div class="dropdown-footer">
+                          <button id="header-logout-btn" class="signout-button">
+                              <i class="fas fa-sign-out-alt"></i>
+                              <span>Sign Out</span>
+                          </button>
+                      </div>
                   </div>
-                  <i class="fas fa-chevron-down"></i>
               </div>
           </div>
 
@@ -101,10 +239,130 @@
       </div>
   </div>
 
+  <!-- Super simple logout modal with inline styles -->
+  <div id="basic-logout-modal">
+    <div class="basic-modal-content">
+      <div class="basic-modal-header">
+        <h3><i class="fas fa-sign-out-alt" style="color: #ef4444; margin-right: 8px;"></i> Confirm Logout</h3>
+        <button class="basic-close-button" id="basic-close-btn">&times;</button>
+      </div>
+      <div class="basic-modal-body">
+        <p>Are you sure you want to logout from Lima-Aja?</p>
+        <div class="basic-loading" id="basic-loading">
+          <div class="basic-spinner"></div>
+          <p>Logging out...</p>
+        </div>
+      </div>
+      <div class="basic-modal-footer" id="basic-modal-footer">
+        <button class="basic-btn basic-btn-secondary" id="basic-cancel-btn">Cancel</button>
+        <a href="{% url 'logout' %}" class="basic-btn basic-btn-danger" id="basic-confirm-btn">Logout</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Bootstrap JS before your custom scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script src="/static/js/dashboard.js"></script>
+  
+  <!-- Inline script for the modal to ensure it works -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Basic modal script loaded');
+      
+      // Get modal elements
+      const modal = document.getElementById('basic-logout-modal');
+      const closeBtn = document.getElementById('basic-close-btn');
+      const cancelBtn = document.getElementById('basic-cancel-btn');
+      const confirmBtn = document.getElementById('basic-confirm-btn');
+      const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+      const headerLogoutBtn = document.getElementById('header-logout-btn');
+      const loading = document.getElementById('basic-loading');
+      const modalFooter = document.getElementById('basic-modal-footer');
+      
+      console.log('Modal elements:', {
+        modal, closeBtn, cancelBtn, confirmBtn, sidebarLogoutBtn, headerLogoutBtn
+      });
+      
+      // Open modal
+      function openModal() {
+        console.log('Opening modal');
+        if (modal) {
+          modal.style.display = 'block';
+        }
+      }
+      
+      // Close modal
+      function closeModal() {
+        console.log('Closing modal');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      }
+      
+      // Event listeners
+      if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', function(e) {
+          console.log('Sidebar logout button clicked');
+          e.preventDefault();
+          openModal();
+        });
+      }
+      
+      if (headerLogoutBtn) {
+        headerLogoutBtn.addEventListener('click', function(e) {
+          console.log('Header logout button clicked');
+          e.preventDefault();
+          openModal();
+        });
+      }
+      
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+      }
+      
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+      }
+      
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          console.log('Confirm logout clicked');
+          
+          // Show loading spinner
+          if (loading) {
+            loading.style.display = 'block';
+          }
+          
+          // Hide footer buttons
+          if (modalFooter) {
+            modalFooter.style.display = 'none';
+          }
+          
+          // Redirect after a delay
+          setTimeout(function() {
+            window.location.href = confirmBtn.getAttribute('href');
+          }, 1000);
+        });
+      }
+      
+      // Close when clicking outside the modal
+      window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+      
+      // Close with ESC key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      });
+    });
+  </script>
+  
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>
