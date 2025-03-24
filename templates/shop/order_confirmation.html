@@ -1,86 +1,110 @@
-{% extends "base.html" %}
+{% extends 'shop/base.html' %}
 {% load static %}
 
-{% block title %}Order Confirmation - Lima Aja{% endblock %}
+{% block title %}Order Confirmation - LimaAja{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
-                <p class="text-gray-600">Thank you for your purchase. Your order has been received.</p>
-            </div>
-            
-            <div class="border-t border-b py-4 mb-6">
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Order Number:</span>
-                    <span class="font-medium">{{ order.id }}</span>
-                </div>
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Date:</span>
-                    <span class="font-medium">{{ order.created_at|date:"F j, Y" }}</span>
-                </div>
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Payment Method:</span>
-                    <span class="font-medium">{{ order.payment_method }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Order Status:</span>
-                    <span class="font-medium text-green-600">{{ order.status }}</span>
-                </div>
-            </div>
-            
-            <div class="mb-6">
-                <h2 class="text-lg font-semibold mb-4">Order Items</h2>
-                <div class="space-y-3">
-                    {% for item in order_items %}
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-start">
-                            <div class="h-10 w-10 flex-shrink-0 mr-3">
-                                {% if item.product.image %}
-                                <img class="h-10 w-10 rounded object-cover" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-                                {% else %}
-                                <div class="h-10 w-10 rounded bg-gray-200 flex items-center justify-center">
-                                    <span class="text-xs text-gray-500">No img</span>
-                                </div>
-                                {% endif %}
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium">{{ item.product.name }}</p>
-                                <p class="text-xs text-gray-500">{{ item.quantity }} {{ item.product.unit }} x Rp {{ item.price }}</p>
-                            </div>
-                        </div>
-                        <p class="text-sm font-medium">Rp {{ item.subtotal }}</p>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6 sm:p-8">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                     </div>
-                    {% endfor %}
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Thank You for Your Order!</h1>
+                    <p class="text-gray-600">Your order has been received and is now being processed.</p>
                 </div>
-            </div>
-            
-            <div class="border-t pt-4 mb-6">
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Subtotal</span>
-                    <span>Rp {{ order.total_amount }}</span>
+                
+                <div class="border-t border-b border-gray-200 py-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">Order Number</h3>
+                            <p class="text-lg font-bold text-gray-800">{{ order.id }}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">Date</h3>
+                            <p class="text-lg font-bold text-gray-800">{{ order.created_at|date:"F j, Y" }}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">Total</h3>
+                            <p class="text-lg font-bold text-primary">Rp {{ order.total|floatformat:0 }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Shipping</span>
-                    <span>Rp 0</span>
+                
+                <div class="mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Order Details</h2>
+                    
+                    <div class="flow-root">
+                        <ul class="-my-6 divide-y divide-gray-200">
+                            {% for item in order_items %}
+                            <li class="py-6 flex">
+                                <div class="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden">
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/96?text={{ item.product.produce_type.name }}'">
+                                </div>
+                                
+                                <div class="ml-4 flex-1 flex flex-col">
+                                    <div>
+                                        <div class="flex justify-between text-base font-medium text-gray-900">
+                                            <h3>{{ item.product.produce_type.name }}</h3>
+                                            <p class="ml-4">Rp {{ item.price|floatformat:0 }}</p>
+                                        </div>
+                                        <p class="mt-1 text-sm text-gray-500">{{ item.product.cooperative.name }}</p>
+                                        <p class="mt-1 text-sm text-gray-500">Grade: {{ item.product.grade }}</p>
+                                    </div>
+                                    
+                                    <div class="flex-1 flex items-end justify-between text-sm">
+                                        <p class="text-gray-500">Qty {{ item.quantity }}</p>
+                                        <p class="font-medium text-gray-900">Subtotal: Rp {{ item.subtotal|floatformat:0 }}</p>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
-                <div class="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span class="text-green-600">Rp {{ order.total_amount }}</span>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Shipping Information</h2>
+                        <address class="not-italic">
+                            <p class="mb-1">{{ order.shipping_name }}</p>
+                            <p class="mb-1">{{ order.shipping_address }}</p>
+                            <p class="mb-1">{{ order.shipping_city }}, {{ order.shipping_postal_code }}</p>
+                            <p class="mb-1">Phone: {{ order.shipping_phone }}</p>
+                            <p>Email: {{ order.user.email }}</p>
+                        </address>
+                    </div>
+                    
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Payment Information</h2>
+                        <p class="mb-1"><span class="font-medium">Method:</span> {{ order.get_payment_method_display }}</p>
+                        <p class="mb-1"><span class="font-medium">Status:</span> <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ order.get_status_display }}</span></p>
+                        
+                        {% if order.payment_method == 'bank_transfer' %}
+                        <div class="mt-4 p-4 bg-gray-50 rounded-md">
+                            <h3 class="font-medium text-gray-800 mb-2">Bank Transfer Details</h3>
+                            <p class="text-sm text-gray-600 mb-1">Please transfer the total amount to:</p>
+                            <p class="text-sm mb-1"><span class="font-medium">Bank:</span> Bank Central Asia (BCA)</p>
+                            <p class="text-sm mb-1"><span class="font-medium">Account Number:</span> 1234567890</p>
+                            <p class="text-sm mb-1"><span class="font-medium">Account Name:</span> PT LimaAja Indonesia</p>
+                            <p class="text-sm text-gray-600 mt-2">Please include your order number in the transfer description.</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
-            
-            <div class="text-center">
-                <a href="{% url 'shop:home' %}" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
-                    Continue Shopping
-                </a>
+                
+                <div class="text-center">
+                    <a href="{% url 'shop:order_history' %}" class="inline-block bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-md transition duration-300">
+                        View Order History
+                    </a>
+                    <a href="{% url 'shop:home' %}" class="inline-block ml-4 border border-primary text-primary hover:bg-primary-light font-bold py-3 px-6 rounded-md transition duration-300">
+                        Continue Shopping
+                    </a>
+                </div>
             </div>
         </div>
     </div>

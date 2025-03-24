@@ -11,10 +11,25 @@ def home(request):
     """
     # Get products with quantity > 0
     featured_products = CooperativeProduce.objects.filter(quantity__gt=0)[:8]
+    
+    # Get fruit products
+    fruit_products = CooperativeProduce.objects.filter(
+        produce_type__category__name__icontains='fruit',
+        quantity__gt=0
+    )[:4]
+    
+    # Get vegetable products
+    vegetable_products = CooperativeProduce.objects.filter(
+        produce_type__category__name__icontains='vegetable',
+        quantity__gt=0
+    )[:4]
+    
     categories = Category.objects.all()[:6]
     
     context = {
         'featured_products': featured_products,
+        'fruit_products': fruit_products,
+        'vegetable_products': vegetable_products,
         'categories': categories,
     }
     return render(request, 'shop/home.html', context)
