@@ -1,0 +1,60 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Register - Lima Aja{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-green-600 text-white py-4 px-6">
+            <h2 class="text-2xl font-bold">Create an Account</h2>
+        </div>
+        
+        <form method="post" class="py-6 px-8">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 font-medium mb-2">Username</label>
+                <input type="text" name="username" id="username" required
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 font-medium mb-2">Email Address</label>
+                <input type="email" name="email" id="email" required
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
+                <input type="password" name="password" id="password" required
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
+            </div>
+            
+            <div class="mb-6">
+                <label for="password2" class="block text-gray-700 font-medium mb-2">Confirm Password</label>
+                <input type="password" name="password2" id="password2" required
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            
+            <div class="mb-6">
+                <div class="flex items-center">
+                    <input type="checkbox" name="terms" id="terms" required class="mr-2">
+                    <label for="terms" class="text-gray-700">I agree to the <a href="#" class="text-green-600 hover:underline">Terms and Conditions</a></label>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
+                    Register
+                </button>
+            </div>
+            
+            <div class="text-center text-gray-600">
+                <p>Already have an account? <a href="{% url 'shop:login' %}" class="text-green-600 hover:underline">Login here</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
