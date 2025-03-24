@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order Confirmation - Lima Aja{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+                <p class="text-gray-600">Thank you for your purchase. Your order has been received.</p>
+            </div>
+            
+            <div class="border-t border-b py-4 mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Order Number:</span>
+                    <span class="font-medium">{{ order.id }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Date:</span>
+                    <span class="font-medium">{{ order.created_at|date:"F j, Y" }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Payment Method:</span>
+                    <span class="font-medium">{{ order.payment_method }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Order Status:</span>
+                    <span class="font-medium text-green-600">{{ order.status }}</span>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-4">Order Items</h2>
+                <div class="space-y-3">
+                    {% for item in order_items %}
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-start">
+                            <div class="h-10 w-10 flex-shrink-0 mr-3">
+                                {% if item.product.image %}
+                                <img class="h-10 w-10 rounded object-cover" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                <div class="h-10 w-10 rounded bg-gray-200 flex items-center justify-center">
+                                    <span class="text-xs text-gray-500">No img</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">{{ item.product.name }}</p>
+                                <p class="text-xs text-gray-500">{{ item.quantity }} {{ item.product.unit }} x Rp {{ item.price }}</p>
+                            </div>
+                        </div>
+                        <p class="text-sm font-medium">Rp {{ item.subtotal }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="border-t pt-4 mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span>Rp {{ order.total_amount }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Shipping</span>
+                    <span>Rp 0</span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span class="text-green-600">Rp {{ order.total_amount }}</span>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{% url 'shop:home' %}" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

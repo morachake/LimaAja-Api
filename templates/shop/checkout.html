@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Lima Aja{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Checkout</h1>
+    
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Checkout Form -->
+        <div class="lg:w-2/3">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Shipping Information</h2>
+                
+                <form method="post" action="{% url 'shop:place_order' %}" id="checkout-form">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                            <input type="text" id="first_name" name="first_name" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="email" name="email" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+                        <input type="text" id="address" name="address" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                            <input type="text" id="city" name="city" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="state" class="block text-sm font-medium text-gray-700 mb-1">Province</label>
+                            <input type="text" id="state" name="state" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="zip_code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                            <input type="text" id="zip_code" name="zip_code" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="radio" id="payment_cod" name="payment_method" value="COD" form="checkout-form" checked
+                               class="h-4 w-4 text-green-600 focus:ring-green-500">
+                        <label for="payment_cod" class="ml-3 block text-sm font-medium text-gray-700">
+                            Cash on Delivery
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="radio" id="payment_bank" name="payment_method" value="BANK_TRANSFER" form="checkout-form"
+                               class="h-4 w-4 text-green-600 focus:ring-green-500">
+                        <label for="payment_bank" class="ml-3 block text-sm font-medium text-gray-700">
+                            Bank Transfer
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="lg:w-1/3">
+            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-6">
+                <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+                
+                <div class="border-b pb-4 mb-4">
+                    {% for item in cart_items %}
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-start">
+                            <div class="h-10 w-10 flex-shrink-0 mr-3">
+                                {% if item.product.image %}
+                                <img class="h-10 w-10 rounded object-cover" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                <div class="h-10 w-10 rounded bg-gray-200 flex items-center justify-center">
+                                    <span class="text-xs text-gray-500">No img</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">{{ item.product.name }}</p>
+                                <p class="text-xs text-gray-500">{{ item.quantity }} {{ item.product.unit }}</p>
+                            </div>
+                        </div>
+                        <p class="text-sm font-medium">Rp {{ item.subtotal }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span>Rp {{ total }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Shipping</span>
+                        <span>Rp 0</span>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4 mb-6">
+                    <div class="flex justify-between">
+                        <span class="font-semibold">Total</span>
+                        <span class="font-semibold text-green-600">Rp {{ total }}</span>
+                    </div>
+                </div>
+                
+                <button type="submit" form="checkout-form" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+                    Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

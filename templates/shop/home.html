@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lima Aja - Fresh Produce Marketplace{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-green-500 to-green-700 rounded-lg shadow-lg p-8 mb-10 text-white">
+        <div class="max-w-3xl">
+            <h1 class="text-4xl font-bold mb-4">Fresh Produce Direct from Local Farmers</h1>
+            <p class="text-xl mb-6">Support local cooperatives and get the freshest produce delivered to your door</p>
+            <a href="{% url 'shop:product_list' %}" class="bg-white text-green-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                Shop Now
+            </a>
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-bold mb-6">Shop by Category</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for category in categories %}
+            <a href="{% url 'shop:product_list' %}?category={{ category.id }}" class="bg-white rounded-lg shadow hover:shadow-md transition p-4 text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="text-green-600 text-2xl">{{ category.name|slice:":1" }}</span>
+                </div>
+                <h3 class="font-semibold">{{ category.name }}</h3>
+            </a>
+            {% empty %}
+            <p>No categories available</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Featured Products -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-bold mb-6">Featured Products</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for product in featured_products %}
+            <div class="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition">
+                <div class="h-48 bg-gray-200">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                        <span class="text-gray-400">No image</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <h3 class="font-semibold text-lg mb-2">{{ product.name }}</h3>
+                    <p class="text-gray-600 mb-2 text-sm">{{ product.cooperative.name }}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-green-600 font-bold">Rp {{ product.price_per_unit }}</span>
+                        <a href="{% url 'shop:product_detail' product.id %}" class="text-green-600 hover:text-green-700">View</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="col-span-4 text-center py-8">No products available</p>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-6">
+            <a href="{% url 'shop:product_list' %}" class="inline-block bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
+                View All Products
+            </a>
+        </div>
+    </div>
+
+    <!-- Featured Cooperatives -->
+    <div>
+        <h2 class="text-2xl font-bold mb-6">Our Cooperatives</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for cooperative in cooperatives %}
+            <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition">
+                <h3 class="font-semibold text-lg mb-2">{{ cooperative.name }}</h3>
+                <p class="text-gray-600 mb-4">{{ cooperative.location }}</p>
+                <p class="text-sm text-gray-500 mb-4">{{ cooperative.description|truncatewords:20 }}</p>
+                <a href="{% url 'shop:product_list' %}?cooperative={{ cooperative.id }}" class="text-green-600 hover:text-green-700 font-semibold">
+                    View Products
+                </a>
+            </div>
+            {% empty %}
+            <p class="col-span-3 text-center py-8">No cooperatives available</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -8,6 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('authentication.urls')),
     path('cooperative/', include('cooperative.urls')),
+    path('', include('shop.urls')),
 ]
 
 # Add this for serving static files during development
