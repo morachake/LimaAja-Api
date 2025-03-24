@@ -1,0 +1,68 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}Notifications - LimaAja{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 py-8">
+    <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Notifications</h1>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% if notifications %}
+                <div class="divide-y divide-gray-200">
+                    {% for notification in notifications %}
+                        <div class="p-6 {% if not notification.is_read %}bg-green-50{% endif %}">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mr-4">
+                                    {% if notification.notification_type == 'order' %}
+                                        <div class="bg-blue-100 p-3 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                            </svg>
+                                        </div>
+                                    {% elif notification.notification_type == 'system' %}
+                                        <div class="bg-purple-100 p-3 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    {% elif notification.notification_type == 'promotion' %}
+                                        <div class="bg-yellow-100 p-3 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                            </svg>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-800">{{ notification.title }}</h3>
+                                    <p class="text-gray-600 mb-2">{{ notification.message }}</p>
+                                    <p class="text-sm text-gray-500">{{ notification.created_at|date:"F j, Y" }} at {{ notification.created_at|time:"g:i A" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-6 text-center">
+                    <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">No notifications yet</h3>
+                    <p class="text-gray-600">We'll notify you when there are updates to your orders or account.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mt-8">
+            <a href="{% url 'shop:user_dashboard' %}" class="text-green-600 hover:text-green-800 font-medium">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
