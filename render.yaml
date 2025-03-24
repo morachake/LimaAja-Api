@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: limaaja-api
+    env: python
+    buildCommand: |
+      # Install Python dependencies
+      pip install -r requirements.txt
+      
+      # Install Node.js dependencies and build Tailwind CSS
+      npm install
+      npm run build
+      
+      # Collect Django static files
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn limaAja.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.1
+      - key: NODE_VERSION
+        value: 18.x
+      - key: DJANGO_SETTINGS_MODULE 
+        value: limaAja.settings
+      - key: DEBUG
+        value: "False"
