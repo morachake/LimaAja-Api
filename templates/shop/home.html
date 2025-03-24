@@ -37,39 +37,56 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {% for product in featured_products|slice:":4" %}
-                <div class="bg-white rounded-lg shadow border border-black overflow-hidden">
-                    <a href="{% url 'shop:product_detail' product.id %}">
-                        <img src="{{ product.image.url }}" alt="{{ product.produce_type.name }}" class="w-full h-48 object-cover" onerror="this.src='{% static "images/placeholder.jpg" %}'; this.onerror=null;">
-                    </a>
-                    <div class="p-3">
-                        <div class="flex space-x-2 mb-2">
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Grade</div>
-                                <div class="text-green-600">{{ product.grade }}</div>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="w-full h-48">
+                        {% if product.image %}
+                            <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.produce_type.name }}">
+                        {% else %}
+                            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Grade</div>
+                                <div class="font-semibold text-green-600">A</div>
                             </div>
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Quantity</div>
-                                <div>5T</div>
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Quantity</div>
+                                <div class="font-semibold">5T</div>
                             </div>
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Rating</div>
-                                <div class="text-yellow-500">★ 5</div>
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Rating</div>
+                                <div class="font-semibold text-yellow-500 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    5
+                                </div>
                             </div>
                         </div>
                         
-                        <h3 class="text-lg font-semibold text-gray-800">{{ product.produce_type.name }}</h3>
-                        <p class="text-sm text-gray-500">{{ product.produce_type.variety|default:product.grade }}</p>
-                        <p class="text-xs text-gray-500 mb-2">{{ product.cooperative.name }}</p>
+                        <div class="mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <h3 class="text-lg font-semibold">{{ product.produce_type.name }}</h3>
+                                {% if product.produce_type.variety %}
+                                <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{ product.produce_type.variety }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-500">{{ product.cooperative.name }} (Kibuye)</p>
+                            <p class="text-green-600 font-bold mt-1">{{ product.produce_type.price_per_unit|floatformat:0 }}K RWF/kg</p>
+                        </div>
                         
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="font-bold text-green-600">{{ product.produce_type.price_per_unit|floatformat:0 }} RWF/{{ product.produce_type.unit }}</span>
-                            <a href="{% url 'shop:add_to_cart' product.id %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm transition duration-300 flex items-center">
-                                Add to Cart
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                        <form method="post" action="{% url 'shop:add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded flex items-center justify-center">
+                                <span>Add to Cart</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
                                 </svg>
-                            </a>
-                        </div>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% empty %}
@@ -99,39 +116,56 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {% for product in fruit_products|slice:":4" %}
-                <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
-                    <a href="{% url 'shop:product_detail' product.id %}">
-                        <img src="{{ product.image.url }}" alt="{{ product.produce_type.name }}" class="w-full h-48 object-cover" onerror="this.src='{% static "images/placeholder.jpg" %}'; this.onerror=null;">
-                    </a>
-                    <div class="p-3">
-                        <div class="flex space-x-2 mb-2">
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Grade</div>
-                                <div class="text-green-600">{{ product.grade }}</div>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="w-full h-48">
+                        {% if product.image %}
+                            <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.produce_type.name }}">
+                        {% else %}
+                            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Grade</div>
+                                <div class="font-semibold text-green-600">A</div>
                             </div>
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Quantity</div>
-                                <div>5T</div>
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Quantity</div>
+                                <div class="font-semibold">5T</div>
                             </div>
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Rating</div>
-                                <div class="text-yellow-500">★ 5</div>
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Rating</div>
+                                <div class="font-semibold text-yellow-500 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    5
+                                </div>
                             </div>
                         </div>
                         
-                        <h3 class="text-lg font-semibold text-gray-800">{{ product.produce_type.name }}</h3>
-                        <p class="text-sm text-gray-500">{{ product.produce_type.variety|default:product.grade }}</p>
-                        <p class="text-xs text-gray-500 mb-2">{{ product.cooperative.name }}</p>
+                        <div class="mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <h3 class="text-lg font-semibold">{{ product.produce_type.name }}</h3>
+                                {% if product.produce_type.variety %}
+                                <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{ product.produce_type.variety }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-500">{{ product.cooperative.name }} (Kibuye)</p>
+                            <p class="text-green-600 font-bold mt-1">{{ product.produce_type.price_per_unit|floatformat:0 }}K RWF/kg</p>
+                        </div>
                         
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="font-bold text-green-600">{{ product.produce_type.price_per_unit|floatformat:0 }} RWF/{{ product.produce_type.unit }}</span>
-                            <a href="{% url 'shop:add_to_cart' product.id %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm transition duration-300 flex items-center">
-                                Add to Cart
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                        <form method="post" action="{% url 'shop:add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded flex items-center justify-center">
+                                <span>Add to Cart</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
                                 </svg>
-                            </a>
-                        </div>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% empty %}
@@ -161,39 +195,56 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {% for product in vegetable_products|slice:":4" %}
-                <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden p-5">
-                    <a href="{% url 'shop:product_detail' product.id %}">
-                        <img src="{{ product.image.url }}" alt="{{ product.produce_type.name }}" class="w-full h-48 object-cover" onerror="this.src='{% static "images/placeholder.jpg" %}'; this.onerror=null;">
-                    </a>
-                    <div class="p-3">
-                        <div class="flex space-x-2 mb-2">
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Grade</div>
-                                <div class="text-green-600">{{ product.grade }}</div>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="w-full h-48">
+                        {% if product.image %}
+                            <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.produce_type.name }}">
+                        {% else %}
+                            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Grade</div>
+                                <div class="font-semibold text-green-600">A</div>
                             </div>
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Quantity</div>
-                                <div>5T</div>
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Quantity</div>
+                                <div class="font-semibold">5T</div>
                             </div>
-                            <div class="bg-gray-100 px-2 py-1 rounded text-xs flex-1 text-center">
-                                <div class="font-semibold">Rating</div>
-                                <div class="text-yellow-500">★ 5</div>
+                            <div class="flex-1 border border-gray-200 rounded-md p-2 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Rating</div>
+                                <div class="font-semibold text-yellow-500 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    5
+                                </div>
                             </div>
                         </div>
                         
-                        <h3 class="text-lg font-semibold text-gray-800">{{ product.produce_type.name }}</h3>
-                        <p class="text-sm text-gray-500">{{ product.produce_type.variety|default:product.grade }}</p>
-                        <p class="text-xs text-gray-500 mb-2">{{ product.cooperative.name }}</p>
+                        <div class="mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <h3 class="text-lg font-semibold">{{ product.produce_type.name }}</h3>
+                                {% if product.produce_type.variety %}
+                                <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{ product.produce_type.variety }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-500">{{ product.cooperative.name }} (Kibuye)</p>
+                            <p class="text-green-600 font-bold mt-1">{{ product.produce_type.price_per_unit|floatformat:0 }}K RWF/kg</p>
+                        </div>
                         
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="font-bold text-green-600">{{ product.produce_type.price_per_unit|floatformat:0 }} RWF/{{ product.produce_type.unit }}</span>
-                            <a href="{% url 'shop:add_to_cart' product.id %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm transition duration-300 flex items-center">
-                                Add to Cart
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                        <form method="post" action="{% url 'shop:add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded flex items-center justify-center">
+                                <span>Add to Cart</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
                                 </svg>
-                            </a>
-                        </div>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% empty %}
@@ -253,7 +304,5 @@
         </div>
     </div>
 </section>
-
-
 {% endblock %}
 
