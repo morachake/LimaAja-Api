@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "authentication",
     "cooperative",
+    "shop"
 ]
 # Add these settings for session persistence
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
