@@ -25,6 +25,62 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   })
 
+  // Handle quantity update buttons
+  const updateForms = document.querySelectorAll(".update-cart-form")
+  updateForms.forEach((form) => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault()
+      const itemId = this.closest(".cart-item").getAttribute("data-item-id")
+      const action = e.submitter.value
+
+      updateCartItemQuantity(itemId, action)
+    })
+  })
+
+  // Function to update cart item quantity
+  function updateCartItemQuantity(itemId, action) {
+    const formData = new FormData()
+    formData.append("action", action)
+
+    fetch(`/update-cart/${itemId}/`, {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Update the quantity display
+          const cartItem = document.querySelector(`.cart-item[data-item-id="${itemId}"]`)
+          if (cartItem) {
+            const quantityDisplay = cartItem.querySelector(".quantity-display")
+            if (quantityDisplay) {
+              quantityDisplay.textContent = data.item_quantity
+            }
+
+            // Update the item subtotal
+            const priceValue = cartItem.querySelector(".price-value")
+            if (priceValue) {
+              priceValue.textContent = `RWF ${data.item_subtotal.toLocaleString("en-RW")}`
+            }
+          }
+
+          // Update cart totals
+          updateCartTotals(data)
+
+          // Show notification with the message from the server
+          showNotification(data.message, "success")
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating cart:", error)
+        showNotification("Failed to update cart. Please try again.", "error")
+      })
+  }
+
   // Function to update cart item
   function updateCartItem(itemId, quantity) {
     const formData = new FormData()
@@ -42,9 +98,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          updateCartUI(data)
-          // Show notification
-          showNotification(`${data.product_name} quantity updated in your cart.`, "success")
+          updateCartTotals(data)
+          // Show notification with the message from the server
+          showNotification(data.message, "success")
         }
       })
       .catch((error) => {
@@ -71,11 +127,11 @@ document.addEventListener("DOMContentLoaded", () => {
             itemRow.remove()
           }
 
-          // Update cart UI
-          updateCartUI(data)
+          // Update cart totals
+          updateCartTotals(data)
 
-          // Show notification
-          showNotification(`${data.product_name} removed from your cart.`, "success")
+          // Show notification with the message from the server
+          showNotification(data.message, "success")
 
           // Check if cart is empty and show empty state if needed
           const cartItems = document.querySelectorAll(".cart-item")
@@ -90,8 +146,8 @@ document.addEventListener("DOMContentLoaded", () => {
       })
   }
 
-  // Function to update cart UI
-  function updateCartUI(data) {
+  // Function to update cart totals
+  function updateCartTotals(data) {
     // Update cart count in header
     const cartCountElements = document.querySelectorAll(".cart-count")
     cartCountElements.forEach((element) => {
@@ -105,33 +161,64 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
 
-    // Update cart total
-    const totalElements = document.querySelectorAll(".cart-total")
-    totalElements.forEach((element) => {
-      element.textContent = formatCurrency(data.cart_total)
-    })
-
     // Update subtotal
-    const subtotalElements = document.querySelectorAll(".cart-subtotal")
-    subtotalElements.forEach((element) => {
-      element.textContent = formatCurrency(data.cart_total)
-    })
+    const subtotalElement = document.getElementById("cart-subtotal")
+    if (subtotalElement) {
+      subtotalElement.textContent = formatCurrency(data.cart_subtotal)
+    }
+
+    // Update tax
+    const taxElement = document.getElementById("cart-tax")
+    if (taxElement) {
+      taxElement.textContent = formatCurrency(data.cart_tax)
+    }
+
+    // Update shipping
+    const shippingElement = document.getElementById("cart-shipping")
+    if (shippingElement) {
+      shippingElement.textContent = formatCurrency(data.cart_shipping)
+    }
+
+    // Update total
+    const totalElement = document.getElementById("cart-total")
+    if (totalElement) {
+      totalElement.textContent = formatCurrency(data.cart_total)
+    }
   }
 
   // Function to show empty cart state
   function showEmptyCart() {
-    const cartTable = document.querySelector(".cart-table")
-    const cartSummary = document.querySelector(".cart-summary")
-    const emptyCartMessage = document.querySelector(".empty-cart-message")
+    // Hide the cart items and summary sections
+    const cartGrid = document.querySelector(".grid.grid-cols-1.lg\\:grid-cols-3")
+    if (cartGrid) {
+      cartGrid.classList.add("hidden")
+    }
 
-    if (cartTable) cartTable.classList.add("hidden")
-    if (cartSummary) cartSummary.classList.add("hidden")
-    if (emptyCartMessage) emptyCartMessage.classList.remove("hidden")
+    // Create and show empty cart message
+    const container = document.querySelector(".container.mx-auto.px-4")
+    if (container) {
+      const emptyCartHTML = `
+        <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
+            <p class="text-gray-600 mb-6">Looks like you haven't added any products to your cart yet.</p>
+            <a href="/products/" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                </svg>
+                Start Shopping
+            </a>
+        </div>
+      `
+      container.insertAdjacentHTML("beforeend", emptyCartHTML)
+    }
   }
 
-  // Helper function to format currency
+  // Function to format currency
   function formatCurrency(amount) {
-    return "Rp " + Number.parseFloat(amount).toLocaleString("id-ID")
+    return "RWF " + Number.parseFloat(amount).toLocaleString("en-RW")
   }
 
   // Helper function to get CSRF token
@@ -173,8 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // Update cart count in header
             updateCartUI(data)
 
-            // Show success notification
-            showNotification(data.message || `${data.product_name} added to your cart.`, "success")
+            // Show success notification with the message from the server
+            showNotification(data.message, "success")
 
             // Animate the cart icon
             const cartIcons = document.querySelectorAll(".fa-shopping-cart")
@@ -194,10 +281,53 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     })
   })
+
+  // Function to update cart UI
+  function updateCartUI(data) {
+    // Update cart count in header
+    const cartCountElements = document.querySelectorAll(".cart-count")
+    cartCountElements.forEach((element) => {
+      element.textContent = data.cart_count
+
+      // If cart is empty, hide the count
+      if (data.cart_count === 0) {
+        element.classList.add("hidden")
+      } else {
+        element.classList.remove("hidden")
+      }
+    })
+
+    // Update cart total
+    const totalElements = document.querySelectorAll(".cart-total")
+    totalElements.forEach((element) => {
+      element.textContent = formatCurrency(data.cart_total)
+    })
+
+    // Update subtotal
+    const subtotalElements = document.querySelectorAll(".cart-subtotal")
+    subtotalElements.forEach((element) => {
+      element.textContent = formatCurrency(data.cart_subtotal || data.cart_total)
+    })
+  }
 })
 
-// Function to show notification
+// Modify the showNotification function to properly manage notifications
+
+// Replace the entire showNotification function with this improved version:
 function showNotification(message, type = "success") {
+  // Clear any existing notifications first
+  const existingContainer = document.getElementById("notification-container")
+  if (existingContainer) {
+    // Fade out all existing notifications
+    const existingNotifications = existingContainer.querySelectorAll("div.notification-item")
+    existingNotifications.forEach((notification) => {
+      notification.classList.add("translate-x-full")
+      setTimeout(() => {
+        notification.remove()
+      }, 300)
+    })
+  }
+
   // Create notification container if it doesn't exist
   let notificationContainer = document.getElementById("notification-container")
   if (!notificationContainer) {
@@ -209,28 +339,28 @@ function showNotification(message, type = "success") {
 
   // Create notification element
   const notification = document.createElement("div")
-  notification.className = `mb-3 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full ${
+  notification.className = `notification-item mb-3 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full ${
     type === "success" ? "bg-green-50 border-l-4 border-green-500" : "bg-red-50 border-l-4 border-red-500"
   }`
 
   // Add content
   notification.innerHTML = `
-        <div class="flex items-start">
-            <div class="flex-shrink-0 mr-3">
-                ${
-                  type === "success"
-                    ? '<i class="fas fa-check-circle text-green-500"></i>'
-                    : '<i class="fas fa-exclamation-circle text-red-500"></i>'
-                }
-            </div>
-            <div class="flex-1">
-                <p class="${type === "success" ? "text-green-800" : "text-red-800"}">${message}</p>
-            </div>
-            <button class="ml-4 text-gray-400 hover:text-gray-600 focus:outline-none">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `
+    <div class="flex items-start">
+      <div class="flex-shrink-0 mr-3">
+        ${
+          type === "success"
+            ? '<i class="fas fa-check-circle text-green-500"></i>'
+            : '<i class="fas fa-exclamation-circle text-red-500"></i>'
+        }
+      </div>
+      <div class="flex-1">
+        <p class="${type === "success" ? "text-green-800" : "text-red-800"}">${message}</p>
+      </div>
+      <button class="ml-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  `
 
   // Add to container
   notificationContainer.appendChild(notification)
@@ -249,7 +379,7 @@ function showNotification(message, type = "success") {
     }, 300)
   })
 
-  // Auto remove after 5 seconds
+  // Auto remove after 3 seconds (reduced from 5 seconds)
   setTimeout(() => {
     if (notification.parentNode) {
       notification.classList.add("translate-x-full")
@@ -259,6 +389,6 @@ function showNotification(message, type = "success") {
         }
       }, 300)
     }
-  }, 5000)
+  }, 3000)
 }
 

@@ -17,7 +17,7 @@
                         <div class="flow-root">
                             <ul class="-my-6 divide-y divide-gray-200">
                                 {% for item in cart_items %}
-                                <li class="py-6 flex cart-item" data-price="{{ item.product.price }}" data-quantity="{{ item.quantity }}">
+                                <li class="py-6 flex cart-item" data-item-id="{{ item.id }}" data-price="{{ item.product.produce_type.price_per_unit }}" data-quantity="{{ item.quantity }}">
                                     <div class="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border border-gray-200">
                                         <img src="{{ item.product.get_image_url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover">
                                     </div>
@@ -28,7 +28,7 @@
                                                 <h3>
                                                     <a href="{% url 'shop:product_detail' item.product.id %}" class="hover:text-green-600">{{ item.product.produce_type.name }}</a>
                                                 </h3>
-                                                <p class="ml-4 price-value" data-price="{{ item.product.produce_type.price_per_unit }}">Rp {{ item.subtotal|floatformat:0 }}</p>
+                                                <p class="ml-4 price-value" data-price="{{ item.product.produce_type.price_per_unit }}">RWF {{ item.subtotal|floatformat:0 }}</p>
                                             </div>
                                             <p class="mt-1 text-sm text-gray-500">{{ item.product.cooperative.name }}</p>
                                             <div class="flex mt-1">
@@ -97,22 +97,22 @@
                             <dl class="-my-4 text-sm divide-y divide-gray-200">
                                 <div class="py-4 flex items-center justify-between">
                                     <dt class="text-gray-600">Subtotal</dt>
-                                    <dd class="font-medium text-gray-900" id="cart-subtotal">Rp {{ cart.total|floatformat:0 }}</dd>
+                                    <dd class="font-medium text-gray-900" id="cart-subtotal">RWF {{ subtotal|floatformat:0 }}</dd>
                                 </div>
                                 
                                 <div class="py-4 flex items-center justify-between">
                                     <dt class="text-gray-600">Shipping</dt>
-                                    <dd class="font-medium text-gray-900" id="cart-shipping" data-value="15000">Rp 15,000</dd>
+                                    <dd class="font-medium text-gray-900" id="cart-shipping" data-value="15000">RWF {{ shipping|floatformat:0 }}</dd>
                                 </div>
                                 
                                 <div class="py-4 flex items-center justify-between">
                                     <dt class="text-gray-600">Tax (10%)</dt>
-                                    <dd class="font-medium text-gray-900" id="cart-tax" data-rate="0.1">Rp {{ cart.total|floatformat:0|multiply:0.1 }}</dd>
+                                    <dd class="font-medium text-gray-900" id="cart-tax" data-rate="0.1">RWF {{ tax|floatformat:0 }}</dd>
                                 </div>
                                 
                                 <div class="py-4 flex items-center justify-between">
                                     <dt class="text-base font-medium text-gray-900">Order Total</dt>
-                                    <dd class="text-base font-medium text-green-600" id="cart-total">Rp {{ total|floatformat:0 }}</dd>
+                                    <dd class="text-base font-medium text-green-600" id="cart-total">RWF {{ total|floatformat:0 }}</dd>
                                 </div>
                             </dl>
                         </div>

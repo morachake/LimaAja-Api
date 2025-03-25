@@ -140,7 +140,7 @@
                               {% endif %}
                           </div>
                           <p class="text-sm text-gray-500 mt-1">{{ product.cooperative.name }} ({{ product.cooperative.location }})</p>
-                          <div class="font-semibold text-green-700 mt-2">{{ product.price|floatformat:0 }}K RWF/kg</div>
+                          <div class="font-semibold text-green-700 mt-2">RWF {{ product.price|floatformat:0 }}/kg</div>
                           
                           <form method="post" action="{% url 'shop:add_to_cart' product.id %}" class="mt-2 add-to-cart-form">
                               {% csrf_token %}

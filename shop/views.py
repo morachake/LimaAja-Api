@@ -10,6 +10,8 @@ from django.db.models import Sum, F, Count
 from django.utils import timezone
 from django.http import JsonResponse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from decimal import Decimal
+
 
 def home(request):
     # Get categories that have products
@@ -135,6 +137,8 @@ def add_to_cart(request, product_id):
         return JsonResponse({
             'success': True,
             'cart_count': cart.item_count,
+            'cart_total': float(cart.total),
+            'product_name': product.produce_type.name,
             'message': f"{product.produce_type.name} added to your cart."
         })
     
@@ -148,10 +152,27 @@ def add_to_cart(request, product_id):
 
 def cart(request):
     cart = get_or_create_cart(request)
+    cart_items = cart.items.all()
+    
+    # Calculate subtotal
+    subtotal = cart.total
+    
+    # Calculate shipping (fixed for now)
+    shipping = Decimal('15000')
+    
+    # Calculate tax (10%)
+    tax = subtotal * Decimal('0.1')
+    
+    # Calculate total
+    total = subtotal + shipping + tax
     
     context = {
         'cart': cart,
-        'cart_items': cart.items.all(),
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'total': total,
     }
     return render(request, 'shop/cart.html', context)
 
@@ -184,14 +205,39 @@ def update_cart(request, item_id):
         else:
             cart_item.delete()
             messages.success(request, "Item removed from cart.")
+    elif action == 'increase':
+        cart_item.quantity += 1
+        cart_item.save()
+        messages.success(request, "Item quantity increased.")
+    elif action == 'decrease':
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+            messages.success(request, "Item quantity decreased.")
+        else:
+            cart_item.delete()
+            messages.success(request, "Item removed from cart.")
     
     # If AJAX request, return JSON response
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         cart = cart_item.cart
+        
+        # Calculate subtotal, tax, shipping, and total
+        subtotal = cart.total
+        shipping = Decimal('15000')
+        tax = subtotal * Decimal('0.1')
+        total = subtotal + shipping + tax
+        
         return JsonResponse({
             'success': True,
             'cart_count': cart.item_count,
-            'cart_total': float(cart.total),
+            'cart_total': float(total),
+            'cart_subtotal': float(subtotal),
+            'cart_tax': float(tax),
+            'cart_shipping': float(shipping),
+            'product_name': cart_item.product.produce_type.name,
+            'item_subtotal': float(cart_item.subtotal),
+            'item_quantity': cart_item.quantity,
         })
     
     return redirect('shop:cart')
@@ -211,6 +257,8 @@ def remove_from_cart(request, item_id):
             messages.error(request, "You don't have permission to modify this cart.")
             return redirect('shop:cart')
     
+    product_name = cart_item.product.produce_type.name
+    
     # Remove the item
     cart_item.delete()
     messages.success(request, "Item removed from cart.")
@@ -218,14 +266,27 @@ def remove_from_cart(request, item_id):
     # If AJAX request, return JSON response
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         cart = cart_item.cart
+        
+        # Calculate subtotal, tax, shipping, and total
+        subtotal = cart.total
+        shipping = Decimal('15000') if cart.items.count() > 0 else Decimal('0')
+        tax = subtotal * Decimal('0.1')
+        total = subtotal + shipping + tax
+        
         return JsonResponse({
             'success': True,
             'cart_count': cart.item_count,
-            'cart_total': float(cart.total),
+            'cart_total': float(total),
+            'cart_subtotal': float(subtotal),
+            'cart_tax': float(tax),
+            'cart_shipping': float(shipping),
+            'product_name': product_name,
         })
     
     return redirect('shop:cart')
 
+
+# Rest of the views remain unchanged
 def checkout(request):
     cart = get_or_create_cart(request)
     
@@ -249,33 +310,50 @@ def checkout(request):
     default_address = addresses.filter(is_default=True).first()
     default_payment = payment_methods.filter(is_default=True).first()
     
+    # Calculate subtotal, tax, shipping, and total
+    subtotal = cart.total
+    shipping = Decimal('15000')
+    tax = subtotal * Decimal('0.1')
+    total = subtotal + shipping + tax
+    
     if request.method == 'POST':
         # Process the order
         address_id = request.POST.get('address')
-        payment_method_id = request.POST.get('payment_method')
+        payment_method = request.POST.get('payment_method')
+        notes = request.POST.get('notes', '')
         
         # Validate inputs
         if not address_id:
             messages.error(request, "Please select a shipping address.")
             return redirect('shop:checkout')
         
-        if not payment_method_id and not request.POST.get('payment_type'):
+        if not payment_method:
             messages.error(request, "Please select a payment method.")
             return redirect('shop:checkout')
         
         # Get the selected address
         address = get_object_or_404(Address, id=address_id, user=request.user)
         
+        # Map payment method values to display names
+        payment_method_display = {
+            'bank_transfer': 'Bank Transfer',
+            'cod': 'Cash on Delivery',
+            'mobile_money': 'Mobile Money'
+        }
+        
         # Create the order
         order = Order.objects.create(
             user=request.user,
-            total_amount=cart.total,
+            total_amount=total,
             shipping_address=address.street_address,
             city=address.city,
             state=address.state,
             zip_code=address.zip_code,
             phone=address.phone,
-            payment_method=request.POST.get('payment_type', 'Cash on Delivery'),
+            payment_method=payment_method_display.get(payment_method, 'Bank Transfer'),
+            shipping_name=address.recipient_name,
+            shipping_postal_code=address.zip_code,
+            notes=notes
         )
         
         # Create order items
@@ -308,6 +386,10 @@ def checkout(request):
         'payment_methods': payment_methods,
         'default_address': default_address,
         'default_payment': default_payment,
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'total': total,
     }
     return render(request, 'shop/checkout.html', context)
 

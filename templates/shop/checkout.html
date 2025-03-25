@@ -1,10 +1,11 @@
 {% extends 'shop/base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Checkout - LimaAja{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4">
+<div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
     
     {% if not cart_items %}
@@ -22,7 +23,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Checkout Form -->
         <div class="lg:col-span-2">
-            <form method="post" action="{% url 'shop:checkout' %}" class="space-y-8">
+            <form method="post" action="{% url 'shop:checkout' %}" id="checkout-form" class="space-y-8">
                 {% csrf_token %}
                 
                 <!-- Shipping Information -->
@@ -31,39 +32,59 @@
                         <h2 class="text-lg font-medium text-gray-900 mb-4">Shipping Information</h2>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                <input type="text" name="first_name" id="first_name" required value="{{ user.first_name }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                            <!-- Display user information -->
+                            <div class="md:col-span-2 mb-4 p-4 bg-gray-50 rounded-md">
+                                <div class="flex items-center mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                    </svg>
+                                    <p class="text-sm font-medium text-gray-700">{{ user.full_name }}</p>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                    </svg>
+                                    <p class="text-sm font-medium text-gray-700">{{ user.email }}</p>
+                                </div>
                             </div>
                             
-                            <div>
-                                <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                <input type="text" name="last_name" id="last_name" required value="{{ user.last_name }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            </div>
-                            
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                <input type="email" name="email" id="email" required value="{{ user.email }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            </div>
-                            
-                            <div>
-                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                <input type="tel" name="phone" id="phone" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            </div>
-                            
+                            <!-- Shipping Address Selection -->
                             <div class="md:col-span-2">
-                                <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                <input type="text" name="address" id="address" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            </div>
-                            
-                            <div>
-                                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                                <input type="text" name="city" id="city" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            </div>
-                            
-                            <div>
-                                <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-                                <input type="text" name="postal_code" id="postal_code" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Select Delivery Address</label>
+                                
+                                {% if addresses %}
+                                    <div class="space-y-3">
+                                        {% for address in addresses %}
+                                        <div class="relative flex items-start">
+                                            <div class="flex items-center h-5">
+                                                <input id="address-{{ address.id }}" name="address" type="radio" value="{{ address.id }}" {% if address.is_default %}checked{% endif %} class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                            </div>
+                                            <div class="ml-3 text-sm">
+                                                <label for="address-{{ address.id }}" class="font-medium text-gray-700">{{ address.name }}</label>
+                                                <p class="text-gray-500">{{ address.recipient_name }}, {{ address.street_address }}, {{ address.city }}, {{ address.state }} {{ address.zip_code }}</p>
+                                                <p class="text-gray-500">Phone: {{ address.phone }}</p>
+                                            </div>
+                                            {% if address.is_default %}
+                                            <span class="absolute top-0 right-0 px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Default</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                        <p class="text-sm text-yellow-800">You don't have any saved addresses. Please add a new address below.</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mt-4">
+                                    <a href="{% url 'shop:add_address' %}" class="inline-flex items-center text-sm font-medium text-primary hover:text-primary-dark">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        Add New Address
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -77,22 +98,32 @@
                         <div class="space-y-4">
                             <div class="flex items-center">
                                 <input id="payment-bank-transfer" name="payment_method" type="radio" value="bank_transfer" checked class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
-                                <label for="payment-bank-transfer" class="ml-3 block text-sm font-medium text-gray-700">
+                                <label for="payment-bank-transfer" class="ml-3 flex items-center text-sm font-medium text-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                                    </svg>
                                     Bank Transfer
                                 </label>
                             </div>
                             
                             <div class="flex items-center">
                                 <input id="payment-cod" name="payment_method" type="radio" value="cod" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
-                                <label for="payment-cod" class="ml-3 block text-sm font-medium text-gray-700">
+                                <label for="payment-cod" class="ml-3 flex items-center text-sm font-medium text-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95a1 1 0 001.715 1.029zM6 12a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm7 0a1 1 0 011-1h.01a1 1 0 110 2H14a1 1 0 01-1-1zm-.94-6a1 1 0 110-2h.01a1 1 0 110 2H12.06zM7.94 6a1 1 0 110-2h.01a1 1 0 110 2H7.94z" clip-rule="evenodd" />
+                                    </svg>
                                     Cash on Delivery
                                 </label>
                             </div>
                             
                             <div class="flex items-center">
-                                <input id="payment-ewallet" name="payment_method" type="radio" value="ewallet" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
-                                <label for="payment-ewallet" class="ml-3 block text-sm font-medium text-gray-700">
-                                    E-Wallet
+                                <input id="payment-mobile" name="payment_method" type="radio" value="mobile_money" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <label for="payment-mobile" class="ml-3 flex items-center text-sm font-medium text-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                    </svg>
+                                    Mobile Money
                                 </label>
                             </div>
                         </div>
@@ -106,7 +137,7 @@
                         
                         <div>
                             <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Order Notes (Optional)</label>
-                            <textarea name="notes" id="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"></textarea>
+                            <textarea name="notes" id="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Special instructions for delivery or any other notes"></textarea>
                         </div>
                     </div>
                 </div>
@@ -129,16 +160,25 @@
                         <ul class="-my-4 divide-y divide-gray-200">
                             {% for item in cart_items %}
                             <li class="py-4 flex">
-                                <div class="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
-                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64?text={{ item.product.produce_type.name }}'">
+                                <div class="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden bg-gray-100">
+                                    {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="ml-4 flex-1">
                                     <div class="flex justify-between text-sm font-medium text-gray-900">
                                         <h3>{{ item.product.produce_type.name }}</h3>
-                                        <p class="ml-4">Rp {{ item.subtotal|floatformat:0 }}</p>
+                                        <p class="ml-4">RWF {{ item.subtotal|floatformat:0|intcomma }}</p>
                                     </div>
                                     <p class="mt-1 text-sm text-gray-500">Qty: {{ item.quantity }}</p>
+                                    <p class="mt-1 text-xs text-gray-500">Grade: {{ item.product.grade }}</p>
                                 </div>
                             </li>
                             {% endfor %}
@@ -149,30 +189,42 @@
                         <dl class="-my-4 text-sm divide-y divide-gray-200">
                             <div class="py-4 flex items-center justify-between">
                                 <dt class="text-gray-600">Subtotal</dt>
-                                <dd class="font-medium text-gray-900">Rp {{ cart_total|floatformat:0 }}</dd>
+                                <dd class="font-medium text-gray-900" id="cart-subtotal">RWF {{ subtotal|floatformat:0|intcomma }}</dd>
                             </div>
                             
                             <div class="py-4 flex items-center justify-between">
                                 <dt class="text-gray-600">Shipping</dt>
-                                <dd class="font-medium text-gray-900">Rp {{ shipping_cost|floatformat:0 }}</dd>
+                                <dd class="font-medium text-gray-900" id="cart-shipping">RWF {{ shipping|floatformat:0|intcomma }}</dd>
                             </div>
                             
                             <div class="py-4 flex items-center justify-between">
                                 <dt class="text-gray-600">Tax</dt>
-                                <dd class="font-medium text-gray-900">Rp {{ tax|floatformat:0 }}</dd>
+                                <dd class="font-medium text-gray-900" id="cart-tax">RWF {{ tax|floatformat:0|intcomma }}</dd>
                             </div>
                             
                             <div class="py-4 flex items-center justify-between">
                                 <dt class="text-base font-medium text-gray-900">Order Total</dt>
-                                <dd class="text-base font-medium text-primary">Rp {{ total|floatformat:0 }}</dd>
+                                <dd class="text-base font-medium text-primary" id="cart-total">RWF {{ total|floatformat:0|intcomma }}</dd>
                             </div>
                         </dl>
                     </div>
                     
                     <div class="mt-6 hidden lg:block">
-                        <button type="submit" form="checkout-form" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-md transition duration-300">
+                        <button type="submit" form="checkout-form" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-md transition duration-300 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            </svg>
                             Place Order
                         </button>
+                    </div>
+                    
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            <p class="text-xs text-gray-600">Secure checkout</p>
+                        </div>
                     </div>
                 </div>
             </div>
