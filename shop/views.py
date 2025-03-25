@@ -10,65 +10,63 @@ from django.db.models import Sum, F, Count
 from django.utils import timezone
 from django.http import JsonResponse
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
 def home(request):
-    # Get featured products
-    featured_products = CooperativeProduce.objects.filter(
-        quantity__gt=0
-    ).order_by('-created_at')[:8]
+    # Get categories that have products
+    categories_with_products = Category.objects.filter(
+        produce_types__cooperative_items__isnull=False
+    ).distinct()
     
-    # Get categories
-    categories = Category.objects.all()[:6]
+    # Get featured products (most recent)
+    featured_products = CooperativeProduce.objects.all().order_by('-created_at')[:8]
     
-    # Get recent products
-    recent_products = CooperativeProduce.objects.filter(
-        quantity__gt=0
+    # Get new arrivals
+    new_arrivals = CooperativeProduce.objects.all().order_by('-created_at')[:4]
+    
+    # Get products by category for display
+    fruits = CooperativeProduce.objects.filter(
+        produce_type__category__name='Fruits'
     ).order_by('-created_at')[:4]
     
-    # Get fruit and vegetable products
-    fruit_products = CooperativeProduce.objects.filter(
-        quantity__gt=0,
-        produce_type__category__name__icontains='fruit'
-    ).order_by('-created_at')[:4]
-    
-    vegetable_products = CooperativeProduce.objects.filter(
-        quantity__gt=0,
-        produce_type__category__name__icontains='vegetable'
+    vegetables = CooperativeProduce.objects.filter(
+        produce_type__category__name='Vegetables'
     ).order_by('-created_at')[:4]
     
     context = {
+        'categories': categories_with_products,
         'featured_products': featured_products,
-        'categories': categories,
-        'recent_products': recent_products,
-        'fruit_products': fruit_products,
-        'vegetable_products': vegetable_products,
+        'new_arrivals': new_arrivals,
+        'fruit_products': fruits,
+        'vegetable_products': vegetables,
     }
     return render(request, 'shop/home.html', context)
 
 def product_list(request):
-    category_id = request.GET.get('category')
+    category_slug = request.GET.get('category')  # Changed from category_id to category_slug
     search_query = request.GET.get('search')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
-    sort_by = request.GET.get('sort_by', 'name')
+    sort_by = request.GET.get('sort_by', 'id')
     
     products = CooperativeProduce.objects.all()
     
-    if category_id:
-        products = products.filter(produce_type__category_id=category_id)
+    if category_slug:
+        # Filter by category slug instead of ID
+        products = products.filter(produce_type__category__slug=category_slug)
     
     if search_query:
-        products = products.filter(name__icontains=search_query)
+        products = products.filter(produce_type__name__icontains=search_query)
     
     if min_price:
-        products = products.filter(price__gte=min_price)
+        products = products.filter(produce_type__price_per_unit__gte=min_price)
     
     if max_price:
-        products = products.filter(price__lte=max_price)
+        products = products.filter(produce_type__price_per_unit__lte=max_price)
     
     if sort_by == 'price_low':
-        products = products.order_by('price')
+        products = products.order_by('produce_type__price_per_unit')
     elif sort_by == 'price_high':
-        products = products.order_by('-price')
+        products = products.order_by('-produce_type__price_per_unit')
     elif sort_by == 'newest':
         products = products.order_by('-created_at')
     else:
@@ -79,7 +77,7 @@ def product_list(request):
     context = {
         'products': products,
         'categories': categories,
-        'selected_category': category_id,
+        'selected_category': category_slug,
         'search_query': search_query,
         'min_price': min_price,
         'max_price': max_price,
@@ -89,11 +87,8 @@ def product_list(request):
 
 def product_detail(request, product_id):
     product = get_object_or_404(CooperativeProduce, id=product_id)
-    
-    # Get related products (same category)
     related_products = CooperativeProduce.objects.filter(
-        produce_type__category=product.produce_type.category,
-        quantity__gt=0
+        produce_type__category=product.produce_type.category
     ).exclude(id=product_id)[:4]
     
     context = {
