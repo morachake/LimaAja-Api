@@ -9,7 +9,7 @@ from .models import Cart, CartItem, Order, OrderItem, Address, PaymentMethod, No
 from django.db.models import Sum, F, Count
 from django.utils import timezone
 from django.http import JsonResponse
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 def home(request):
     # Get categories that have products
@@ -114,7 +114,6 @@ def get_or_create_cart(request):
             request.session['cart_id'] = cart.id
     return cart
 
-@login_required
 def add_to_cart(request, product_id):
     product = get_object_or_404(CooperativeProduce, id=product_id, quantity__gt=0)
     cart = get_or_create_cart(request)
@@ -136,12 +135,17 @@ def add_to_cart(request, product_id):
         return JsonResponse({
             'success': True,
             'cart_count': cart.item_count,
+            'message': f"{product.produce_type.name} added to your cart."
         })
     
-    # Otherwise redirect to the cart page
-    return redirect('shop:cart')
+    # Get the referring page if available
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    
+    # Otherwise redirect to the product list page
+    return redirect('shop:product_list')
 
-@login_required
 def cart(request):
     cart = get_or_create_cart(request)
     
@@ -151,14 +155,20 @@ def cart(request):
     }
     return render(request, 'shop/cart.html', context)
 
-@login_required
 def update_cart(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
     
-    # Ensure the cart belongs to the current user
-    if request.user.is_authenticated and cart_item.cart.user != request.user:
+    # For logged-in users, ensure the cart belongs to them
+    if request.user.is_authenticated and cart_item.cart.user and cart_item.cart.user != request.user:
         messages.error(request, "You don't have permission to modify this cart.")
         return redirect('shop:cart')
+    
+    # For anonymous users, ensure the cart belongs to their session
+    if not request.user.is_authenticated:
+        cart_id = request.session.get('cart_id')
+        if not cart_id or cart_item.cart.id != cart_id:
+            messages.error(request, "You don't have permission to modify this cart.")
+            return redirect('shop:cart')
     
     action = request.POST.get('action')
     
@@ -186,7 +196,36 @@ def update_cart(request, item_id):
     
     return redirect('shop:cart')
 
-@login_required
+def remove_from_cart(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id)
+    
+    # For logged-in users, ensure the cart belongs to them
+    if request.user.is_authenticated and cart_item.cart.user and cart_item.cart.user != request.user:
+        messages.error(request, "You don't have permission to modify this cart.")
+        return redirect('shop:cart')
+    
+    # For anonymous users, ensure the cart belongs to their session
+    if not request.user.is_authenticated:
+        cart_id = request.session.get('cart_id')
+        if not cart_id or cart_item.cart.id != cart_id:
+            messages.error(request, "You don't have permission to modify this cart.")
+            return redirect('shop:cart')
+    
+    # Remove the item
+    cart_item.delete()
+    messages.success(request, "Item removed from cart.")
+    
+    # If AJAX request, return JSON response
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        cart = cart_item.cart
+        return JsonResponse({
+            'success': True,
+            'cart_count': cart.item_count,
+            'cart_total': float(cart.total),
+        })
+    
+    return redirect('shop:cart')
+
 def checkout(request):
     cart = get_or_create_cart(request)
     
@@ -194,6 +233,13 @@ def checkout(request):
     if cart.items.count() == 0:
         messages.warning(request, "Your cart is empty. Add some products before checkout.")
         return redirect('shop:product_list')
+    
+    # Check if user is authenticated
+    if not request.user.is_authenticated:
+        # Store the next URL in the session
+        request.session['next'] = reverse('shop:checkout')
+        messages.info(request, "Please log in to complete your checkout.")
+        return redirect('shop:login')
     
     # Get user's addresses and payment methods
     addresses = Address.objects.filter(user=request.user)
@@ -498,21 +544,51 @@ def mark_notification_read(request, notification_id):
 
 def login_view(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            user = authenticate(username=email, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f"Welcome back, {username}!")
+                messages.success(request, f"Welcome back, {user.full_name}!")
+                
+                # Check if there's a next URL in the session
+                next_url = request.session.get('next')
+                if next_url:
+                    del request.session['next']
+                    return redirect(next_url)
+                
+                # Transfer session cart to user cart if needed
+                session_cart_id = request.session.get('cart_id')
+                if session_cart_id:
+                    try:
+                        session_cart = Cart.objects.get(id=session_cart_id)
+                        user_cart, created = Cart.objects.get_or_create(user=user)
+                        
+                        # Transfer items from session cart to user cart
+                        for item in session_cart.items.all():
+                            try:
+                                user_item = CartItem.objects.get(cart=user_cart, product=item.product)
+                                user_item.quantity += item.quantity
+                                user_item.save()
+                            except CartItem.DoesNotExist:
+                                item.cart = user_cart
+                                item.save()
+                        
+                        # Delete the session cart
+                        session_cart.delete()
+                        del request.session['cart_id']
+                    except Cart.DoesNotExist:
+                        pass
+                
                 return redirect('shop:home')
             else:
-                messages.error(request, "Invalid username or password.")
+                messages.error(request, "Invalid email or password.")
         else:
-            messages.error(request, "Invalid username or password.")
+            messages.error(request, "Invalid email or password.")
     else:
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     
     context = {
         'form': form
@@ -521,18 +597,48 @@ def login_view(request):
 
 def register_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, f"Account created successfully. Welcome, {user.username}!")
+            messages.success(request, f"Account created successfully. Welcome, {user.full_name}!")
+            
+            # Transfer session cart to user cart if needed
+            session_cart_id = request.session.get('cart_id')
+            if session_cart_id:
+                try:
+                    session_cart = Cart.objects.get(id=session_cart_id)
+                    user_cart, created = Cart.objects.get_or_create(user=user)
+                    
+                    # Transfer items from session cart to user cart
+                    for item in session_cart.items.all():
+                        try:
+                            user_item = CartItem.objects.get(cart=user_cart, product=item.product)
+                            user_item.quantity += item.quantity
+                            user_item.save()
+                        except CartItem.DoesNotExist:
+                            item.cart = user_cart
+                            item.save()
+                    
+                    # Delete the session cart
+                    session_cart.delete()
+                    del request.session['cart_id']
+                except Cart.DoesNotExist:
+                    pass
+            
+            # Check if there's a next URL in the session
+            next_url = request.session.get('next')
+            if next_url:
+                del request.session['next']
+                return redirect(next_url)
+                
             return redirect('shop:home')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     
     context = {
         'form': form

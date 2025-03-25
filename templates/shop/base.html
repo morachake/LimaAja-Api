@@ -7,9 +7,45 @@
     <title>{% block title %}LimaAja{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
+    <style>
+        /* Cart dropdown animations */
+        .group:hover .group-hover\:block {
+            display: block;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Cart icon pulse animation */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .cart-added {
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        /* User dropdown menu */
+        .user-dropdown {
+            transform-origin: top right;
+            transition: all 0.2s ease-out;
+        }
+        .user-dropdown.hidden {
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-50 text-gray-800">
+    <!-- Notification container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 w-80"></div>
+    
     <!-- Header -->
     <header class="bg-white shadow-sm">
         <div class="container mx-auto px-4">
@@ -29,30 +65,120 @@
 
                 <!-- Auth buttons -->
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="{% url 'shop:cart' %}" class="text-gray-700 hover:text-green-600 relative">
-                        <i class="fas fa-shopping-cart"></i>
-                        {% if cart_count %}
-                        <span class="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ cart_count }}</span>
-                        {% endif %}
-                    </a>
+                    <!-- Cart with dropdown preview -->
+                    <div class="relative group">
+                        <a href="{% url 'shop:cart' %}" class="text-gray-700 hover:text-green-600 relative p-2">
+                            <i class="fas fa-shopping-cart text-xl"></i>
+                            {% if cart_count %}
+                            <span class="cart-count absolute -top-2 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ cart_count }}</span>
+                            {% endif %}
+                        </a>
+                        
+                        <!-- Cart preview dropdown -->
+                        <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg py-2 z-20 hidden group-hover:block">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <h3 class="font-medium text-gray-800">Your Cart (<span class="cart-count">{{ cart_count|default:"0" }}</span>)</h3>
+                            </div>
+                            
+                            {% if cart_count %}
+                                <div class="max-h-64 overflow-y-auto py-2">
+                                    {% for item in request.cart_items|slice:":3" %}
+                                    <div class="px-4 py-2 hover:bg-gray-50 flex items-center">
+                                        <div class="w-10 h-10 flex-shrink-0 mr-2 bg-gray-100 rounded overflow-hidden">
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                                    <i class="fas fa-seedling"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-800 truncate">{{ item.product.produce_type.name }}</p>
+                                            <p class="text-xs text-gray-500">{{ item.quantity }} × Rp {{ item.product.price|floatformat:0 }}</p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    
+                                    {% if cart_count > 3 %}
+                                    <div class="px-4 py-2 text-xs text-gray-500 text-center">
+                                        + {{ cart_count|add:"-3" }} more item(s)
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="border-t border-gray-100 mt-2 pt-2 px-4">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="font-medium text-gray-600">Subtotal:</span>
+                                        <span class="font-medium text-gray-800 cart-subtotal">Rp {{ cart_total|default:"0"|floatformat:0 }}</span>
+                                    </div>
+                                    <a href="{% url 'shop:cart' %}" class="block w-full bg-green-600 text-white text-center py-2 px-4 rounded-md text-sm hover:bg-green-700 transition duration-150">
+                                        View Cart
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="px-4 py-4 text-center">
+                                    <p class="text-gray-500 text-sm mb-3">Your cart is empty</p>
+                                    <a href="{% url 'shop:product_list' %}" class="text-green-600 text-sm hover:text-green-700">
+                                        Start shopping
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
                     {% if user.is_authenticated %}
-                        <div class="relative group">
-                            <button class="text-gray-700 hover:text-green-600 flex items-center">
-                                <i class="fas fa-user-circle mr-1"></i>
+                        <div class="relative">
+                            <button id="user-menu-button" class="text-gray-700 hover:text-green-600 flex items-center">
+                                <i class="fas fa-user-circle text-xl mr-1"></i>
                                 <span>{{ user.username }}</span>
                                 <i class="fas fa-chevron-down ml-1 text-xs"></i>
                             </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                                <a href="{% url 'shop:user_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
-                                <a href="{% url 'shop:order_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Orders</a>
-                                <a href="{% url 'shop:user_settings' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                                <div class="border-t border-gray-100"></div>
-                                <a href="{% url 'shop:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                            <div id="user-dropdown" class="user-dropdown absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-10 hidden">
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-medium text-gray-900">{{ user.first_name }} {{ user.last_name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                                </div>
+                                
+                                <div class="py-1">
+                                    <a href="{% url 'shop:user_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-tachometer-alt w-5 text-gray-400"></i>
+                                        Dashboard
+                                    </a>
+                                    <a href="{% url 'shop:order_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-shopping-bag w-5 text-gray-400"></i>
+                                        Orders
+                                    </a>
+                                    <a href="{% url 'shop:user_notifications' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-bell w-5 text-gray-400"></i>
+                                        Notifications
+                                        {% if unread_notifications_count %}
+                                        <span class="ml-auto inline-block bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ unread_notifications_count }}</span>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                
+                                <div class="py-1 border-t border-gray-100">
+                                    <a href="{% url 'shop:user_settings' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-cog w-5 text-gray-400"></i>
+                                        Settings
+                                    </a>
+                                    <a href="{% url 'shop:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-sign-out-alt w-5 text-gray-400"></i>
+                                        Logout
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     {% else %}
-                        <a href="{% url 'shop:login' %}" class="text-gray-700 hover:text-green-600">Login</a>
-                        <a href="{% url 'shop:register' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Sign Up</a>
+                        <div class="flex items-center space-x-2">
+                            <a href="{% url 'shop:login' %}" class="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md flex items-center">
+                                <i class="fas fa-sign-in-alt mr-1"></i> Login
+                            </a>
+                            <a href="{% url 'shop:register' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center">
+                                <i class="fas fa-user-plus mr-1"></i> Sign Up
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
                 <button class="md:hidden text-gray-600 focus:outline-none" id="mobile-menu-button">
@@ -69,13 +195,39 @@
                     
                     <div class="border-t border-gray-200 my-2"></div>
                     
+                    <a href="{% url 'shop:cart' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                        <i class="fas fa-shopping-cart mr-1"></i> Cart
+                        {% if cart_count %}
+                        <span class="ml-1 bg-green-600 text-white text-xs rounded-full px-2 py-0.5 cart-count">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                    
                     {% if user.is_authenticated %}
-                        <a href="{% url 'shop:user_dashboard' %}" class="block py-2 text-gray-700 hover:text-green-600">My Account</a>
-                        <a href="{% url 'shop:cart' %}" class="block py-2 text-gray-700 hover:text-green-600">Cart</a>
-                        <a href="{% url 'shop:logout' %}" class="block py-2 text-gray-700 hover:text-green-600">Logout</a>
+                        <a href="{% url 'shop:user_dashboard' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+                        </a>
+                        <a href="{% url 'shop:order_history' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-shopping-bag mr-1"></i> Orders
+                        </a>
+                        <a href="{% url 'shop:user_notifications' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-bell mr-1"></i> Notifications
+                            {% if unread_notifications_count %}
+                            <span class="ml-1 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{{ unread_notifications_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'shop:user_settings' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-cog mr-1"></i> Settings
+                        </a>
+                        <a href="{% url 'shop:logout' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </a>
                     {% else %}
-                        <a href="{% url 'shop:login' %}" class="block py-2 text-gray-700 hover:text-green-600">Login</a>
-                        <a href="{% url 'shop:register' %}" class="block py-2 text-gray-700 hover:text-green-600">Sign Up</a>
+                        <a href="{% url 'shop:login' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Login
+                        </a>
+                        <a href="{% url 'shop:register' %}" class="block py-2 text-gray-700 hover:text-green-600">
+                            <i class="fas fa-user-plus mr-1"></i> Sign Up
+                        </a>
                     {% endif %}
                 </div>
             </div>
@@ -153,8 +305,27 @@
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
             document.getElementById('mobile-menu').classList.toggle('hidden');
         });
+        
+        // User dropdown toggle
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        if (userMenuButton && userDropdown) {
+            userMenuButton.addEventListener('click', function() {
+                userDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+        }
     </script>
+    <script src="{% static 'js/cart.js' %}"></script>
     {% block extra_js %}{% endblock %}
+    <script src="{% static 'js/auth-modal.js' %}"></script>
 </body>
 </html>
 
