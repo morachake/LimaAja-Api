@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LimaAja{% endblock %}</title  initial-scale=1.0">
+    <title>{% block title %}LimaAja{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block extra_css %}{% endblock %}
@@ -15,60 +15,65 @@
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <img src="{% static 'images/logo.png' %}" alt="LimaAja Logo" class="h-10 w-auto mr-2" >
+                    <a href="{% url 'shop:home' %}" class="text-2xl font-bold text-green-600">LimaAja</a>
                 </div>
-                <nav class="hidden md:flex space-x-8">
-                    <a href="{% url 'shop:home' %}" class="text-gray-600 hover:text-green-600">Home</a>
-                    <a href="{% url 'shop:product_list' %}" class="text-gray-600 hover:text-green-600">Shop</a>
-                    <a href="#" class="text-gray-600 hover:text-green-600">About</a>
-                    <a href="#" class="text-gray-600 hover:text-green-600">Contact</a>
-                </nav>
-                <div class="flex items-center space-x-4">
-                    <a href="{% url 'shop:cart' %}" class="text-gray-600 hover:text-green-600 relative">
+                <!-- Navigation links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{% url 'shop:home' %}" class="text-gray-700 hover:text-green-600">Home</a>
+                    <a href="{% url 'shop:product_list' %}" class="text-gray-700 hover:text-green-600">Products</a>
+                    <a href="#" class="text-gray-700 hover:text-green-600">About</a>
+                    <a href="#" class="text-gray-700 hover:text-green-600">Contact</a>
+                </div>
+
+                <!-- Auth buttons -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{% url 'shop:cart' %}" class="text-gray-700 hover:text-green-600 relative">
                         <i class="fas fa-shopping-cart"></i>
                         {% if cart_count %}
                         <span class="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ cart_count }}</span>
                         {% endif %}
                     </a>
                     {% if user.is_authenticated %}
-                    <div class="relative group">
-                        <button class="text-gray-600 hover:text-green-600 flex items-center">
-                            <i class="fas fa-user-circle mr-1"></i>
-                            <span>{{ user.username }}</span>
-                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
-                        </button>
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                            <a href="{% url 'shop:user_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
-                            <a href="{% url 'shop:order_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Orders</a>
-                            <a href="{% url 'shop:user_settings' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                            <div class="border-t border-gray-100"></div>
-                            <a href="{% url 'shop:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                        <div class="relative group">
+                            <button class="text-gray-700 hover:text-green-600 flex items-center">
+                                <i class="fas fa-user-circle mr-1"></i>
+                                <span>{{ user.username }}</span>
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
+                                <a href="{% url 'shop:user_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                                <a href="{% url 'shop:order_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Orders</a>
+                                <a href="{% url 'shop:user_settings' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="{% url 'shop:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                            </div>
                         </div>
-                    </div>
                     {% else %}
-                    <a href="{% url 'shop:login' %}" class="text-gray-600 hover:text-green-600">Login</a>
-                    <a href="{% url 'shop:register' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Sign Up</a>
+                        <a href="{% url 'shop:login' %}" class="text-gray-700 hover:text-green-600">Login</a>
+                        <a href="{% url 'shop:register' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Sign Up</a>
                     {% endif %}
                 </div>
                 <button class="md:hidden text-gray-600 focus:outline-none" id="mobile-menu-button">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
-            <!-- Mobile Menu -->
-            <div class="md:hidden hidden" id="mobile-menu">
+            <!-- Mobile menu (hidden by default) -->
+            <div id="mobile-menu" class="hidden md:hidden">
                 <div class="py-2 space-y-1">
-                    <a href="{% url 'shop:home' %}" class="block py-2 text-gray-600 hover:text-green-600">Home</a>
-                    <a href="{% url 'shop:product_list' %}" class="block py-2 text-gray-600 hover:text-green-600">Shop</a>
-                    <a href="#" class="block py-2 text-gray-600 hover:text-green-600">About</a>
-                    <a href="#" class="block py-2 text-gray-600 hover:text-green-600">Contact</a>
+                    <a href="{% url 'shop:home' %}" class="block py-2 text-gray-700 hover:text-green-600">Home</a>
+                    <a href="{% url 'shop:product_list' %}" class="block py-2 text-gray-700 hover:text-green-600">Products</a>
+                    <a href="#" class="block py-2 text-gray-700 hover:text-green-600">About</a>
+                    <a href="#" class="block py-2 text-gray-700 hover:text-green-600">Contact</a>
+                    
+                    <div class="border-t border-gray-200 my-2"></div>
+                    
                     {% if user.is_authenticated %}
-                    <a href="{% url 'shop:user_dashboard' %}" class="block py-2 text-gray-600 hover:text-green-600">Dashboard</a>
-                    <a href="{% url 'shop:order_history' %}" class="block py-2 text-gray-600 hover:text-green-600">Orders</a>
-                    <a href="{% url 'shop:user_settings' %}" class="block py-2 text-gray-600 hover:text-green-600">Settings</a>
-                    <a href="{% url 'logout' %}" class="block py-2 text-gray-600 hover:text-green-600">Logout</a>
+                        <a href="{% url 'shop:user_dashboard' %}" class="block py-2 text-gray-700 hover:text-green-600">My Account</a>
+                        <a href="{% url 'shop:cart' %}" class="block py-2 text-gray-700 hover:text-green-600">Cart</a>
+                        <a href="{% url 'shop:logout' %}" class="block py-2 text-gray-700 hover:text-green-600">Logout</a>
                     {% else %}
-                    <a href="{% url 'shop:login' %}" class="block py-2 text-gray-600 hover:text-green-600">Login</a>
-                    <a href="{% url 'shop:register' %}" class="block py-2 text-gray-600 hover:text-green-600">Sign Up</a>
+                        <a href="{% url 'shop:login' %}" class="block py-2 text-gray-700 hover:text-green-600">Login</a>
+                        <a href="{% url 'shop:register' %}" class="block py-2 text-gray-700 hover:text-green-600">Sign Up</a>
                     {% endif %}
                 </div>
             </div>

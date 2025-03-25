@@ -6,217 +6,171 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="bg-green-600 text-white py-12">
-    <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row items-center">
-            <div class="md:w-1/2 mb-8 md:mb-0">
-                <h1 class="text-3xl md:text-4xl font-bold mb-4">Fresh Produce Marketplace</h1>
-                <p class="text-xl mb-6">Browse our selection of fresh produce directly from Rwandan farmers</p>
-            </div>
-            <div class="md:w-1/2 flex justify-end">
-                <img src="{% static 'images/hero-produce.jpg' %}" alt="Fresh produce" class="rounded-lg shadow-lg max-h-64" onerror="this.src='{% static 'images/placeholder-produce.jpg' %}'; this.onerror=null;">
-            </div>
-        </div>
-    </div>
+  <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row items-center">
+          <div class="md:w-1/2 mb-8 md:mb-0">
+              <h1 class="text-3xl md:text-4xl font-bold mb-4">Fresh Produce Marketplace</h1>
+              <p class="text-xl mb-6">Browse our selection of fresh produce directly from Rwandan farmers</p>
+          </div>
+          <div class="md:w-1/2 flex justify-end">
+              <img src="{% static 'images/hero-produce.jpg' %}" alt="Fresh produce" class="rounded-lg shadow-lg max-h-64" onerror="this.src='{% static 'images/placeholder-produce.jpg' %}'; this.onerror=null;">
+          </div>
+      </div>
+  </div>
 </section>
 
 <div class="container mx-auto px-4 py-8">
-    <!-- Filters Section (Mobile Dropdown) -->
-    <div class="md:hidden mb-6">
-        <button id="filter-toggle" class="w-full bg-white shadow-md rounded-lg px-4 py-3 flex justify-between items-center">
-            <span class="font-semibold text-gray-700">Filters</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-        </button>
-        <div id="mobile-filters" class="hidden bg-white rounded-lg shadow-md mt-2 p-4">
-            <!-- Mobile filters content -->
-            {% include 'shop/partials/filter_form.html' %}
-        </div>
-    </div>
+  <!-- Filters Section (Mobile Dropdown) -->
+  <div class="md:hidden mb-6">
+      <button id="filter-toggle" class="w-full bg-white shadow-md rounded-lg px-4 py-3 flex justify-between items-center">
+          <span class="font-semibold text-gray-700">Filters</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+      </button>
+      <div id="mobile-filters" class="hidden bg-white rounded-lg shadow-md mt-2 p-4">
+          <!-- Mobile filters content -->
+          {% include 'shop/partials/filter_form.html' %}
+      </div>
+  </div>
 
-    <div class="flex flex-col md:flex-row gap-8">
-        <!-- Sidebar / Filters (Desktop) -->
-        <div class="hidden md:block md:w-1/4">
-            <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Filters</h2>
-                
-                {% include 'shop/partials/filter_form.html' %}
-            </div>
-        </div>
-        
-        <!-- Product Grid -->
-        <div class="md:w-3/4">
-            {% if categories %}
-                {% for category in categories %}
-                    {% with category_products=products|filter_by_category:category %}
-                    {% if category_products %}
-                    <div class="mb-12">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">{{ category.name }}</h2>
-                            <a href="{% url 'shop:product_list' %}?category={{ category.id }}" class="text-primary hover:text-primary-dark flex items-center">
-                                See more
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </a>
-                        </div>
-                        <p class="text-gray-600 mb-4">Freshly harvested from the fields.</p>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {% for product in category_products|slice:":4" %}
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
-                                <a href="{% url 'shop:product_detail' product.id %}">
-                                    <img src="{{ product.image.url }}" alt="{{ product.produce_type.name }}" class="w-full h-48 object-cover">
-                                </a>
-                                <div class="p-3">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <div class="flex space-x-2">
-                                            <div class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                                <span class="font-semibold">Grade</span>
-                                                <span class="text-primary">{{ product.grade }}</span>
-                                            </div>
-                                            <div class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                                <span class="font-semibold">Quantity</span>
-                                                <span>{{ product.quantity }}{{ product.produce_type.unit }}</span>
-                                            </div>
-                                            <div class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                                <span class="font-semibold">Rating</span>
-                                                <span class="text-yellow-500">★ 5</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <h3 class="text-lg font-semibold text-gray-800">{{ product.produce_type.name }}</h3>
-                                    <p class="text-sm text-gray-500">{{ product.produce_type.variety }}</p>
-                                    <p class="text-xs text-gray-500 mb-2">{{ product.cooperative.name }}</p>
-                                    
-                                    <div class="flex justify-between items-center mt-3">
-                                        <span class="font-bold text-primary">{{ product.produce_type.price_per_unit|floatformat:0 }} RWF/{{ product.produce_type.unit }}</span>
-                                        <a href="{% url 'shop:add_to_cart' product.id %}" class="bg-primary hover:bg-primary-dark text-white px-3 py-1 rounded-md text-sm transition duration-300 flex items-center">
-                                            Add to Cart
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% endwith %}
-                {% endfor %}
-            {% endif %}
-            
-            <!-- All Products Section -->
-            <div class="mb-12">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">All Products</h2>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {% for product in products %}
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
-                        <a href="{% url 'shop:product_detail' product.id %}">
-                            <img src="{{ product.image.url }}" alt="{{ product.produce_type.name }}" class="w-full h-48 object-cover">
-                        </a>
-                        <div class="p-3">
-                            <div class="flex justify-between items-center mb-2">
-                                <div class="flex space-x-2">
-                                    <div class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                        <span class="font-semibold">Grade</span>
-                                        <span class="text-primary">{{ product.grade }}</span>
-                                    </div>
-                                    <div class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                        <span class="font-semibold">Quantity</span>
-                                        <span>{{ product.quantity }}{{ product.produce_type.unit }}</span>
-                                    </div>
-                                    <div class="bg-gray-100 px-2 py-1 rounded text-xs">
-                                        <span class="font-semibold">Rating</span>
-                                        <span class="text-yellow-500">★ 5</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <h3 class="text-lg font-semibold text-gray-800">{{ product.produce_type.name }}</h3>
-                            <p class="text-sm text-gray-500">{{ product.produce_type.variety }}</p>
-                            <p class="text-xs text-gray-500 mb-2">{{ product.cooperative.name }}</p>
-                            
-                            <div class="flex justify-between items-center mt-3">
-                                <span class="font-bold text-primary">{{ product.produce_type.price_per_unit|floatformat:0 }} RWF/{{ product.produce_type.unit }}</span>
-                                <a href="{% url 'shop:add_to_cart' product.id %}" class="bg-primary hover:bg-primary-dark text-white px-3 py-1 rounded-md text-sm transition duration-300 flex items-center">
-                                    Add to Cart
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="col-span-full text-center py-8">
-                        <p class="text-gray-500">No products found matching your criteria.</p>
-                        <a href="{% url 'shop:product_list' %}" class="text-primary hover:text-primary-dark font-medium mt-2 inline-block">Clear filters</a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Looking for more section -->
-            <div class="text-center py-12 bg-gray-50 rounded-lg">
-                <h2 class="text-2xl font-bold mb-4">Looking for more?</h2>
-                <p class="text-gray-600 mb-6">Explore our full list of 200+ fresh produce from farms.</p>
-                <a href="{% url 'shop:product_list' %}" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded-full transition duration-300 inline-block">
-                    See more
-                </a>
-            </div>
-            
-            <!-- Pagination -->
-            {% if products.has_other_pages %}
-            <div class="mt-8 flex justify-center">
-                <div class="flex space-x-1">
-                    {% if products.has_previous %}
-                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ products.previous_page_number }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                        Previous
-                    </a>
-                    {% endif %}
-                    
-                    {% for i in products.paginator.page_range %}
-                        {% if products.number == i %}
-                        <span class="px-4 py-2 border border-primary bg-primary text-white rounded-md">{{ i }}</span>
-                        {% elif i > products.number|add:'-3' and i < products.number|add:'3' %}
-                        <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ i }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            {{ i }}
-                        </a>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if products.has_next %}
-                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ products.next_page_number }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                        Next
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+  <div class="flex flex-col md:flex-row gap-8">
+      <!-- Sidebar / Filters (Desktop) -->
+      <div class="hidden md:block md:w-1/4">
+          <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+              <h2 class="text-xl font-bold text-gray-800 mb-4">Filters</h2>
+              
+              {% include 'shop/partials/filter_form.html' %}
+          </div>
+      </div>
+      
+      <!-- Product Grid -->
+      <div class="md:w-3/4">
+          <!-- All Products Section -->
+          <div class="mb-12">
+              <div class="flex justify-between items-center mb-6">
+                  <h2 class="text-2xl font-bold text-gray-800">All Products</h2>
+              </div>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {% for product in products %}
+                  <div class="bg-white rounded-lg overflow-hidden shadow border border-gray-200">
+                      <!-- Product Image -->
+                      <div class="h-48 overflow-hidden">
+                          {% if product.image %}
+                              <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.name }}">
+                          {% else %}
+                              <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                          {% endif %}
+                      </div>
+                      
+                      <!-- Info boxes - Styled to match the screenshot -->
+                      <div class="flex justify-between p-2 border-b border-gray-100">
+                          <div class="text-center border rounded px-2 py-1 flex-1 mx-1">
+                              <div class="text-xs text-gray-500">Grade</div>
+                              <div class="font-semibold">{{ product.grade }}</div>
+                          </div>
+                          <div class="text-center border rounded px-2 py-1 flex-1 mx-1">
+                              <div class="text-xs text-gray-500">Quantity</div>
+                              <div class="font-semibold">{{ product.quantity }}{{ product.unit }}</div>
+                          </div>
+                          <div class="text-center border rounded px-2 py-1 flex-1 mx-1">
+                              <div class="text-xs text-gray-500">Rating</div>
+                              <div class="font-semibold flex items-center justify-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                  </svg>
+                                  5
+                              </div>
+                          </div>
+                      </div>
+                      
+                      <!-- Product details -->
+                      <div class="p-4">
+                          <div class="flex justify-between items-center">
+                              <h3 class="font-semibold text-lg">{{ product.name }}</h3>
+                              {% if product.produce_type %}
+                              <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{ product.produce_type.name }}</span>
+                              {% endif %}
+                          </div>
+                          <p class="text-sm text-gray-500 mt-1">{{ product.cooperative.name }} ({{ product.cooperative.location }})</p>
+                          <div class="font-semibold text-green-700 mt-2">{{ product.price|floatformat:0 }}K RWF/kg</div>
+                          
+                          <form method="post" action="{% url 'shop:add_to_cart' product.id %}" class="mt-3">
+                              {% csrf_token %}
+                              <button type="submit" class="w-full bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded flex items-center justify-center">
+                                  <span>Add to Cart</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                                  </svg>
+                              </button>
+                          </form>
+                      </div>
+                  </div>
+                  {% empty %}
+                  <div class="col-span-full text-center py-8">
+                      <p class="text-gray-500">No products found matching your criteria.</p>
+                      <a href="{% url 'shop:product_list' %}" class="text-green-600 hover:text-green-700 font-medium mt-2 inline-block">Clear filters</a>
+                  </div>
+                  {% endfor %}
+              </div>
+          </div>
+          
+          <!-- Looking for more section -->
+          <div class="text-center py-12 bg-gray-50 rounded-lg">
+              <h2 class="text-2xl font-bold mb-4">Looking for more?</h2>
+              <p class="text-gray-600 mb-6">Explore our full list of 200+ fresh produce from farms.</p>
+              <a href="{% url 'shop:product_list' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full transition duration-300 inline-block">
+                  See more
+              </a>
+          </div>
+          
+          <!-- Pagination -->
+          {% if products.has_other_pages %}
+          <div class="mt-8 flex justify-center">
+              <div class="flex space-x-1">
+                  {% if products.has_previous %}
+                  <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ products.previous_page_number }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                      Previous
+                  </a>
+                  {% endif %}
+                  
+                  {% for i in products.paginator.page_range %}
+                      {% if products.number == i %}
+                      <span class="px-4 py-2 border border-green-600 bg-green-600 text-white rounded-md">{{ i }}</span>
+                      {% elif i > products.number|add:'-3' and i < products.number|add:'3' %}
+                      <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ i }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                          {{ i }}
+                      </a>
+                      {% endif %}
+                  {% endfor %}
+                  
+                  {% if products.has_next %}
+                  <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ products.next_page_number }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                      Next
+                  </a>
+                  {% endif %}
+              </div>
+          </div>
+          {% endif %}
+      </div>
+  </div>
 </div>
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Mobile filter toggle
-        const filterToggle = document.getElementById('filter-toggle');
-        const mobileFilters = document.getElementById('mobile-filters');
-        
-        if (filterToggle && mobileFilters) {
-            filterToggle.addEventListener('click', function() {
-                mobileFilters.classList.toggle('hidden');
-            });
-        }
-    });
+  document.addEventListener('DOMContentLoaded', function() {
+      // Mobile filter toggle
+      const filterToggle = document.getElementById('filter-toggle');
+      const mobileFilters = document.getElementById('mobile-filters');
+      
+      if (filterToggle && mobileFilters) {
+          filterToggle.addEventListener('click', function() {
+              mobileFilters.classList.toggle('hidden');
+          });
+      }
+  });
 </script>
 {% endblock %}
 {% endblock %}

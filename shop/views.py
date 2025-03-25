@@ -1,19 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.http import JsonResponse
-from django.db.models import Sum, Count, Q
-from django.utils import timezone
-from datetime import timedelta
-
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from cooperative.models import CooperativeProduce, Category
-from .models import (
-    Cart, CartItem, Order, OrderItem, 
-    Address, PaymentMethod, Notification
-)
-
+from .models import Cart, CartItem, Order, OrderItem, Address, PaymentMethod, Notification
+from django.db.models import Sum, F, Count
+from django.utils import timezone
+from django.http import JsonResponse
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 def home(request):
     # Get featured products
     featured_products = CooperativeProduce.objects.filter(
@@ -49,29 +45,45 @@ def home(request):
     return render(request, 'shop/home.html', context)
 
 def product_list(request):
-    products = CooperativeProduce.objects.filter(quantity__gt=0)
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('search')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    sort_by = request.GET.get('sort_by', 'name')
     
-    # Filter by category if provided
-    category_slug = request.GET.get('category')
-    if category_slug:
-        products = products.filter(produce_type__category__slug=category_slug)
+    products = CooperativeProduce.objects.all()
     
-    # Filter by search query if provided
-    search_query = request.GET.get('q')
+    if category_id:
+        products = products.filter(produce_type__category_id=category_id)
+    
     if search_query:
-        products = products.filter(
-            Q(produce_type__name__icontains=search_query) | 
-            Q(produce_type__description__icontains=search_query)
-        )
+        products = products.filter(name__icontains=search_query)
     
-    # Get all categories for the filter sidebar
+    if min_price:
+        products = products.filter(price__gte=min_price)
+    
+    if max_price:
+        products = products.filter(price__lte=max_price)
+    
+    if sort_by == 'price_low':
+        products = products.order_by('price')
+    elif sort_by == 'price_high':
+        products = products.order_by('-price')
+    elif sort_by == 'newest':
+        products = products.order_by('-created_at')
+    else:
+        products = products.order_by('id')
+    
     categories = Category.objects.all()
     
     context = {
         'products': products,
         'categories': categories,
-        'selected_category': category_slug,
+        'selected_category': category_id,
         'search_query': search_query,
+        'min_price': min_price,
+        'max_price': max_price,
+        'sort_by': sort_by,
     }
     return render(request, 'shop/product_list.html', context)
 
