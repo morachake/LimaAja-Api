@@ -25,11 +25,11 @@ def home(request):
     
     # Get products by category for display
     fruits = CooperativeProduce.objects.filter(
-        produce_type__category__name='Fruits'
+        produce_type__category__slug='fruits'
     ).order_by('-created_at')[:4]
     
     vegetables = CooperativeProduce.objects.filter(
-        produce_type__category__name='Vegetables'
+        produce_type__category__slug='vegetables'
     ).order_by('-created_at')[:4]
     
     context = {

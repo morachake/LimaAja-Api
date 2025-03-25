@@ -94,11 +94,11 @@
             <div class="bg-white rounded-lg overflow-hidden shadow border border-gray-200">
     <!-- Product Image -->
     <div class="h-48 overflow-hidden">
-        {% if product.image %}
-            <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.name }}">
-        {% else %}
-            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
-        {% endif %}
+        {% if product.produce_type.image %}
+    <img class="w-full h-full object-cover" src="{{ product.produce_type.image.url }}" alt="{{ product.produce_type.name }}">
+    {% else %}
+        <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,...">
+    {% endif %}
     </div>
     
     <!-- Info boxes - Styled to match the screenshot -->
@@ -166,10 +166,10 @@
             <div class="bg-white rounded-lg overflow-hidden shadow border border-gray-200">
     <!-- Product Image -->
     <div class="h-48 overflow-hidden">
-        {% if product.image %}
-            <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% if product.produce_type.image %}
+            <img class="w-full h-full object-cover" src="{{ product.produce_type.image.url }}" alt="{{ product.produce_type.name }}">
         {% else %}
-            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,...">
         {% endif %}
     </div>
     
@@ -238,10 +238,10 @@
             <div class="bg-white rounded-lg overflow-hidden shadow border border-gray-200">
     <!-- Product Image -->
     <div class="h-48 overflow-hidden">
-        {% if product.image %}
-            <img class="w-full h-full object-cover" src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% if product.produce_type.image %}
+        <img class="w-full h-full object-cover" src="{{ product.produce_type.image.url }}" alt="{{ product.produce_type.name }}">
         {% else %}
-            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQ0IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjx0ZXh0IHg9IjEyMiIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgYWxpZ25tZW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM2YjcyODAiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+            <img class="w-full h-full object-cover" src="{% static 'images/placeholder.jpg' %}" alt="{{ product.produce_type.name }}" onerror="this.src='data:image/svg+xml;base64,...">
         {% endif %}
     </div>
     

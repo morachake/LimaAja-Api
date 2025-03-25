@@ -116,6 +116,7 @@ class ProduceVariant(models.Model):
     def __str__(self):
         return f"{self.produce_type.name} - Grade {self.grade}"
 
+# New models for cooperative produce management
 class CooperativeProduce(models.Model):
     cooperative = models.ForeignKey(User, on_delete=models.CASCADE, related_name='produce_items')
     produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE, related_name='cooperative_items')
@@ -136,7 +137,20 @@ class CooperativeProduce(models.Model):
     
     class Meta:
         ordering = ['-created_at']
-
+    
+    def get_image_url(self):
+        """Return the image URL or a placeholder if no image exists"""
+        if self.produce_type.image and hasattr(self.produce_type.image, 'url'):
+            return self.produce_type.image.url
+        return '/static/images/placeholder.jpg'
+    
+    @property
+    def price(self):
+        """Calculate price based on produce type and grade"""
+        base_price = self.produce_type.price_per_unit
+        # You could apply grade-based pricing here if needed
+        return base_price
+    
 # Order models
 class Customer(models.Model):
     ROLE_CHOICES = [
