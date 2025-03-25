@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./templates/**/*.{html,js}",
     "./templates/shop/**/*.html",
+    "./templates/cooperative/**/*.html",
     "./static/js/**/*.js",
     "*.{js,ts,jsx,tsx,mdx}",
   ],

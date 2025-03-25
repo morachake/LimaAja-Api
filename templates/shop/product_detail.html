@@ -76,7 +76,7 @@
                 <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ product.produce_type.name }}</h1>
                 
                 <div class="flex items-center mb-4">
-                    <span class="text-xl font-bold text-green-600">Rp {{ product.price|floatformat:0 }}</span>
+                    <span class="text-xl font-bold text-green-600">RWF {{ product.price|floatformat:0 }}</span>
                     <span class="text-sm text-gray-500 ml-2">per {{ product.produce_type.unit }}</span>
                 </div>
                 
@@ -140,7 +140,7 @@
                             <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                             <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-5h2a1 1 0 00.9-.5l1.08-1.8A3 3 0 0013.38 5H12V4a1 1 0 00-1-1H3zM12 6.5h1.38a1.5 1.5 0 011.32.78l.85 1.42H12V6.5z" />
                         </svg>
-                        <span class="text-sm text-gray-700">Free shipping on orders over Rp 100,000</span>
+                        <span class="text-sm text-gray-700">Free shipping on orders over RWF 100,000</span>
                     </div>
                     <div class="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -179,7 +179,7 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ related.produce_type.name }}</h3>
                         
                         <div class="flex items-center justify-between">
-                            <span class="text-green-600 font-bold">Rp {{ related.price|floatformat:0 }}</span>
+                            <span class="text-green-600 font-bold">RWF {{ related.price|floatformat:0 }}</span>
                             <form method="post" action="{% url 'shop:add_to_cart' related.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="quantity" value="1">

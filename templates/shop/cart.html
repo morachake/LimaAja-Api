@@ -19,11 +19,7 @@
                                 {% for item in cart_items %}
                                 <li class="py-6 flex cart-item" data-price="{{ item.product.price }}" data-quantity="{{ item.quantity }}">
                                     <div class="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border border-gray-200">
-                                        {% if item.product.image %}
-                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover">
-                                        {% else %}
-                                            <img src="https://via.placeholder.com/96?text={{ item.product.produce_type.name }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover">
-                                        {% endif %}
+                                        <img src="{{ item.product.get_image_url }}" alt="{{ item.product.produce_type.name }}" class="w-full h-full object-cover">
                                     </div>
                                     
                                     <div class="ml-4 flex-1 flex flex-col">

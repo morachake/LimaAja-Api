@@ -190,976 +190,1045 @@
 
 <!-- Add Produce Modal -->
 <div id="addProduceModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 7h-9"></path>
-                    <path d="M14 17H5"></path>
-                    <circle cx="17" cy="17" r="3"></circle>
-                    <circle cx="7" cy="7" r="3"></circle>
-                </svg>
-                Add New Produce
-            </div>
-            <button class="modal-close" onclick="closeAddProduceModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
+  <div class="modal-content">
+      <div class="modal-header">
+          <div class="modal-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 7h-9"></path>
+                  <path d="M14 17H5"></path>
+                  <circle cx="17" cy="17" r="3"></circle>
+                  <circle cx="7" cy="7" r="3"></circle>
+              </svg>
+              Add New Produce
+          </div>
+          <button class="modal-close" onclick="closeAddProduceModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+          </button>
+      </div>
 
-        <form method="POST" action="{% url 'add_produce' %}" class="add-produce-form" id="addProduceForm">
-            {% csrf_token %}
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>What is the name of the Farm Produce?</label>
-                    <select class="form-control" id="produce_type" name="produce_type" required onchange="updateProducePreview()">
-                        <option value="">Select Farm Produce</option>
-                        {% for produce_type in produce_types %}
-                            <option value="{{ produce_type.id }}" 
-                                    data-name="{{ produce_type.name }}"
-                                    data-image="{% if produce_type.image %}{{ produce_type.image.url }}{% elif produce_type.image_url %}{{ produce_type.image_url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}"
-                                    data-price="{{ produce_type.price_per_unit }}">
-                                {{ produce_type.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
+      <form method="POST" action="{% url 'add_produce' %}" class="add-produce-form" id="addProduceForm">
+          {% csrf_token %}
+          <div class="modal-body">
+              <div class="form-group">
+                  <label>What is the name of the Farm Produce?</label>
+                  <select class="form-control" id="produce_type" name="produce_type" required onchange="updateProducePreview()">
+                      <option value="">Select Farm Produce</option>
+                      {% for produce_type in produce_types %}
+                          <option value="{{ produce_type.id }}" 
+                                  data-name="{{ produce_type.name }}"
+                                  data-image="{% if produce_type.image %}{{ produce_type.image.url }}{% elif produce_type.image_url %}{{ produce_type.image_url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}"
+                                  data-price="{{ produce_type.price_per_unit }}">
+                              {{ produce_type.name }}
+                          </option>
+                      {% endfor %}
+                  </select>
+              </div>
 
-                <!-- Preview Section -->
-                <div id="producePreview" class="produce-preview" style="display: none;">
-                    <img src="/placeholder.svg" alt="" class="preview-image">
-                    <div class="preview-info">
-                        <h4 class="preview-name"></h4>
-                        <p class="preview-price"></p>
-                    </div>
-                </div>
+              <!-- Preview Section -->
+              <div id="producePreview" class="produce-preview" style="display: none;">
+                  <img src="/placeholder.svg" alt="" class="preview-image">
+                  <div class="preview-info">
+                      <h4 class="preview-name"></h4>
+                      <p class="preview-price"></p>
+                  </div>
+              </div>
 
-                <div class="form-group">
-                    <label>Enter Quantity of Farm Produce</label>
-                    <div class="quantity-input">
-                        <div class="unit-select">Tons</div>
-                        <input type="number" class="form-control" id="quantity" name="quantity" min="0.1" step="0.1" required>
-                    </div>
-                </div>
+              <div class="form-group">
+                  <label>Enter Quantity of Farm Produce</label>
+                  <div class="quantity-input">
+                      <div class="unit-select">Tons</div>
+                      <input type="number" class="form-control" id="quantity" name="quantity" min="0.1" step="0.1" required>
+                  </div>
+              </div>
 
-                <div class="form-group">
-                    <label>Choose Province/Location of Farm Produce</label>
-                    <select class="form-control" id="location" name="location" required>
-                        <option value="">Select Location</option>
-                        <option value="Eastern">Eastern Province</option>
-                        <option value="Western">Western Province</option>
-                        <option value="Northern">Northern Province</option>
-                        <option value="Southern">Southern Province</option>
-                        <option value="Kigali">Kigali</option>
-                    </select>
-                </div>
+              <div class="form-group">
+                  <label>Choose Province/Location of Farm Produce</label>
+                  <select class="form-control" id="location" name="location" required>
+                      <option value="">Select Location</option>
+                      <option value="Eastern">Eastern Province</option>
+                      <option value="Western">Western Province</option>
+                      <option value="Northern">Northern Province</option>
+                      <option value="Southern">Southern Province</option>
+                      <option value="Kigali">Kigali</option>
+                  </select>
+              </div>
 
-                <div class="form-group">
-                    <label>Choose Applicable Variants of Farm Produce</label>
-                    <div class="grade-buttons">
-                        <button type="button" class="grade-button active" data-grade="A" id="gradeA">
-                            Grade A
-                            <input type="radio" name="grade" value="A" checked hidden>
-                        </button>
-                        <button type="button" class="grade-button" data-grade="B" id="gradeB">
-                            Grade B
-                            <input type="radio" name="grade" value="B" hidden>
-                        </button>
-                        <button type="button" class="grade-button" data-grade="C" id="gradeC">
-                            Grade C
-                            <input type="radio" name="grade" value="C" hidden>
-                        </button>
-                        <button type="button" class="grade-button" data-grade="D" id="gradeD">
-                            Grade D
-                            <input type="radio" name="grade" value="D" hidden>
-                        </button>
-                        <button type="button" class="grade-button" data-grade="E" id="gradeE">
-                            Grade E
-                            <input type="radio" name="grade" value="E" hidden>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                <button type="submit" class="btn-submit">Add Produce</button>
-            </div>
-        </form>
-    </div>
+              <div class="form-group">
+                  <label>Choose Applicable Variants of Farm Produce</label>
+                  <div class="grade-buttons">
+                      <button type="button" class="grade-button active" data-grade="A" id="gradeA">
+                          Grade A
+                          <input type="radio" name="grade" value="A" checked hidden>
+                      </button>
+                      <button type="button" class="grade-button" data-grade="B" id="gradeB">
+                          Grade B
+                          <input type="radio" name="grade" value="B" hidden>
+                      </button>
+                      <button type="button" class="grade-button" data-grade="C" id="gradeC">
+                          Grade C
+                          <input type="radio" name="grade" value="C" hidden>
+                      </button>
+                      <button type="button" class="grade-button" data-grade="D" id="gradeD">
+                          Grade D
+                          <input type="radio" name="grade" value="D" hidden>
+                      </button>
+                      <button type="button" class="grade-button" data-grade="E" id="gradeE">
+                          Grade E
+                          <input type="radio" name="grade" value="E" hidden>
+                      </button>
+                  </div>
+              </div>
+          </div>
+          
+          <div class="modal-footer">
+              <button type="submit" class="btn-submit">Add Produce</button>
+          </div>
+      </form>
+  </div>
 </div>
 
 <!-- Edit Produce Modal -->
 <div id="editProduceModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Edit Produce
-            </div>
-            <button class="modal-close" onclick="closeEditProduceModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        
-        <form id="editProduceForm" method="post" action="">
-            {% csrf_token %}
-            
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Farm Produce</label>
-                    <input type="text" id="edit_produce_name" class="form-control" readonly>
-                </div>
+  <div class="modal-content">
+      <div class="modal-header">
+          <div class="modal-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Edit Produce
+          </div>
+          <button class="modal-close" onclick="closeEditProduceModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+          </button>
+      </div>
+      
+      <form id="editProduceForm" method="post" action="">
+          {% csrf_token %}
+          
+          <div class="modal-body">
+              <div class="form-group">
+                  <label>Farm Produce</label>
+                  <input type="text" id="edit_produce_name" class="form-control" readonly>
+              </div>
 
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" name="quantity" id="edit_quantity" class="form-control" min="0.1" step="0.1" required>
-                </div>
+              <div class="form-group">
+                  <label>Quantity</label>
+                  <input type="number" name="quantity" id="edit_quantity" class="form-control" min="0.1" step="0.1" required>
+              </div>
 
-                <div class="form-group">
-                    <label>Location</label>
-                    <select name="location" id="edit_location" class="form-control" required>
-                        <option value="Eastern">Eastern Province</option>
-                        <option value="Western">Western Province</option>
-                        <option value="Northern">Northern Province</option>
-                        <option value="Southern">Southern Province</option>
-                        <option value="Kigali">Kigali</option>
-                    </select>
-                </div>
-            </div>
+              <div class="form-group">
+                  <label>Location</label>
+                  <select name="location" id="edit_location" class="form-control" required>
+                      <option value="Eastern">Eastern Province</option>
+                      <option value="Western">Western Province</option>
+                      <option value="Northern">Northern Province</option>
+                      <option value="Southern">Southern Province</option>
+                      <option value="Kigali">Kigali</option>
+                  </select>
+              </div>
+          </div>
 
-            <div class="modal-footer">
-                <button type="submit" class="btn-submit">Update Produce</button>
-            </div>
-        </form>
-    </div>
+          <div class="modal-footer">
+              <button type="submit" class="btn-submit">Update Produce</button>
+          </div>
+      </form>
+  </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
 <div id="deleteProduceModal" class="modal">
-    <div class="modal-content modal-sm">
-        <div class="modal-header">
-            <div class="modal-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Delete Produce
-            </div>
-            <button class="modal-close" onclick="closeDeleteProduceModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        
-        <form id="deleteProduceForm" method="post" action="">
-            {% csrf_token %}
-            
-            <div class="modal-body">
-                <p>Are you sure you want to delete <strong id="delete_produce_name"></strong>?</p>
-                <p class="text-muted">This action cannot be undone.</p>
-            </div>
+  <div class="modal-content modal-sm">
+      <div class="modal-header">
+          <div class="modal-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Delete Produce
+          </div>
+          <button class="modal-close" onclick="closeDeleteProduceModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+          </button>
+      </div>
+      
+      <form id="deleteProduceForm" method="post" action="">
+          {% csrf_token %}
+          
+          <div class="modal-body">
+              <p>Are you sure you want to delete <strong id="delete_produce_name"></strong>?</p>
+              <p class="text-muted">This action cannot be undone.</p>
+          </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeDeleteProduceModal()">Cancel</button>
-                <button type="submit" class="btn-delete">Delete</button>
-            </div>
-        </form>
-    </div>
+          <div class="modal-footer">
+              <button type="button" class="btn-cancel" onclick="closeDeleteProduceModal()">Cancel</button>
+              <button type="submit" class="btn-delete">Delete</button>
+          </div>
+      </form>
+  </div>
 </div>
 
 <style>
 /* Main Container Styles */
 .products-container {
-    padding: 24px;
-    background-color: #f9fafb;
+  padding: 24px;
+  background-color: #f9fafb;
 }
 
 /* Header Styles */
 .products-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
 }
 
 /* Filter Tabs */
 .filter-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .filter-tab {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 9999px;
-    font-size: 14px;
-    color: #374151;
-    text-decoration: none;
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  font-size: 14px;
+  color: #374151;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .filter-tab:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .filter-tab.active {
-    background-color: #dcfce7;
-    border-color: #28a745;
-    color: #28a745;
+  background-color: #dcfce7;
+  border-color: #28a745;
+  color: #28a745;
 }
 
 .count {
-    margin-left: 8px;
-    padding: 2px 8px;
-    background-color: #f3f4f6;
-    border-radius: 9999px;
-    font-size: 12px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  font-size: 12px;
 }
 
 /* View Toggle */
 .view-toggle {
-    display: flex;
-    gap: 4px;
-    padding: 4px;
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }
 
 .view-btn {
-    padding: 8px;
-    border: none;
-    background: none;
-    border-radius: 6px;
-    color: #6b7280;
-    cursor: pointer;
+  padding: 8px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
 }
 
 .view-btn:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 .view-btn.active {
-    background-color: #dcfce7;
-    color: #28a745;
+  background-color: #dcfce7;
+  color: #28a745;
 }
 
 /* Grid View */
 .produce-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .produce-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.2s;
-    cursor: pointer;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
 }
 
 .produce-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .produce-link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .produce-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
 }
 
 .produce-content {
-    padding: 16px;
+  padding: 16px;
 }
 
 .produce-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
 }
 
 .produce-header h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .produce-header h3 a {
-    text-decoration: none;
-    color: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 .produce-header h3 a:hover {
-    color: #28a745;
+  color: #28a745;
 }
 
 .price {
-    font-weight: 600;
-    color: #28a745;
+  font-weight: 600;
+  color: #28a745;
 }
 
 .produce-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .meta-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
 }
 
 .label {
-    color: #6b7280;
+  color: #6b7280;
 }
 
 .produce-actions {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .btn-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-action.edit {
-    background-color: #dcfce7;
-    color: #28a745;
+  background-color: #dcfce7;
+  color: #28a745;
 }
 
 .btn-action.edit:hover {
-    background-color: #c6f6d5;
+  background-color: #c6f6d5;
 }
 
 .btn-action.delete {
-    background-color: #fee2e2;
-    color: #ef4444;
+  background-color: #fee2e2;
+  color: #ef4444;
 }
 
 .btn-action.delete:hover {
-    background-color: #fecaca;
+  background-color: #fecaca;
 }
 
 /* List View */
 .produce-list table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
 }
 
 .produce-list th {
-    padding: 12px 16px;
-    text-align: left;
-    font-weight: 500;
-    color: #6b7280;
-    border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .produce-list td {
-    padding: 16px;
-    background: white;
+  padding: 16px;
+  background: white;
 }
 
 .produce-list tr td:first-child {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
 .produce-list tr td:last-child {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .produce-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .produce-info img {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    object-fit: cover;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .produce-info h4 {
-    margin: 0 0 4px 0;
-    font-size: 14px;
-    font-weight: 500;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .produce-info h4 a {
-    text-decoration: none;
-    color: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 .produce-info h4 a:hover {
-    color: #28a745;
+  color: #28a745;
 }
 
 .produce-info span {
-    font-size: 12px;
-    color: #6b7280;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .action-buttons {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .btn-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-icon.edit {
-    background-color: #dcfce7;
-    color: #28a745;
+  background-color: #dcfce7;
+  color: #28a745;
 }
 
 .btn-icon.edit:hover {
-    background-color: #c6f6d5;
+  background-color: #c6f6d5;
 }
 
 .btn-icon.delete {
-    background-color: #fee2e2;
-    color: #ef4444;
+  background-color: #fee2e2;
+  color: #ef4444;
 }
 
 .btn-icon.delete:hover {
-    background-color: #fecaca;
+  background-color: #fecaca;
 }
 
 /* Modal Styles - Updated */
 .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    padding: 0;
-    align-items: center;
-    justify-content: center;
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-content {
-    background: white;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 600px; /* Increased from 500px */
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    margin: auto;
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px; /* Increased from 500px */
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  margin: auto;
 }
 
 /* Make form elements larger and more spaced out */
 .form-group {
-    margin-bottom: 28px; /* Increased from 24px */
+  margin-bottom: 28px; /* Increased from 24px */
 }
 
 .form-group label {
-    display: block;
-    margin-bottom: 10px; /* Increased from 8px */
-    font-weight: 500;
-    color: #111827;
-    font-size: 16px; /* Increased from default */
+  display: block;
+  margin-bottom: 10px; /* Increased from 8px */
+  font-weight: 500;
+  color: #111827;
+  font-size: 16px; /* Increased from default */
 }
 
 .form-control {
-    width: 100%;
-    padding: 14px 18px; /* Increased from 12px 16px */
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 16px; /* Increased from 14px */
+  width: 100%;
+  padding: 14px 18px; /* Increased from 12px 16px */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px; /* Increased from 14px */
 }
 
 /* Make buttons larger */
 .btn-submit {
-    width: 100%;
-    padding: 16px; /* Increased from 12px */
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px; /* Increased from 14px */
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  width: 100%;
+  padding: 16px; /* Increased from 12px */
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px; /* Increased from 14px */
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 /* Larger grade buttons */
 .grade-button {
-    flex: 1;
-    min-width: 90px; /* Increased from 80px */
-    padding: 12px; /* Increased from 10px */
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background-color: white;
-    color: #6b7280;
-    font-size: 16px; /* Increased from 14px */
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
+  flex: 1;
+  min-width: 90px; /* Increased from 80px */
+  padding: 12px; /* Increased from 10px */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  color: #6b7280;
+  font-size: 16px; /* Increased from 14px */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
 }
 
 /* Larger modal padding */
 .modal-body {
-    padding: 30px; /* Increased from 24px */
+  padding: 30px; /* Increased from 24px */
 }
 
 .modal-footer {
-    padding: 30px; /* Increased from 24px */
-    border-top: 1px solid #e5e7eb;
+  padding: 30px; /* Increased from 24px */
+  border-top: 1px solid #e5e7eb;
 }
 
 .modal-header {
-    padding: 24px 30px; /* Increased horizontal padding */
+  padding: 24px 30px; /* Increased horizontal padding */
 }
 
 /* Larger preview section */
 .produce-preview {
-    padding: 20px; /* Increased from 16px */
-    margin: 20px 0; /* Increased from 16px 0 */
+  padding: 20px; /* Increased from 16px */
+  margin: 20px 0; /* Increased from 16px 0 */
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #f9fafb;
+  border-radius: 8px;
 }
 
 .preview-image {
-    width: 80px; /* Increased from 64px */
-    height: 80px; /* Increased from 64px */
+  width: 80px; /* Increased from 64px */
+  height: 80px; /* Increased from 64px */
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .preview-info h4 {
-    font-size: 18px; /* Increased from 16px */
+  font-size: 18px; /* Increased from 16px */
+  margin: 0 0 4px 0;
+  font-weight: 500;
 }
 
 .preview-price {
-    font-size: 16px; /* Increased from default */
+  font-size: 16px; /* Increased from default */
+  color: #28a745;
+  font-weight: 500;
 }
 
 /* Quantity Input */
 .quantity-input {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .quantity-input input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
 }
 
 .unit-select {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background-color: #f9fafb;
-    color: #6b7280;
-    font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 /* Footer */
 .modal-footer {
-    padding: 24px;
-    border-top: 1px solid #e5e7eb;
+  padding: 24px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .btn-submit {
-    width: 100%;
-    padding: 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  width: 100%;
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .btn-submit:hover {
-    background-color: #218838;
+  background-color: #218838;
 }
 
 .btn-cancel {
-    padding: 12px 24px;
-    background-color: #f3f4f6;
-    color: #6b7280;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
+  padding: 12px 24px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .btn-cancel:hover {
-    background-color: #e5e7eb;
+  background-color: #e5e7eb;
 }
 
 .btn-delete {
-    padding: 12px 24px;
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
+  padding: 12px 24px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .btn-delete:hover {
-    background-color: #dc2626;
+  background-color: #dc2626;
 }
 
 /* Add Produce Button */
 .btn-add-produce {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .btn-add-produce:hover {
-    background-color: #218838;
+  background-color: #218838;
 }
 
 /* Empty State */
 .empty-state {
-    text-align: center;
-    padding: 48px;
-    background: white;
-    border-radius: 12px;
+  text-align: center;
+  padding: 48px;
+  background: white;
+  border-radius: 12px;
 }
 
 .empty-icon {
-    margin-bottom: 16px;
-    color: #6b7280;
+  margin-bottom: 16px;
+  color: #6b7280;
 }
 
 .empty-state h3 {
-    margin: 0 0 8px 0;
-    font-size: 18px;
-    font-weight: 600;
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .empty-state p {
-    margin: 0 0 24px 0;
-    color: #6b7280;
+  margin: 0 0 24px 0;
+  color: #6b7280;
 }
 
 .text-muted {
-    color: #6b7280;
-    font-size: 14px;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 /* Grade buttons */
 .grade-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .grade-button {
-    flex: 1;
-    min-width: 90px; /* Increased from 80px */
-    padding: 12px; /* Increased from 10px */
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background-color: white;
-    color: #6b7280;
-    font-size: 16px; /* Increased from 14px */
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: center;
+  flex: 1;
+  min-width: 90px; /* Increased from 80px */
+  padding: 12px; /* Increased from 10px */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  color: #6b7280;
+  font-size: 16px; /* Increased from 14px */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
 }
 
 .grade-button:hover {
-    border-color: #4d7c0f;
-    background-color: #f0fdf4;
-    color: #4d7c0f;
+  border-color: #4d7c0f;
+  background-color: #f0fdf4;
+  color: #4d7c0f;
 }
 
 .grade-button.active {
-    background-color: #4d7c0f;
-    color: white;
-    border-color: #4d7c0f;
-    box-shadow: 0 2px 4px rgba(77, 124, 15, 0.2);
-    transform: translateY(-1px);
+  background-color: #4d7c0f;
+  color: white;
+  border-color: #4d7c0f;
+  box-shadow: 0 2px 4px rgba(77, 124, 15, 0.2);
+  transform: translateY(-1px);
 }
 
 /* Add specific colors for different grades */
 .grade-button[data-grade="A"].active {
-    background-color: #15803d; /* Dark green for Grade A */
+  background-color: #15803d; /* Dark green for Grade A */
 }
 
 .grade-button[data-grade="B"].active {
-    background-color: #65a30d; /* Light green for Grade B */
+  background-color: #65a30d; /* Light green for Grade B */
 }
 
 .grade-button[data-grade="C"].active {
-    background-color: #ca8a04; /* Yellow for Grade C */
+  background-color: #ca8a04; /* Yellow for Grade C */
 }
 
 .grade-button[data-grade="D"].active {
-    background-color: #ea580c; /* Orange for Grade D */
+  background-color: #ea580c; /* Orange for Grade D */
 }
 
 .grade-button[data-grade="E"].active {
-    background-color: #dc2626; /* Red for Grade E */
+  background-color: #dc2626; /* Red for Grade E */
+}
+
+/* Modal animation */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  animation: modalFadeIn 0.3s ease;
 }
 </style>
 
 <script>
 function updateProducePreview() {
-    const select = document.getElementById('produce_type');
-    const preview = document.getElementById('producePreview');
-    const option = select.options[select.selectedIndex];
+  const select = document.getElementById('produce_type');
+  const preview = document.getElementById('producePreview');
+  const option = select.options[select.selectedIndex];
 
-    if (select.value) {
-        const name = option.getAttribute('data-name');
-        const price = option.getAttribute('data-price');
-        const image = option.getAttribute('data-image');
-        
-        // Update image
-        const previewImage = preview.querySelector('img');
-        if (previewImage) {
-            previewImage.src = image || '';
-            previewImage.onerror = function() {
-                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZTVlN2ViIi8+PHRleHQgeD0iMzIiIHk9IjMyIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNmI3MjgwIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
-            };
-        }
-        
-        // Update text
-        preview.querySelector('.preview-name').textContent = name;
-        preview.querySelector('.preview-price').textContent = `Grade A - RWF ${price}`;
-        
-        preview.style.display = 'flex';
-        
-        // Automatically select Grade A when a produce is selected
-        selectGrade('A');
-    } else {
-        preview.style.display = 'none';
-    }
+  if (select.value) {
+      const name = option.getAttribute('data-name');
+      const price = option.getAttribute('data-price');
+      const image = option.getAttribute('data-image');
+      
+      // Update image
+      const previewImage = preview.querySelector('img');
+      if (previewImage) {
+          previewImage.src = image || '';
+          previewImage.onerror = function() {
+              this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZTVlN2ViIi8+PHRleHQgeD0iMzIiIHk9IjMyIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjNmI3MjgwIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+          };
+      }
+      
+      // Update text
+      preview.querySelector('.preview-name').textContent = name;
+      preview.querySelector('.preview-price').textContent = `Grade A - RWF ${price}`;
+      
+      preview.style.display = 'flex';
+      
+      // Automatically select Grade A when a produce is selected
+      selectGrade('A');
+  } else {
+      preview.style.display = 'none';
+  }
 }
 
 function setViewMode(mode) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('view_mode', mode);
-    window.location.href = url.toString();
+  const url = new URL(window.location.href);
+  url.searchParams.set('view_mode', mode);
+  window.location.href = url.toString();
 }
 
 function openAddProduceModal() {
-    const modal = document.getElementById('addProduceModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    // Center the modal content
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.style.opacity = '0';
-        setTimeout(() => {
-            modalContent.style.transition = 'opacity 0.3s ease';
-            modalContent.style.opacity = '1';
-        }, 10);
-    }
+  const modal = document.getElementById('addProduceModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  
+  // Center the modal content
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+      modalContent.style.opacity = '0';
+      setTimeout(() => {
+          modalContent.style.transition = 'opacity 0.3s ease';
+          modalContent.style.opacity = '1';
+      }, 10);
+  }
 }
 
 function closeAddProduceModal() {
-    const modal = document.getElementById('addProduceModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+  const modal = document.getElementById('addProduceModal');
+  const modalContent = modal.querySelector('.modal-content');
+  
+  // Fade out animation
+  if (modalContent) {
+      modalContent.style.opacity = '0';
+      setTimeout(() => {
+          modal.style.display = 'none';
+          document.body.style.overflow = 'auto';
+      }, 300);
+  } else {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+  }
 }
 
 function openEditProduceModal(id, name, quantity, location) {
-    const modal = document.getElementById('editProduceModal');
-    const form = document.getElementById('editProduceForm');
-    
-    form.action = `/cooperative/dashboard/update-produce/${id}/`;
-    document.getElementById('edit_produce_name').value = name;
-    document.getElementById('edit_quantity').value = quantity;
-    
-    // Set the selected location in the dropdown
-    const locationSelect = document.getElementById('edit_location');
-    for (let i = 0; i < locationSelect.options.length; i++) {
-        if (locationSelect.options[i].value === location) {
-            locationSelect.selectedIndex = i;
-            break;
-        }
-    }
-    
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    // Center the modal content
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.style.opacity = '0';
-        setTimeout(() => {
-            modalContent.style.transition = 'opacity 0.3s ease';
-            modalContent.style.opacity = '1';
-        }, 10);
-    }
+  const modal = document.getElementById('editProduceModal');
+  const form = document.getElementById('editProduceForm');
+  
+  form.action = `/cooperative/dashboard/update-produce/${id}/`;
+  document.getElementById('edit_produce_name').value = name;
+  document.getElementById('edit_quantity').value = quantity;
+  
+  // Set the selected location in the dropdown
+  const locationSelect = document.getElementById('edit_location');
+  for (let i = 0; i < locationSelect.options.length; i++) {
+      if (locationSelect.options[i].value === location) {
+          locationSelect.selectedIndex = i;
+          break;
+      }
+  }
+  
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  
+  // Center the modal content
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+      modalContent.style.opacity = '0';
+      setTimeout(() => {
+          modalContent.style.transition = 'opacity 0.3s ease';
+          modalContent.style.opacity = '1';
+      }, 10);
+  }
 }
 
 function closeEditProduceModal() {
-    const modal = document.getElementById('editProduceModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+  const modal = document.getElementById('editProduceModal');
+  const modalContent = modal.querySelector('.modal-content');
+  
+  // Fade out animation
+  if (modalContent) {
+      modalContent.style.opacity = '0';
+      setTimeout(() => {
+          modal.style.display = 'none';
+          document.body.style.overflow = 'auto';
+      }, 300);
+  } else {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+  }
 }
 
 function confirmDeleteProduce(id, name) {
-    const modal = document.getElementById('deleteProduceModal');
-    const form = document.getElementById('deleteProduceForm');
-    
-    form.action = `/cooperative/dashboard/delete-produce/${id}/`;
-    document.getElementById('delete_produce_name').textContent = name;
-    
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    // Center the modal content
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.style.opacity = '0';
-        setTimeout(() => {
-            modalContent.style.transition = 'opacity 0.3s ease';
-            modalContent.style.opacity = '1';
-        }, 10);
-    }
+  const modal = document.getElementById('deleteProduceModal');
+  const form = document.getElementById('deleteProduceForm');
+  
+  form.action = `/cooperative/dashboard/delete-produce/${id}/`;
+  document.getElementById('delete_produce_name').textContent = name;
+  
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  
+  // Center the modal content
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+      modalContent.style.opacity = '0';
+      setTimeout(() => {
+          modalContent.style.transition = 'opacity 0.3s ease';
+          modalContent.style.opacity = '1';
+      }, 10);
+  }
 }
 
 function closeDeleteProduceModal() {
-    const modal = document.getElementById('deleteProduceModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+  const modal = document.getElementById('deleteProduceModal');
+  const modalContent = modal.querySelector('.modal-content');
+  
+  // Fade out animation
+  if (modalContent) {
+      modalContent.style.opacity = '0';
+      setTimeout(() => {
+          modal.style.display = 'none';
+          document.body.style.overflow = 'auto';
+      }, 300);
+  } else {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+  }
 }
 
 function selectGrade(grade) {
-    const buttons = document.querySelectorAll('.grade-button');
-    buttons.forEach(button => {
-        button.classList.remove('active');
-        const radio = button.querySelector('input[type="radio"]');
-        if (radio) {
-            radio.checked = false;
-        }
-    });
-    
-    const selectedButton = document.querySelector(`.grade-button[data-grade="${grade}"]`);
-    if (selectedButton) {
-        selectedButton.classList.add('active');
-        const radio = selectedButton.querySelector('input[type="radio"]');
-        if (radio) {
-            radio.checked = true;
-        }
-    }
+  const buttons = document.querySelectorAll('.grade-button');
+  buttons.forEach(button => {
+      button.classList.remove('active');
+      const radio = button.querySelector('input[type="radio"]');
+      if (radio) {
+          radio.checked = false;
+      }
+  });
+  
+  const selectedButton = document.querySelector(`.grade-button[data-grade="${grade}"]`);
+  if (selectedButton) {
+      selectedButton.classList.add('active');
+      const radio = selectedButton.querySelector('input[type="radio"]');
+      if (radio) {
+          radio.checked = true;
+      }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Add click handlers to produce cards
-    const produceCards = document.querySelectorAll('.produce-card');
-    produceCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Don't navigate if clicking on action buttons
-            if (e.target.closest('.produce-actions') || e.target.closest('.btn-action')) {
-                e.stopPropagation();
-                return;
-            }
-            
-            // Get the URL from the link inside the card
-            const link = this.querySelector('a.produce-link');
-            if (link) {
-                window.location.href = link.href;
-            }
-        });
-    });
-    
-    // Close modals when clicking outside
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeAddProduceModal();
-                closeEditProduceModal();
-                closeDeleteProduceModal();
-            }
-        });
-    });
-    
-    // Set default grade to A
-    if (document.querySelector('.grade-button')) {
-        selectGrade('A');
-    }
+  // Add click handlers to produce cards
+  const produceCards = document.querySelectorAll('.produce-card');
+  produceCards.forEach(card => {
+      card.addEventListener('click', function(e) {
+          // Don't navigate if clicking on action buttons
+          if (e.target.closest('.produce-actions') || e.target.closest('.btn-action')) {
+              e.stopPropagation();
+              return;
+          }
+          
+          // Get the URL from the link inside the card
+          const link = this.querySelector('a.produce-link');
+          if (link) {
+              window.location.href = link.href;
+          }
+      });
+  });
+  
+  // Close modals when clicking outside
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+      modal.addEventListener('click', function(e) {
+          if (e.target === this) {
+              closeAddProduceModal();
+              closeEditProduceModal();
+              closeDeleteProduceModal();
+          }
+      });
+  });
+  
+  // Set default grade to A
+  if (document.querySelector('.grade-button')) {
+      selectGrade('A');
+  }
 
-    // Add event listeners to grade buttons
-    document.querySelectorAll('.grade-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const grade = this.getAttribute('data-grade');
-            selectGrade(grade);
-        });
-    });
+  // Add event listeners to grade buttons
+  document.querySelectorAll('.grade-button').forEach(button => {
+      button.addEventListener('click', function() {
+          const grade = this.getAttribute('data-grade');
+          selectGrade(grade);
+      });
+  });
+  
+  // Close modals with ESC key
+  document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+          closeAddProduceModal();
+          closeEditProduceModal();
+          closeDeleteProduceModal();
+      }
+  });
 });
 </script>
 
