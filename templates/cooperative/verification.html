@@ -1,710 +1,1315 @@
-{% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Document Upload - Lima Aja{% endblock %}
-
-{% block extra_css %}
-<style>
-    .document-upload-container {
-        max-width: 900px;
-        margin: 40px auto;
-        padding: 2rem;
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    }
-
-    .page-header {
-        margin-bottom: 2rem;
-        text-align: center;
-    }
-
-    .page-header h1 {
-        font-size: 1.75rem;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 0.5rem;
-    }
-
-    .page-header p {
-        color: #6b7280;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    .document-requirements {
-        background-color: #f0fdf4;
-        border: 1px solid #dcfce7;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .document-requirements h3 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: #16a34a;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .document-requirements ul {
-        margin: 0;
-        padding-left: 1.5rem;
-    }
-
-    .document-requirements li {
-        margin-bottom: 0.5rem;
-        color: #374151;
-    }
-
-    .document-requirements li:last-child {
-        margin-bottom: 0;
-    }
-
-    .document-requirements .document-tip {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px dashed #86efac;
-        font-size: 0.875rem;
-        color: #16a34a;
-    }
-
-    .upload-section {
-        margin-bottom: 2rem;
-    }
-
-    .dropzone {
-        border: 2px dashed #e2e8f0;
-        border-radius: 8px;
-        padding: 2.5rem 2rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background-color: #f8fafc;
-    }
-
-    .dropzone:hover, .dropzone.drag-active {
-        border-color: #28a745;
-        background-color: #f0fdf4;
-    }
-
-    .dropzone-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1rem;
-        color: #28a745;
-        opacity: 0.8;
-    }
-
-    .dropzone-title {
-        font-weight: 600;
-        font-size: 1.125rem;
-        margin-bottom: 0.5rem;
-        color: #111827;
-    }
-
-    .dropzone-text {
-        color: #6b7280;
-        margin-bottom: 1rem;
-    }
-
-    .dropzone-formats {
-        display: inline-flex;
-        gap: 0.5rem;
-        background-color: #f3f4f6;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        color: #4b5563;
-    }
-
-    .file-list {
-        margin-top: 1.5rem;
-    }
-
-    .file-list-header {
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-        color: #111827;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .file-list-empty {
-        text-align: center;
-        padding: 2rem;
-        color: #6b7280;
-        background-color: #f9fafb;
-        border-radius: 8px;
-        border: 1px dashed #e5e7eb;
-    }
-
-    .file-item {
-        display: flex;
-        align-items: center;
-        padding: 1rem;
-        background-color: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-bottom: 0.75rem;
-        transition: all 0.2s ease;
-    }
-
-    .file-item:hover {
-        border-color: #d1d5db;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .file-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        background-color: #f3f4f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-        color: #28a745;
-        flex-shrink: 0;
-    }
-
-    .file-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .file-name {
-        font-weight: 500;
-        color: #111827;
-        margin-bottom: 0.25rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .file-meta {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        font-size: 0.875rem;
-        color: #6b7280;
-    }
-
-    .file-size {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .file-type {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        text-transform: uppercase;
-    }
-
-    .file-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .file-remove {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: none;
-        border: none;
-        color: #ef4444;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .file-remove:hover {
-        background-color: #fee2e2;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: center;
-        margin-top: 2rem;
-    }
-
-    .btn-submit {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background-color: #28a745;
-        color: white;
-        font-weight: 500;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .btn-submit:hover {
-        background-color: #218838;
-    }
-
-    .btn-submit:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-
-    .upload-progress {
-        margin-top: 1.5rem;
-        display: none;
-    }
-
-    .upload-progress.active {
-        display: block;
-    }
-
-    .progress-bar-container {
-        width: 100%;
-        height: 8px;
-        background-color: #e5e7eb;
-        border-radius: 9999px;
-        overflow: hidden;
-        margin-bottom: 0.5rem;
-    }
-
-    .progress-bar {
-        height: 100%;
-        background-color: #28a745;
-        width: 0%;
-        transition: width 0.3s ease;
-    }
-
-    .progress-text {
-        font-size: 0.875rem;
-        color: #6b7280;
-        text-align: center;
-    }
-
-    .notes-section {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .notes-label {
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-        color: #111827;
-    }
-
-    .notes-textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        resize: vertical;
-        min-height: 100px;
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
-    }
-
-    .notes-textarea:focus {
-        outline: none;
-        border-color: #28a745;
-        box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
-    }
-
-    .notes-hint {
-        margin-top: 0.5rem;
-        font-size: 0.75rem;
-        color: #6b7280;
-    }
-
-    /* Responsive styles */
-    @media (max-width: 768px) {
-        .document-upload-container {
-            padding: 1.5rem;
-            margin: 20px auto;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Verification - LimaAja</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4d7c0f;
+            --primary-hover: #3f6a0a;
+            --primary-light: #84cc16;
+            --primary-ultra-light: #ecfccb;
+            --secondary-color: #e9f7e0;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --border-focus: #84cc16;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --card-bg: #ffffff;
+            --input-bg: #f9fafb;
+            --input-focus: #f0f9eb;
+            --bg-light: #f3f4f6;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --transition: all 0.2s ease;
         }
-
-        .dropzone {
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            background-image: linear-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center center;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .auth-container {
+            max-width: 1100px;
+            margin: 0 auto;
             padding: 2rem 1rem;
-        }
-
-        .dropzone-icon {
-            width: 48px;
-            height: 48px;
-        }
-
-        .file-meta {
+            display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            gap: 0.25rem;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
-    }
-
-    @media (max-width: 480px) {
-        .file-item {
-            flex-direction: column;
-            align-items: flex-start;
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
         }
-
-        .file-icon {
-            margin-right: 0;
-            margin-bottom: 0.75rem;
+        
+        .auth-logo {
+            height: 80px;
+            margin-bottom: 1rem;
         }
-
-        .file-actions {
+        
+        .auth-header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .verification-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: var(--card-bg);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Progress bar styling */
+        .progress-container {
+            padding: 2rem 2.5rem 0;
+            position: relative;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 3rem;
+        }
+        
+        .progress-steps::before {
+            content: '';
             position: absolute;
-            top: 1rem;
-            right: 1rem;
+            top: 18px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: var(--border-color);
+            z-index: 1;
+            border-radius: 2px;
         }
-
-        .file-info {
+        
+        .progress-line {
+            position: absolute;
+            top: 18px;
+            left: 0;
+            height: 4px;
+            background-color: var(--primary-color);
+            z-index: 2;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            transition: transform 0.3s ease;
+        }
+        
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--bg-light);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 0.9rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            font-size: 0.9rem;
+        }
+        
+        .step.active .step-circle {
+            background-color: var(--primary-color);
+            color: white;
+            transform: scale(1.15);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 6px rgba(132, 204, 22, 0.2);
+        }
+        
+        .step.completed .step-circle {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .step.completed .step-circle::after {
+            content: '✓';
+            font-size: 1.1rem;
+        }
+        
+        .step-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 0.2rem;
+        }
+        
+        .step.active .step-label {
+            color: var(--primary-color);
+            font-weight: 600;
+            transform: scale(1.05);
+        }
+        
+        .step.completed .step-label {
+            color: var(--text-primary);
+        }
+        
+        /* Form styling */
+        .form-container {
+            padding: 0 3rem 3rem;
+        }
+        
+        .form-step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        .form-step.active {
+            display: block;
+            animation: fadeInStep 0.5s ease forwards;
+        }
+        
+        .form-step-header {
+            margin-bottom: 2.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 1.2rem;
+        }
+        
+        .form-step-header h2 {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            margin-bottom: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .form-step-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .required {
+            color: var(--error-color);
+            margin-left: 0.25rem;
+        }
+        
+        .form-control {
             width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            background-color: var(--input-bg);
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            height: auto;
         }
-    }
-</style>
-{% endblock %}
+        
+        .form-control::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            background-color: var(--input-focus);
+            box-shadow: 0 0 0 4px rgba(132, 204, 22, 0.15);
+        }
+        
+        textarea.form-control {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-position: right 1rem center;
+            background-repeat: no-repeat;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+            background-color: #fcfcfc;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+        
+        .form-section-title {
+            font-size: 1.15rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed var(--border-color);
+            font-weight: 600;
+        }
+        
+        /* File upload styling */
+        .file-upload-container {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--input-bg);
+        }
+        
+        .file-upload-container:hover {
+            border-color: var(--primary-light);
+            background-color: var(--primary-ultra-light);
+        }
+        
+        .file-upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .file-upload-container:hover .file-upload-icon {
+            transform: translateY(-5px);
+        }
+        
+        .file-upload-text {
+            color: var(--text-primary);
+            margin-bottom: 0.7rem;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .file-upload-hint {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .file-list {
+            margin-top: 1.8rem;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.9rem 1.2rem;
+            background-color: var(--secondary-color);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.8rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .file-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .file-item-icon {
+            color: var(--primary-color);
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .file-item-name {
+            flex-grow: 1;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .file-item-size {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-right: 1.2rem;
+            background-color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+        }
+        
+        .file-item-remove {
+            color: var(--error-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        .file-item-remove:hover {
+            transform: scale(1.1);
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        /* Navigation buttons */
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(100%);
+            transition: transform 0.2s ease;
+        }
+        
+        .btn:hover::after {
+            transform: translateY(0);
+        }
+        
+        .btn-prev {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-prev:hover {
+            background-color: var(--border-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-next, .btn-submit {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+        
+        .btn-next:hover, .btn-submit:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn i {
+            transition: transform 0.2s ease;
+        }
+        
+        .btn-prev i {
+            margin-right: 0.6rem;
+        }
+        
+        .btn-next i {
+            margin-left: 0.6rem;
+            order: 2;
+        }
+        
+        .btn-prev:hover i {
+            transform: translateX(-3px);
+        }
+        
+        .btn-next:hover i,
+        .btn-submit:hover i {
+            transform: translateX(3px);
+        }
+        
+        .btn-submit i {
+            margin-left: 0.6rem;
+        }
+        
+        /* Summary styling */
+        .summary-section {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: var(--input-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .summary-section:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .summary-section-title {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .summary-section-title i {
+            margin-right: 0.7rem;
+            font-size: 1.2rem;
+            color: var(--primary-light);
+            background-color: var(--primary-ultra-light);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .summary-item {
+            margin-bottom: 1rem;
+            background-color: white;
+            padding: 0.8rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .summary-item-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        
+        .summary-item-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .summary-item.full-width {
+            grid-column: span 2;
+        }
+        
+        .summary-documents {
+            margin-top: 1.5rem;
+            background-color: white;
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .summary-documents h4 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .summary-document-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            background-color: var(--bg-light);
+            border-radius: var(--radius-sm);
+        }
+        
+        .summary-document-icon {
+            color: var(--primary-color);
+            margin-right: 0.8rem;
+            background-color: var(--primary-ultra-light);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .summary-document-name {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* Error styling */
+        .form-error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 0.6rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .form-control.error {
+            border-color: var(--error-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        
+        .form-control.error:focus {
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+        }
+        
+        .form-control.error + .form-error {
+            display: block;
+        }
+        
+        /* Success message */
+        .success-message {
+            text-align: center;
+            padding: 4rem 2rem;
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+        
+        .success-icon {
+            font-size: 5rem;
+            color: var(--success-color);
+            margin-bottom: 2rem;
+            background-color: rgba(16, 185, 129, 0.1);
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 2rem;
+        }
+        
+        .success-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .success-text {
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Messages styling */
+        .messages-container {
+            margin-bottom: 2rem;
+        }
+        
+        .alert {
+            padding: 1.2rem 1.5rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: flex-start;
+            box-shadow: var(--shadow-sm);
+            animation: slideIn 0.4s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert-icon {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            margin-top: 0.1rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .alert-content {
+            flex-grow: 1;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            font-size: 1.1rem;
+        }
+        
+        .alert-message {
+            font-size: 0.95rem;
+        }
+        
+        .alert-success {
+            background-color: #ecfdf5;
+            border: 1px solid #d1fae5;
+            color: #065f46;
+        }
+        
+        .alert-success .alert-icon {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+        
+        .alert-error, .alert-danger {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+        }
+        
+        .alert-error .alert-icon, .alert-danger .alert-icon {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        .alert-warning {
+            background-color: #fffbeb;
+            border: 1px solid #fef3c7;
+            color: #92400e;
+        }
+        
+        .alert-warning .alert-icon {
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+        
+        .alert-info {
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            color: #1e40af;
+        }
+        
+        .alert-info .alert-icon {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .verification-container {
+                margin: 1rem;
+                max-width: 100%;
+                border-radius: var(--radius-lg);
+            }
+            
+            .auth-container {
+                padding: 1rem;
+            }
+            
+            .progress-container {
+                padding: 1.5rem 1.2rem 0;
+            }
+            
+            .form-container {
+                padding: 0 1.2rem 1.5rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+            
+            .summary-item.full-width {
+                grid-column: span 1;
+            }
+            
+            .step-label {
+                font-size: 0.8rem;
+            }
+            
+            .step-circle {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .form-step-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .progress-steps::before {
+                top: 16px;
+            }
+            
+            .progress-line {
+                top: 16px;
+            }
+            
+            .btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 0.95rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .step-label {
+                font-size: 0.7rem;
+            }
+            
+            .step-circle {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+            
+            .form-step-header h2 {
+                font-size: 1.3rem;
+            }
+            
+            .progress-steps::before {
+                top: 14px;
+            }
+            
+            .progress-line {
+                top: 14px;
+            }
+            
+            .form-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .form-container {
+                padding: 0 1rem 1.5rem;
+            }
+            
+            .progress-container {
+                padding: 1.5rem 1rem 0;
+            }
+        }
+        
+        /* Input focus and active states */
+        .form-control:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(132, 204, 22, 0.15);
+        }
+        
+        /* Helper tooltip styles */
+        .form-tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 0.4rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .form-tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--text-primary);
+            color: white;
+            text-align: center;
+            border-radius: var(--radius-md);
+            padding: 0.8rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            font-weight: normal;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .form-tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--text-primary) transparent transparent transparent;
+        }
+        
+        .form-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Input with icons */
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon .form-control {
+            padding-left: 2.8rem;
+        }
+        
+        .input-with-icon .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        
+        /* Checkbox and radio styles */
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
 
-{% block content %}
-<div class="document-upload-container">
-    <div class="page-header">
-        <h1>Upload Your Documents</h1>
-        <p>Please upload the required documents to complete your cooperative verification process</p>
+        .form-check input[type="checkbox"],
+        .form-check input[type="radio"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            margin-right: 0.8rem;
+            accent-color: var(--primary-color);
+        }
+
+        .form-check label {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+/* Add subtle transitions for better UX */
+.form-step {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.form-step.active {
+    animation: fadeInStep 0.5s ease forwards;
+}
+
+@keyframes fadeInStep {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add box shadow to the form for better depth */
+.verification-container {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <img src="{% static 'images/logo.png' %}" alt="LimaAja Logo" class="auth-logo">
+            <h1>Cooperative Verification</h1>
+            <p>Please complete the following steps to verify your cooperative.</p>
+        </div>
+        
+        <div class="verification-container">
+            <div class="progress-container">
+                <div class="progress-steps">
+                    <div class="step active">
+                        <div class="step-circle">1</div>
+                        <span class="step-label">Basic Information</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">2</div>
+                        <span class="step-label">Legal Documents</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <span class="step-label">Financial Details</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">4</div>
+                        <span class="step-label">Review & Submit</span>
+                    </div>
+                </div>
+                <div class="progress-line" style="width: 25%;"></div>
+            </div>
+            
+            <div class="form-container">
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <div class="form-step active">
+                        <div class="form-step-header">
+                            <h2>Basic Cooperative Information</h2>
+                            <p>Enter the core details of your cooperative.</p>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cooperative_name">Cooperative Name <span class="required">*</span></label>
+                                <input type="text" id="cooperative_name" name="cooperative_name" class="form-control" placeholder="Enter cooperative name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="registration_number">Registration Number <span class="required">*</span></label>
+                                <input type="text" id="registration_number" name="registration_number" class="form-control" placeholder="Enter registration number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="establishment_date">Establishment Date <span class="required">*</span></label>
+                                <input type="date" id="establishment_date" name="establishment_date" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="cooperative_type">Cooperative Type <span class="required">*</span></label>
+                                <select id="cooperative_type" name="cooperative_type" class="form-control" required>
+                                    <option value="">Select type</option>
+                                    <option value="primary">Primary</option>
+                                    <option value="secondary">Secondary</option>
+                                    <option value="tertiary">Tertiary</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label for="address">Address <span class="required">*</span></label>
+                                <textarea id="address" name="address" class="form-control" placeholder="Enter full address" required></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="city">City <span class="required">*</span></label>
+                                <input type="text" id="city" name="city" class="form-control" placeholder="Enter city" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="province">Province <span class="required">*</span></label>
+                                <input type="text" id="province" name="province" class="form-control" placeholder="Enter province" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="postal_code">Postal Code <span class="required">*</span></label>
+                                <input type="text" id="postal_code" name="postal_code" class="form-control" placeholder="Enter postal code" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-step">
+                        <div class="form-step-header">
+                            <h2>Legal Documents</h2>
+                            <p>Upload the necessary legal documents for verification.</p>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3 class="form-section-title">Bylaws</h3>
+                            <div class="form-group full-width">
+                                <label for="bylaws_file">Bylaws Document <span class="required">*</span></label>
+                                <div class="file-upload-container">
+                                    <i class="fas fa-upload file-upload-icon"></i>
+                                    <p class="file-upload-text">Drag and drop files here or click to browse</p>
+                                    <p class="file-upload-hint">Supported formats: PDF, DOC, DOCX</p>
+                                    <input type="file" id="bylaws_file" name="bylaws_file" style="display: none;">
+                                </div>
+                                <div class="file-list">
+                                    <!-- File items will be dynamically added here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3 class="form-section-title">Registration Certificate</h3>
+                            <div class="form-group full-width">
+                                <label for="registration_certificate">Registration Certificate Document <span class="required">*</span></label>
+                                <div class="file-upload-container">
+                                    <i class="fas fa-upload file-upload-icon"></i>
+                                    <p class="file-upload-text">Drag and drop files here or click to browse</p>
+                                    <p class="file-upload-hint">Supported formats: PDF, DOC, DOCX</p>
+                                    <input type="file" id="registration_certificate" name="registration_certificate" style="display: none;">
+                                </div>
+                                <div class="file-list">
+                                    <!-- File items will be dynamically added here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-step">
+                        <div class="form-step-header">
+                            <h2>Financial Details</h2>
+                            <p>Provide information about your cooperative's financial standing.</p>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="total_assets">Total Assets</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-coins input-icon"></i>
+                                    <input type="number" id="total_assets" name="total_assets" class="form-control" placeholder="Enter total assets">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="total_liabilities">Total Liabilities</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-file-invoice-dollar input-icon"></i>
+                                    <input type="number" id="total_liabilities" name="total_liabilities" class="form-control" placeholder="Enter total liabilities">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="annual_revenue">Annual Revenue</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-chart-line input-icon"></i>
+                                    <input type="number" id="annual_revenue" name="annual_revenue" class="form-control" placeholder="Enter annual revenue">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="net_profit">Net Profit</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-money-bill-wave input-icon"></i>
+                                    <input type="number" id="net_profit" name="net_profit" class="form-control" placeholder="Enter net profit">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-step">
+                        <div class="form-step-header">
+                            <h2>Review and Submit</h2>
+                            <p>Review the information you've provided and submit your application.</p>
+                        </div>
+                        
+                        <div class="summary-section">
+                            <h3 class="summary-section-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Cooperative Name</div>
+                                    <div class="summary-item-value">LimaAja Cooperative</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Registration Number</div>
+                                    <div class="summary-item-value">1234567890</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Establishment Date</div>
+                                    <div class="summary-item-value">2020-01-01</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Cooperative Type</div>
+                                    <div class="summary-item-value">Primary</div>
+                                </div>
+                                <div class="summary-item full-width">
+                                    <div class="summary-item-label">Address</div>
+                                    <div class="summary-item-value">123 Main Street, Anytown</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">City</div>
+                                    <div class="summary-item-value">Anytown</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Province</div>
+                                    <div class="summary-item-value">Anyprovince</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Postal Code</div>
+                                    <div class="summary-item-value">12345</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-section">
+                            <h3 class="summary-section-title"><i class="fas fa-file-alt"></i> Legal Documents</h3>
+                            <div class="summary-documents">
+                                <h4>Uploaded Documents</h4>
+                                <div class="summary-document-item">
+                                    <div class="summary-document-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="summary-document-name">Bylaws.pdf</div>
+                                </div>
+                                <div class="summary-document-item">
+                                    <div class="summary-document-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="summary-document-name">RegistrationCertificate.pdf</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-section">
+                            <h3 class="summary-section-title"><i class="fas fa-chart-pie"></i> Financial Details</h3>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Total Assets</div>
+                                    <div class="summary-item-value">$1,000,000</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Total Liabilities</div>
+                                    <div class="summary-item-value">$500,000</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Annual Revenue</div>
+                                    <div class="summary-item-value">$2,000,000</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-label">Net Profit</div>
+                                    <div class="summary-item-value">$500,000</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-navigation">
+                        <button type="button" class="btn btn-prev"><i class="fas fa-arrow-left"></i> Previous</button>
+                        <button type="button" class="btn btn-next">Next <i class="fas fa-arrow-right"></i></button>
+                        <button type="submit" class="btn btn-submit"><i class="fas fa-check"></i> Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     
-    <div class="document-requirements">
-        <h3>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            Required Documents
-        </h3>
-        <ul>
-            <li><strong>Business Registration Certificate</strong> - Official document proving your cooperative's legal registration</li>
-            <li><strong>Tax Registration Document</strong> - Your cooperative's tax identification document</li>
-            <li><strong>Bank Account Details</strong> - Document showing your cooperative's bank account information</li>
-            <li><strong>Proof of Address</strong> - Recent utility bill or official document showing your business address</li>
-        </ul>
-        <div class="document-tip">
-            <strong>Tip:</strong> Make sure all documents are clear, legible, and in JPG, PNG, or PDF format. Maximum file size is 5MB per document.
-        </div>
-    </div>
-
-    <form method="post" enctype="multipart/form-data" id="documentUploadForm">
-        {% csrf_token %}
+    <script>
+        const prevBtn = document.querySelector(".btn-prev");
+        const nextBtn = document.querySelector(".btn-next");
+        const submitBtn = document.querySelector(".btn-submit");
+        const formSteps = document.querySelectorAll(".form-step");
+        const progressLine = document.querySelector(".progress-line");
         
-        <div class="upload-section">
-            <div class="dropzone" id="documentDropzone">
-                <div class="dropzone-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                </div>
-                <h3 class="dropzone-title">Drag and drop your files here</h3>
-                <p class="dropzone-text">or click to browse your files</p>
-                <div class="dropzone-formats">JPG, PNG, PDF (max 5MB)</div>
-            </div>
-            
-            <input type="file" id="documentInput" name="documents[]" multiple accept=".jpg,.jpeg,.png,.pdf" style="display: none">
-            
-            <div class="upload-progress" id="uploadProgress">
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                <div class="progress-text" id="progressText">Uploading files...</div>
-            </div>
-            
-            <div class="file-list">
-                <div class="file-list-header" id="fileListHeader" style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    Uploaded Files
-                </div>
-                <div id="uploadedFiles"></div>
-                <div class="file-list-empty" id="emptyFileList">
-                    No files uploaded yet. Upload your documents to continue.
-                </div>
-            </div>
-        </div>
-
-        <div class="notes-section">
-            <label for="notes" class="notes-label">Additional Notes</label>
-            <textarea 
-                class="notes-textarea" 
-                id="notes" 
-                name="notes" 
-                placeholder="Add any additional information about the uploaded documents that might be helpful for verification"
-            ></textarea>
-            <div class="notes-hint">Optional: Include any details that might help with the verification process</div>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-submit" id="submitButton" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Submit Documents
-            </button>
-        </div>
-    </form>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dropzone = document.getElementById('documentDropzone');
-    const fileInput = document.getElementById('documentInput');
-    const uploadedFiles = document.getElementById('uploadedFiles');
-    const emptyFileList = document.getElementById('emptyFileList');
-    const fileListHeader = document.getElementById('fileListHeader');
-    const submitButton = document.getElementById('submitButton');
-    const form = document.getElementById('documentUploadForm');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const uploadProgress = document.getElementById('uploadProgress');
-    
-    let files = new Set();
-
-    // Handle click on upload area
-    dropzone.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-    });
-
-    // Highlight drop zone when dragging over it
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, highlight, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, unhighlight, false);
-    });
-
-    // Handle dropped files
-    dropzone.addEventListener('drop', handleDrop, false);
-
-    // Handle selected files
-    fileInput.addEventListener('change', handleFiles);
-
-    // Handle form submission
-    form.addEventListener('submit', handleSubmit);
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    function highlight() {
-        dropzone.classList.add('drag-active');
-    }
-
-    function unhighlight() {
-        dropzone.classList.remove('drag-active');
-    }
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const droppedFiles = dt.files;
-        handleFiles({ target: { files: droppedFiles } });
-    }
-
-    function handleFiles(e) {
-        const fileList = e.target.files;
+        let currentStep = 0;
         
-        Array.from(fileList).forEach(file => {
-            // Validate file type
-            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
-            if (!validTypes.includes(file.type)) {
-                showMessage(`Invalid file type: ${file.name}. Please upload JPG, PNG, or PDF files only.`, 'danger');
-                return;
-            }
-
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                showMessage(`File too large: ${file.name}. Maximum size is 5MB.`, 'danger');
-                return;
-            }
-
-            if (!files.has(file)) {
-                files.add(file);
-                displayFile(file);
-            }
-        });
-
-        updateFileListVisibility();
-        updateSubmitButton();
-    }
-
-    function displayFile(file) {
-        const div = document.createElement('div');
-        div.className = 'file-item';
-        
-        const size = (file.size / 1024 / 1024).toFixed(2);
-        const fileType = file.type.split('/')[1].toUpperCase();
-        
-        div.innerHTML = `
-            <div class="file-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-            </div>
-            <div class="file-info">
-                <div class="file-name">${file.name}</div>
-                <div class="file-meta">
-                    <div class="file-size">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                        </svg>
-                        ${size} MB
-                    </div>
-                    <div class="file-type">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                        </svg>
-                        ${fileType}
-                    </div>
-                </div>
-            </div>
-            <div class="file-actions">
-                <button type="button" class="file-remove" data-filename="${file.name}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-        `;
-        
-        div.querySelector('.file-remove').addEventListener('click', function() {
-            removeFile(file, div);
-        });
-        
-        uploadedFiles.appendChild(div);
-    }
-
-    function removeFile(file, element) {
-        files.delete(file);
-        element.remove();
-        updateFileListVisibility();
-        updateSubmitButton();
-    }
-
-    function updateFileListVisibility() {
-        if (files.size > 0) {
-            emptyFileList.style.display = 'none';
-            fileListHeader.style.display = 'flex';
-        } else {
-            emptyFileList.style.display = 'block';
-            fileListHeader.style.display = 'none';
-        }
-    }
-
-    function updateSubmitButton() {
-        submitButton.disabled = files.size === 0;
-    }
-
-    function handleSubmit(e) {
-        e.preventDefault();
-        
-        if (files.size === 0) {
-            showMessage('Please upload at least one document to continue.', 'warning');
-            return;
+        function updateProgressLine() {
+            progressLine.style.width = `${(currentStep / (formSteps.length - 1)) * 100}%`;
         }
         
-        // Show progress bar
-        uploadProgress.classList.add('active');
-        submitButton.disabled = true;
+        function showStep(stepIndex) {
+            formSteps.forEach((step, index) => {
+                step.classList.toggle("active", index === stepIndex);
+            });
+        }
         
-        const formData = new FormData();
-        let totalSize = 0;
-        files.forEach(file => {
-            formData.append('documents[]', file);
-            totalSize += file.size;
+        nextBtn.addEventListener("click", () => {
+            currentStep++;
+            if (currentStep >= formSteps.length) {
+                currentStep = formSteps.length - 1;
+            }
+            showStep(currentStep);
+            updateProgressLine();
         });
-        formData.append('notes', document.getElementById('notes').value);
         
-        // Simulate upload progress
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 5;
-            if (progress > 95) {
-                clearInterval(interval);
+        prevBtn.addEventListener("click", () => {
+            currentStep--;
+            if (currentStep < 0) {
+                currentStep = 0;
             }
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `Uploading files... ${progress}%`;
-        }, 200);
-        
-        // Submit the form
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            clearInterval(interval);
-            progressBar.style.width = '100%';
-            progressText.textContent = 'Upload complete!';
-            
-            if (data.success) {
-                showMessage('Documents uploaded successfully! Your account is pending approval.', 'success');
-                setTimeout(() => {
-                    window.location.href = '{% url "cooperative_dashboard" %}';
-                }, 2000);
-            } else {
-                showMessage(data.message || 'An error occurred during upload.', 'danger');
-                uploadProgress.classList.remove('active');
-                submitButton.disabled = false;
-            }
-        })
-        .catch(error => {
-            clearInterval(interval);
-            uploadProgress.classList.remove('active');
-            submitButton.disabled = false;
-            showMessage('An error occurred during upload. Please try again.', 'danger');
-            console.error('Error:', error);
+            showStep(currentStep);
+            updateProgressLine();
         });
-    }
-
-    function showMessage(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        alertDiv.style.marginBottom = '1rem';
-        alertDiv.textContent = message;
         
-        const container = document.querySelector('.page-header');
-        container.insertAdjacentElement('afterend', alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
-});
-</script>
-{% endblock %}
+        showStep(currentStep);
+        updateProgressLine();
+    </script>
+</body>
+</html>
 

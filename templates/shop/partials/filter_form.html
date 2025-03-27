@@ -1,0 +1,68 @@
+<form method="get" action="{% url 'shop:product_list' %}" class="space-y-6">
+    <!-- Category Filter -->
+    <div>
+        <h3 class="font-medium text-gray-700 mb-2">Categories</h3>
+        <div class="space-y-2">
+            <div class="flex items-center">
+                <input type="radio" id="all-categories" name="category" value="" {% if not selected_category %}checked{% endif %} class="h-4 w-4 text-green-600 focus:ring-green-500">
+                <label for="all-categories" class="ml-2 text-sm text-gray-700">All Categories</label>
+            </div>
+            {% for cat in categories %}
+            <div class="flex items-center">
+                <input type="radio" id="category-{{ cat.id }}" name="category" value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"i" %}checked{% endif %} class="h-4 w-4 text-green-600 focus:ring-green-500">
+                <label for="category-{{ cat.id }}" class="ml-2 text-sm text-gray-700">{{ cat.name }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Price Range Filter -->
+    <div>
+        <h3 class="font-medium text-gray-700 mb-2">Price Range</h3>
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label for="min_price" class="block text-sm text-gray-600 mb-1">Min</label>
+                <input type="number" id="min_price" name="min_price" value="{{ min_price|default_if_none:'' }}" placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500">
+            </div>
+            <div>
+                <label for="max_price" class="block text-sm text-gray-600 mb-1">Max</label>
+                <input type="number" id="max_price" name="max_price" value="{{ max_price|default_if_none:'' }}" placeholder="10000" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sort By Filter -->
+    <div>
+        <h3 class="font-medium text-gray-700 mb-2">Sort By</h3>
+        <select name="sort_by" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500">
+            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+            <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price (Low to High)</option>
+            <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price (High to Low)</option>
+            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+        </select>
+    </div>
+    
+    <!-- Search -->
+    <div>
+        <h3 class="font-medium text-gray-700 mb-2">Search</h3>
+        <div class="relative">
+            <input type="text" name="search" value="{{ search_query|default_if_none:'' }}" placeholder="Search products..." class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Apply Filters Button -->
+    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-300">
+        Apply Filters
+    </button>
+    
+    <!-- Clear Filters Link -->
+    <div class="text-center">
+        <a href="{% url 'shop:product_list' %}" class="text-sm text-green-600 hover:text-green-700">Clear all filters</a>
+    </div>
+</form>
+

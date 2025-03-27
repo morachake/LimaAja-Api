@@ -52,17 +52,25 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('admin', 'Admin'),
     )
 
+    # Basic user information
     full_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20, unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     profile_picture = models.TextField(blank=True, null=True)
+    
+    # Address information
     address = models.TextField(blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
+    province = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Timestamps
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Status flags
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
@@ -72,6 +80,34 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Cooperative specific fields
     certificates = models.JSONField(blank=True, null=True)
     payment_details = models.JSONField(blank=True, null=True)
+    
+    # Cooperative registration details
+    registration_number = models.CharField(max_length=100, blank=True, null=True)
+    tax_id = models.CharField(max_length=100, blank=True, null=True)
+    year_established = models.IntegerField(blank=True, null=True)
+    cooperative_type = models.CharField(max_length=50, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    
+    # Manager details
+    manager_name = models.CharField(max_length=150, blank=True, null=True)
+    manager_email = models.EmailField(blank=True, null=True)
+    manager_phone = models.CharField(max_length=20, blank=True, null=True)
+    manager_role = models.CharField(max_length=100, blank=True, null=True)
+    manager_bio = models.TextField(blank=True, null=True)
+    
+    # Additional contact
+    contact_name = models.CharField(max_length=150, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    contact_role = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Password reset fields
+    password_reset_token = models.CharField(max_length=100, blank=True, null=True)
+    password_reset_token_created_at = models.DateTimeField(blank=True, null=True)
+    
+    # Email verification fields
+    email_verification_token = models.CharField(max_length=100, blank=True, null=True)
+    email_verification_token_created_at = models.DateTimeField(blank=True, null=True)
 
     # Buyer specific fields
     payment_methods = models.JSONField(blank=True, null=True)
@@ -87,4 +123,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def soft_delete(self):
         self.is_deleted = True
         self.save()
+
+
 

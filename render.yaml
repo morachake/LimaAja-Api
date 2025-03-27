@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: limaaja-api
+    env: python
+    buildCommand: pip install -r requirements.txt && npm install && npm run build && python manage.py collectstatic --noinput
+    startCommand: gunicorn limaAja.wsgi:application
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x

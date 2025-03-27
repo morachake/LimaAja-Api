@@ -1,0 +1,243 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verification - Lima Aja</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --light-green: #e9f7e0;
+            --pattern-opacity: 0.3;
+        }
+        
+        .verification-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .verification-left {
+            display: none;
+            background-color: var(--light-green);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .verification-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234d7c0f' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: var(--pattern-opacity);
+        }
+        
+        .verification-logo {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .verification-content {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .verification-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+        
+        .verification-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .verification-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            border-radius: 12px;
+            background-color: var(--secondary-color);
+        }
+        
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .step-content h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.125rem;
+            color: var(--primary-color);
+        }
+        
+        .step-content p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .contact-support {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .contact-support h3 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1.125rem;
+        }
+        
+        .contact-support p {
+            margin: 0 0 1rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .contact-methods {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .contact-method {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .back-to-home {
+            margin-top: 2.5rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .verification-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .verification-left {
+                display: block;
+            }
+            
+            .verification-content {
+                padding: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="verification-left">
+            <div class="verification-pattern"></div>
+            <div class="verification-logo">LIMA-AJA</div>
+            <div style="position: absolute; bottom: 2rem; left: 2rem; right: 2rem; text-align: center; color: var(--primary-color);">
+                <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">
+                    Sell Farm Produce,<br>
+                    Earn, Get Support,<br>
+                    And Grow.
+                </h2>
+            </div>
+        </div>
+        
+        <div class="verification-right">
+            <div class="verification-content">
+                <div class="auth-logo">
+                    <img src="{% static 'images/logo.png' %}" alt="Lima Aja Logo" style="width: 80px; height: 80px;">
+                </div>
+                
+                <h1 style="font-size: 2rem; margin: 1rem 0 0.5rem;">Verification in Progress</h1>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Your account is awaiting verification by our team</p>
+                
+                <div style="position: relative; width: 100%; height: 6px; background-color: #f3f4f6; border-radius: 3px; margin-bottom: 2rem;">
+                    <div style="position: absolute; top: 0; left: 0; height: 100%; width: 30%; background-color: var(--primary-color); border-radius: 3px;">
+                        <div style="position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 50%; background-color: var(--primary-color);"></div>
+                    </div>
+                </div>
+                
+                <div class="verification-steps">
+                    <div class="verification-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Application Submitted</h3>
+                            <p>Your cooperative registration has been successfully submitted to our system.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="verification-step" style="background-color: rgba(237, 233, 254, 0.5);">
+                        <div class="step-number" style="background-color: #8b5cf6;">2</div>
+                        <div class="step-content">
+                            <h3>Under Review</h3>
+                            <p>Our team is currently reviewing your application. This typically takes 1-2 business days.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="verification-step" style="background-color: rgba(236, 253, 245, 0.5); opacity: 0.6;">
+                        <div class="step-number" style="background-color: #10b981;">3</div>
+                        <div class="step-content">
+                            <h3>Account Activation</h3>
+                            <p>Once approved, you'll receive an email notification and can start using Lima Aja.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-support">
+                    <h3>Need Help?</h3>
+                    <p>If you have any questions or concerns about your application, please contact our support team.</p>
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <i class="fas fa-envelope"></i>
+                            <span>support@lima-aja.com</span>
+                        </div>
+                        <div class="contact-method">
+                            <i class="fas fa-phone"></i>
+                            <span>+62 123 456 7890</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="back-to-home">
+                    <a href="{% url 'cooperative:index' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i>
+                        Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -2,14 +2,24 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class Farmer(models.Model):
-    cooperative = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='farmers')
-    name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=15)
-    address = models.TextField(blank=True, null=True)
-    joining_date = models.DateField(default=timezone.now)
-    is_active = models.BooleanField(default=True)
+    PROVINCE_CHOICES = [
+        ('Kigali City', 'Kigali City'),
+        ('Northern Province', 'Northern Province'),
+        ('Southern Province', 'Southern Province'),
+        ('Eastern Province', 'Eastern Province'),
+        ('Western Province', 'Western Province'),
+    ]
+    
+    cooperative = models.ForeignKey(User, on_delete=models.CASCADE, related_name='farmers')
+    name = models.CharField(max_length=100, default='')
+    phone_number = models.CharField(max_length=20, default='')
+    location = models.CharField(max_length=100, default='', choices=PROVINCE_CHOICES, help_text="Province in Rwanda")
+    created_at = models.DateTimeField(default=timezone.now)  # Changed from auto_now_add
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.name
@@ -37,33 +47,67 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
-
-# New models for produce management
-class ProduceType(models.Model):
-    CATEGORY_CHOICES = [
-        ('vegetables', 'Vegetables'),
-        ('fruits', 'Fruits'),
-        ('nuts', 'Nuts'),
-        ('herbs', 'Herbs'),
-        ('grains', 'Grains'),
-        ('other', 'Other'),
-    ]
     
+    
+class Category(models.Model):
     name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
     description = models.TextField(blank=True, null=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
-    base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='produce/', blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)  # For external images
+    icon = models.CharField(max_length=50, blank=True, null=True, help_text="Font Awesome icon class")
+    color = models.CharField(max_length=20, blank=True, null=True, help_text="Color code for the category")
+    display_order = models.PositiveIntegerField(default=0, help_text="Order to display categories")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['display_order', 'name']
     
     def __str__(self):
         return self.name
     
-    def get_image_url(self):
-        if self.image:
-            return self.image.url
-        return self.image_url or '/placeholder.svg?height=400&width=600'
+    def get_produce_count(self, cooperative=None):
+        """Get count of produce items in this category for a cooperative"""
+        query = self.produce_types.all()
+        if cooperative:
+            return CooperativeProduce.objects.filter(
+                produce_type__category=self.slug,
+                cooperative=cooperative
+            ).count()
+        return query.count()
+    
+    def get_total_quantity(self, cooperative=None):
+        """Get total quantity of produce items in this category for a cooperative"""
+        if cooperative:
+            return CooperativeProduce.objects.filter(
+                produce_type__category=self.slug,
+                cooperative=cooperative
+            ).aggregate(total=models.Sum('quantity'))['total'] or 0
+        return 0
+    
+# New models for produce management
+class ProduceType(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE, 
+        related_name='produce_types'
+    )
+    unit = models.CharField(max_length=20, default='kg')
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to='produce_types/', blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True,blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True,blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.name} ({self.category.name})"
 
+
+
+    
+    
 class ProduceVariant(models.Model):
     produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE, related_name='variants')
     grade = models.CharField(max_length=10)  # e.g., "A", "B", "C"
@@ -72,22 +116,41 @@ class ProduceVariant(models.Model):
     def __str__(self):
         return f"{self.produce_type.name} - Grade {self.grade}"
 
+# New models for cooperative produce management
 class CooperativeProduce(models.Model):
-    cooperative = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cooperative_produce')
-    produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE)
-    variant = models.ForeignKey(ProduceVariant, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)  # in tons
-    province = models.CharField(max_length=100)
+    cooperative = models.ForeignKey(User, on_delete=models.CASCADE, related_name='produce_items')
+    produce_type = models.ForeignKey(ProduceType, on_delete=models.CASCADE, related_name='cooperative_items')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    location = models.CharField(max_length=100)
+    grade = models.CharField(max_length=1, choices=[
+        ('A', 'Grade A'),
+        ('B', 'Grade B'),
+        ('C', 'Grade C'),
+        ('D', 'Grade D'),
+        ('E', 'Grade E'),
+    ], default='A')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.produce_type.name} - {self.quantity} tons"
+        return f"{self.produce_type.name} - {self.quantity} {self.produce_type.unit} ({self.location})"
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def get_image_url(self):
+        """Return the image URL or a placeholder if no image exists"""
+        if self.produce_type.image and hasattr(self.produce_type.image, 'url'):
+            return self.produce_type.image.url
+        return '/static/images/placeholder.jpg'
     
     @property
     def price(self):
-        return self.produce_type.base_price * self.variant.price_multiplier
-
+        """Calculate price based on produce type and grade"""
+        base_price = self.produce_type.price_per_unit
+        # You could apply grade-based pricing here if needed
+        return base_price
+    
 # Order models
 class Customer(models.Model):
     ROLE_CHOICES = [

@@ -15,17 +15,17 @@
     {% endif %}
 
     <div class="settings-grid">
-        <!-- Profile Information Card -->
+        <!-- Cooperative Profile Information Card -->
         <div class="settings-card">
             <div class="settings-card-header">
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="card-title">Profile Information</h3>
+                    <h3 class="card-title">Cooperative Information</h3>
                     <p class="card-description">Update your cooperative's profile information</p>
                 </div>
             </div>
@@ -51,6 +51,21 @@
                     </div>
                     
                     <div class="form-group">
+                        <label for="registration_number" class="form-label">Registration Number</label>
+                        <input type="text" class="form-control" id="registration_number" name="registration_number" value="{{ request.user.registration_number }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tax_id" class="form-label">Tax ID</label>
+                        <input type="text" class="form-control" id="tax_id" name="tax_id" value="{{ request.user.tax_id }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="year_established" class="form-label">Year Established</label>
+                        <input type="number" class="form-control" id="year_established" name="year_established" value="{{ request.user.year_established }}" min="1900" max="2099">
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="address" class="form-label">Address</label>
                         <textarea class="form-control" id="address" name="address" rows="3">{{ request.user.address }}</textarea>
                     </div>
@@ -61,13 +76,191 @@
                             <input type="text" class="form-control" id="city" name="city" value="{{ request.user.city }}">
                         </div>
                         <div class="form-group half">
-                            <label for="country" class="form-label">Country</label>
-                            <input type="text" class="form-control" id="country" name="country" value="{{ request.user.country }}">
+                            <label for="province" class="form-label">Province</label>
+                            <select class="form-control" id="province" name="province">
+                                <option value="Kigali City" {% if request.user.province == 'Kigali City' %}selected{% endif %}>Kigali City</option>
+                                <option value="Northern Province" {% if request.user.province == 'Northern Province' %}selected{% endif %}>Northern Province</option>
+                                <option value="Southern Province" {% if request.user.province == 'Southern Province' %}selected{% endif %}>Southern Province</option>
+                                <option value="Eastern Province" {% if request.user.province == 'Eastern Province' %}selected{% endif %}>Eastern Province</option>
+                                <option value="Western Province" {% if request.user.province == 'Western Province' %}selected{% endif %}>Western Province</option>
+                            </select>
                         </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="country" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="country" name="country" value="{{ request.user.country|default:'Rwanda' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="website" class="form-label">Website</label>
+                        <input type="url" class="form-control" id="website" name="website" value="{{ request.user.website }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description" class="form-label">About Cooperative</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ request.user.description }}</textarea>
                     </div>
                     
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Cooperative Manager Details Card -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="card-title">Manager Details</h3>
+                    <p class="card-description">Information about the cooperative manager</p>
+                </div>
+            </div>
+            <div class="settings-card-content">
+                <form method="post" action="{% url 'cooperative_dashboard' %}?view=settings" class="settings-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_manager">
+                    
+                    <div class="form-group">
+                        <label for="manager_name" class="form-label">Manager Name</label>
+                        <input type="text" class="form-control" id="manager_name" name="manager_name" value="{{ request.user.manager_name }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manager_email" class="form-label">Manager Email</label>
+                        <input type="email" class="form-control" id="manager_email" name="manager_email" value="{{ request.user.manager_email }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manager_phone" class="form-label">Manager Phone</label>
+                        <input type="tel" class="form-control" id="manager_phone" name="manager_phone" value="{{ request.user.manager_phone }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manager_role" class="form-label">Role in Cooperative</label>
+                        <input type="text" class="form-control" id="manager_role" name="manager_role" value="{{ request.user.manager_role|default:'Manager' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manager_bio" class="form-label">Manager Bio</label>
+                        <textarea class="form-control" id="manager_bio" name="manager_bio" rows="3">{{ request.user.manager_bio }}</textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Manager Details</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Document Upload Card -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="card-title">Documents & Certificates</h3>
+                    <p class="card-description">Update your cooperative's official documents</p>
+                </div>
+            </div>
+            <div class="settings-card-content">
+                <form method="post" action="{% url 'cooperative_dashboard' %}?view=settings" class="settings-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_documents">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Current Documents</label>
+                        {% if request.user.certificates %}
+                            <div class="document-list">
+                                {% for cert in request.user.certificates %}
+                                    <div class="document-item">
+                                        <div class="document-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                <polyline points="10 9 9 9 8 9"></polyline>
+                                            </svg>
+                                        </div>
+                                        <div class="document-info">
+                                            <span class="document-name">{{ cert.name }}</span>
+                                            <span class="document-date">Uploaded: {{ cert.uploaded_at|slice:":10" }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="no-documents">
+                                <p>No documents uploaded yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registration_certificate" class="form-label">Registration Certificate</label>
+                        <div class="file-upload">
+                            <input type="file" class="file-input" id="registration_certificate" name="documents[]" accept="image/png, image/jpeg, image/gif, application/pdf">
+                            <label for="registration_certificate" class="file-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span>Choose file</span>
+                            </label>
+                            <span class="file-name">No file chosen</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tax_certificate" class="form-label">Tax Certificate</label>
+                        <div class="file-upload">
+                            <input type="file" class="file-input" id="tax_certificate" name="documents[]" accept="image/png, image/jpeg, image/gif, application/pdf">
+                            <label for="tax_certificate" class="file-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span>Choose file</span>
+                            </label>
+                            <span class="file-name">No file chosen</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="other_document" class="form-label">Other Documents</label>
+                        <div class="file-upload">
+                            <input type="file" class="file-input" id="other_document" name="documents[]" accept="image/png, image/jpeg, image/gif, application/pdf" multiple>
+                            <label for="other_document" class="file-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span>Choose files</span>
+                            </label>
+                            <span class="file-name">No files chosen</span>
+                        </div>
+                        <div class="form-hint">You can select multiple files (max 5MB each)</div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Upload Documents</button>
                     </div>
                 </form>
             </div>
@@ -136,7 +329,7 @@
                     
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="email_notifications" checked>
+                            <input type="checkbox" name="email_notifications" {% if request.user.email_notifications %}checked{% endif %}>
                             <span>Email Notifications</span>
                         </label>
                         <div class="form-hint">Receive notifications about new orders, updates, and important announcements</div>
@@ -144,7 +337,7 @@
                     
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="sms_notifications" checked>
+                            <input type="checkbox" name="sms_notifications" {% if request.user.sms_notifications %}checked{% endif %}>
                             <span>SMS Notifications</span>
                         </label>
                         <div class="form-hint">Receive text messages for urgent updates and order confirmations</div>
@@ -152,7 +345,7 @@
                     
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="marketing_emails">
+                            <input type="checkbox" name="marketing_emails" {% if request.user.marketing_emails %}checked{% endif %}>
                             <span>Marketing Emails</span>
                         </label>
                         <div class="form-hint">Receive promotional content, newsletters, and market updates</div>
@@ -163,55 +356,6 @@
                     </div>
                 </form>
             </div>
-        </div>
-
-        <!-- Account Deletion Card -->
-        <!-- <div class="settings-card danger-card">
-            <div class="settings-card-header">
-                <div class="card-icon danger">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="card-title">Delete Account</h3>
-                    <p class="card-description">Permanently delete your cooperative account</p>
-                </div>
-            </div>
-            <div class="settings-card-content">
-                <p class="warning-text">
-                    Once you delete your account, there is no going back. This action is permanent and will remove all data associated with your cooperative.
-                </p>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-danger" onclick="confirmAccountDeletion()">Delete Account</button>
-                </div>
-            </div>
-        </div> -->
-    </div>
-</div>
-
-<div id="deleteAccountModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Confirm Account Deletion</h3>
-            <button class="modal-close" onclick="closeDeleteModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="modal-body">
-            <p>Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.</p>
-            <div class="form-group">
-                <label for="delete_confirmation" class="form-label">Type "DELETE" to confirm</label>
-                <input type="text" class="form-control" id="delete_confirmation" placeholder="DELETE">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-            <button class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete Account</button>
         </div>
     </div>
 </div>
@@ -467,97 +611,117 @@ textarea.form-control {
     background-color: #b91c1c;
 }
 
-/* Danger Card */
-.danger-card {
-    border: 1px solid #fee2e2;
+/* File Upload Styles */
+.file-upload {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
-.warning-text {
-    color: #dc2626;
-    background-color: #fee2e2;
-    padding: 12px 16px;
+.file-input {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #f3f4f6;
+    color: #374151;
     border-radius: 8px;
     font-size: 14px;
-    margin-bottom: 16px;
-}
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-}
-
-.modal-content {
-    background-color: white;
-    border-radius: 12px;
-    max-width: 500px;
-    width: 100%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.modal-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    color: #6b7280;
+    font-weight: 500;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s;
 }
 
-.modal-close:hover {
-    background-color: #f3f4f6;
-    color: #111827;
+.file-label:hover {
+    background-color: #e5e7eb;
 }
 
-.modal-body {
-    padding: 24px;
+.file-name {
+    margin-left: 12px;
+    font-size: 14px;
+    color: #6b7280;
 }
 
-.modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #e5e7eb;
+/* Document List Styles */
+.document-list {
+    margin-top: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.document-item {
     display: flex;
-    justify-content: flex-end;
-    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.document-item:last-child {
+    border-bottom: none;
+}
+
+.document-icon {
+    margin-right: 12px;
+    color: #6b7280;
+}
+
+.document-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.document-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.document-date {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.no-documents {
+    padding: 16px;
+    text-align: center;
+    color: #6b7280;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
 }
 </style>
 
 <script>
-
-
-function closeDeleteModal() {
-    document.getElementById('deleteAccountModal').style.display = 'none';
-}
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('deleteAccountModal');
-    if (event.target === modal) {
-        closeDeleteModal();
-    }
+// File upload handling
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInputs = document.querySelectorAll('.file-input');
+    
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const fileNameElement = this.parentElement.querySelector('.file-name');
+            
+            if (this.files.length > 0) {
+                if (this.files.length === 1) {
+                    fileNameElement.textContent = this.files[0].name;
+                } else {
+                    fileNameElement.textContent = `${this.files.length} files selected`;
+                }
+            } else {
+                fileNameElement.textContent = 'No file chosen';
+            }
+        });
+    });
 });
 </script>
 

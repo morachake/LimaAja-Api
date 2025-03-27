@@ -137,3 +137,21 @@ GitHub.sublime-settings
 !.vscode/extensions.json
 .history
 .DS_Store
+
+# Node.js / Tailwind CSS #
+node_modules/
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Tailwind CSS build outputs #
+public/css/
+public/js/
+public/build/
+static/css/tailwind.css
+static/css/tailwind*.css
+
+# Local Netlify folder
+.netlify

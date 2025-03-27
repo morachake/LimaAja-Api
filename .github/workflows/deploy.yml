@@ -1,0 +1,71 @@
+name: Deploy LimaAja API
+
+on:
+  push:
+    branches: [ main ] 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.7' 
+        
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        port: ${{ secrets.SSH_PORT }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/LimaAja-Api
+          git config --global --add safe.directory /var/www/LimaAja-Api
+          git pull origin main
+          
+          # Check if venv exists, if not create it
+          if [ ! -d "venv" ]; then
+            python3 -m venv venv
+          fi
+          
+          source venv/bin/activate
+          
+          # Install pip, gunicorn, and requirements
+          python -m pip install --upgrade pip
+          python -m pip install gunicorn
+          python -m pip install -r requirements.txt --break-system-packages
+          
+          # Run Django commands
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          
+          # Check if service exists, if not create it
+          if ! systemctl list-unit-files | grep -q gunicorn-limaaja.service; then
+            echo "[Unit]
+            Description=gunicorn daemon for LimaAja-Api
+            After=network.target
+
+            [Service]
+            User=root
+            Group=www-data
+            WorkingDirectory=/var/www/LimaAja-Api
+            ExecStart=/var/www/LimaAja-Api/venv/bin/gunicorn \
+                      --access-logfile - \
+                      --workers 3 \
+                      --bind unix:/var/www/LimaAja-Api/limaaja.sock \
+                      LimaAja.wsgi:application
+
+            [Install]
+            WantedBy=multi-user.target" > /tmp/gunicorn-limaaja.service
+            
+            mv /tmp/gunicorn-limaaja.service /etc/systemd/system/
+            systemctl daemon-reload
+            systemctl enable gunicorn-limaaja
+          fi
+          
+          # Restart the service
+          systemctl restart gunicorn-limaaja || systemctl start gunicorn-limaaja
