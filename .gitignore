@@ -155,3 +155,10 @@ static/css/tailwind*.css
 
 # Local Netlify folder
 .netlify
+
+# Ignore SQLite database
+db.sqlite3
+*.sqlite3
+# Database backups
+*.sql
+*.dump
