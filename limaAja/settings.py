@@ -25,7 +25,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Add APPEND_SLASH setting to handle URLs without trailing slashes
 APPEND_SLASH = True
-
+DEFAULT_HOST = 'shop'
+ROOT_HOSTCONF = 'limaAja.hosts'
+HOST_PORT = '80'
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -37,6 +39,8 @@ SECRET_KEY = "django-insecure-&i_po%fq^tkl7@qbpn+51!&#o3ck0u(g81y+2ijoy&rh*6ue(u
 DEBUG = True  # Temporarily set to True for debugging
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS = ['159.223.141.122', 'shop.lima-aja.com']
+# Rainbow-Butterflies
 # Static files (CSS, JavaScript, Images)
 # Add this to your settings.py
 CSRF_TRUSTED_ORIGINS = ['https://limaaja-api-production.up.railway.app']
@@ -58,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    'django_hosts',
     'django.contrib.humanize',
     "rest_framework.authtoken",
     "corsheaders",
@@ -71,6 +76,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 
 MIDDLEWARE = [
+    'django_hosts.middleware.HostsRequestMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -81,6 +87,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'cooperative.middleware.CooperativeAuthMiddleware',
+    'django_hosts.middleware.HostsResponseMiddleware',
+
 ]
 
 ROOT_URLCONF = "limaAja.urls"
