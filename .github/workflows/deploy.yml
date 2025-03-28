@@ -24,7 +24,14 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd /var/www/LimaAja-Api
+          
+          # Reset and clean the working directory
           git config --global --add safe.directory /var/www/LimaAja-Api
+          git reset --hard HEAD
+          git clean -f -d
+          
+          # Fetch and pull the latest changes
+          git fetch --all
           git pull origin main
           
           # Check if venv exists, if not create it
@@ -57,7 +64,7 @@ jobs:
                       --access-logfile - \
                       --workers 3 \
                       --bind unix:/var/www/LimaAja-Api/limaaja.sock \
-                      LimaAja.wsgi:application
+                      limaAja.wsgi:application
 
             [Install]
             WantedBy=multi-user.target" > /tmp/gunicorn-limaaja.service
