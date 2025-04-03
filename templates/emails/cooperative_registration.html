@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Registration Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Cooperative Registration Confirmation</h2>
+        </div>
+        
+        <p>Hello,</p>
+        
+        <p>Thank you for registering your cooperative with Lima Aja. We're excited to have you join our platform!</p>
+        
+        {% if verification_pending %}
+        <div class="status">
+            Your account is pending verification
+        </div>
+        
+        <p>Your registration has been received and is currently under review by our team. This process typically takes 1-2 business days.</p>
+        
+        <p>Once your account is verified, you'll receive another email notification and will be able to access all features of the platform.</p>
+        
+        <p>In the meantime, you can complete your cooperative profile by adding more information about your products and services.</p>
+        {% else %}
+        <p>Your account has been created successfully. You can now log in to your dashboard and start using our platform.</p>
+        {% endif %}
+        
+        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+        
+        <p>Thank you for choosing Lima Aja!</p>
+        
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>&copy; {% now "Y" %} Lima Aja. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+

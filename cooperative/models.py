@@ -24,6 +24,7 @@ class Farmer(models.Model):
     def __str__(self):
         return self.name
 
+
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ('vegetables', 'Vegetables'),
@@ -31,6 +32,22 @@ class Product(models.Model):
         ('nuts', 'Nuts'),
         ('herbs', 'Herbs'),
         ('grains', 'Grains'),
+        ('roots_tubers', 'Roots & Tubers'),
+        ('legumes', 'Legumes & Pulses'),
+        ('coffee_tea', 'Coffee & Tea'),
+        ('dairy', 'Dairy Products'),
+        ('honey', 'Honey & Bee Products'),
+        ('spices', 'Spices'),
+        ('flowers', 'Flowers'),
+        ('seeds', 'Seeds'),
+        ('livestock', 'Livestock Products'),
+        ('oils', 'Oils & Fats'),
+        ('processed', 'Processed Foods'),
+        ('organic', 'Organic Products'),
+        ('specialty', 'Specialty Products'),
+        ('medicinal', 'Medicinal Plants'),
+        ('fish', 'Fish & Aquaculture'),
+        ('other', 'Other Products')
     ]
     
     cooperative = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='products')

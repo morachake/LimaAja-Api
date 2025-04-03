@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Account Verification Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .approved {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .rejected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .action-button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Cooperative Account Verification Status</h2>
+        </div>
+        
+        <p>Hello,</p>
+        
+        {% if is_approved %}
+        <div class="status approved">
+            Your account has been approved!
+        </div>
+        
+        <p>Congratulations! Your cooperative account has been verified and approved by our team.</p>
+        
+        <p>You now have full access to all features of the Lima Aja platform. You can start adding your products, managing your inventory, and receiving orders from customers.</p>
+        
+        <a href="{{ login_url }}" class="action-button">Log in to your account</a>
+        
+        <p>We're excited to have you as part of our community and look forward to helping your cooperative grow.</p>
+        {% else %}
+        <div class="status rejected">
+            Your account verification requires additional information
+        </div>
+        
+        <p>Thank you for your application. After reviewing your cooperative details, we need some additional information before we can approve your account.</p>
+        
+        <p>Please log in to your account and update your profile with the requested information. Once you've made these updates, your application will be reviewed again.</p>
+        
+        <a href="{{ login_url }}" class="action-button">Update your profile</a>
+        
+        <p>If you have any questions or need assistance, please contact our support team.</p>
+        {% endif %}
+        
+        <p>Thank you for choosing Lima Aja!</p>
+        
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>&copy; {% now "Y" %} Lima Aja. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+

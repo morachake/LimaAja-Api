@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Order Status Update</h2>
+        </div>
+        
+        <p>Hello,</p>
+        
+        <p>We're writing to inform you that the status of your order #{{ order.id }} has been updated.</p>
+        
+        <div class="status">
+            New Status: {{ status }}
+        </div>
+        
+        <p>Order Details:</p>
+        <ul>
+            <li><strong>Order Number:</strong> #{{ order.id }}</li>
+            <li><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y" }}</li>
+            <li><strong>Total Amount:</strong> RWF {{ order.total_amount }}</li>
+        </ul>
+        
+        {% if status == 'Processing' %}
+        <p>Your order is now being processed. We'll update you again when it's ready for shipping.</p>
+        {% elif status == 'Shipped' %}
+        <p>Great news! Your order has been shipped and is on its way to you.</p>
+        {% elif status == 'Delivered' %}
+        <p>Your order has been delivered. We hope you enjoy your purchase!</p>
+        {% elif status == 'Completed' %}
+        <p>Your order is now complete. Thank you for shopping with us!</p>
+        {% elif status == 'Cancelled' %}
+        <p>Your order has been cancelled. If you have any questions, please contact our customer service team.</p>
+        {% endif %}
+        
+        <p>You can view the full details of your order by logging into your account.</p>
+        
+        <p>Thank you for shopping with Lima Aja!</p>
+        
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>&copy; {% now "Y" %} Lima Aja. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+
